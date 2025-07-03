@@ -46,58 +46,88 @@ type FormValues = z.infer<typeof formSchema>
 interface NovoVisitanteDialogProps {
   onClose: () => void
   onSave: (visitante: Visitante) => void
+  visitanteParaEdicao?: Visitante & { responsavel_nome?: string | null }
 }
 
-export default function NovoVisitanteDialog({ onClose, onSave }: NovoVisitanteDialogProps) {
+export default function NovoVisitanteDialog({ onClose, onSave, visitanteParaEdicao }: NovoVisitanteDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const isEditing = !!visitanteParaEdicao
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      nome: "",
-      celular: "",
-      cidade: "",
-      bairro: "",
-      idade: "",
-      pedidos_oracao: "",
-      intencao: "Gostaria de conhecer melhor",
-      sexo: "Masculino",
+      nome: visitanteParaEdicao?.nome || "",
+      celular: visitanteParaEdicao?.celular || "",
+      cidade: visitanteParaEdicao?.cidade || "",
+      bairro: visitanteParaEdicao?.bairro || "",
+      idade: visitanteParaEdicao?.idade ? String(visitanteParaEdicao.idade) : "",
+      pedidos_oracao: visitanteParaEdicao?.pedidos_oracao || "",
+      intencao: (visitanteParaEdicao?.intencao as "Sou membro de outra igreja" | "Gostaria de conhecer melhor" | "Quero ser membro") || "Gostaria de conhecer melhor",
+      sexo: (visitanteParaEdicao?.sexo as "Masculino" | "Feminino") || "Masculino",
     },
   })
 
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true)
     try {
-      // Preparar dados para inserção
-      const visitanteData: VisitanteInsert = {
-        nome: values.nome,
-        celular: values.celular,
-        cidade: values.cidade || null,
-        bairro: values.bairro || null,
-        idade: values.idade ? Number(values.idade) : null,
-        pedidos_oracao: values.pedidos_oracao || null,
-        intencao: values.intencao,
-        mensagem_enviada: false,
-        sexo: values.sexo,
-      }
+      if (isEditing && visitanteParaEdicao) {
+        // Atualizar visitante existente
+        const { data, error } = await supabase
+          .from("visitantes")
+          .update({
+            nome: values.nome,
+            celular: values.celular,
+            cidade: values.cidade || null,
+            bairro: values.bairro || null,
+            idade: values.idade ? Number(values.idade) : null,
+            pedidos_oracao: values.pedidos_oracao || null,
+            intencao: values.intencao,
+            sexo: values.sexo,
+          })
+          .eq("id", visitanteParaEdicao.id)
+          .select()
 
-      // Inserir no Supabase
-      const { data, error } = await supabase.from("visitantes").insert(visitanteData).select()
+        if (error) throw error
 
-      if (error) throw error
+        if (data && data[0]) {
+          onSave(data[0])
+          toast({
+            title: "Visitante atualizado",
+            description: "O visitante foi atualizado com sucesso.",
+          })
+        }
+      } else {
+        // Preparar dados para inserção
+        const visitanteData: VisitanteInsert = {
+          nome: values.nome,
+          celular: values.celular,
+          cidade: values.cidade || null,
+          bairro: values.bairro || null,
+          idade: values.idade ? Number(values.idade) : null,
+          pedidos_oracao: values.pedidos_oracao || null,
+          intencao: values.intencao,
+          mensagem_enviada: false,
+          sexo: values.sexo,
+        }
 
-      if (data && data[0]) {
-        onSave(data[0])
-        toast({
-          title: "Visitante cadastrado",
-          description: "O visitante foi cadastrado com sucesso.",
-        })
+        // Inserir no Supabase
+        const { data, error } = await supabase.from("visitantes").insert(visitanteData).select()
+
+        if (error) throw error
+
+        if (data && data[0]) {
+          onSave(data[0])
+          toast({
+            title: "Visitante cadastrado",
+            description: "O visitante foi cadastrado com sucesso.",
+          })
+        }
       }
     } catch (error) {
-      console.error("Erro ao cadastrar:", error)
+      console.error(`Erro ao ${isEditing ? "atualizar" : "cadastrar"}:`, error)
       toast({
         variant: "destructive",
-        title: "Erro ao cadastrar",
+        title: `Erro ao ${isEditing ? "atualizar" : "cadastrar"}`,
         description: "Ocorreu um erro ao salvar o visitante.",
       })
     } finally {
@@ -114,8 +144,10 @@ export default function NovoVisitanteDialog({ onClose, onSave }: NovoVisitanteDi
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Novo Visitante</DialogTitle>
-          <DialogDescription>Cadastre um novo visitante manualmente.</DialogDescription>
+          <DialogTitle>{isEditing ? "Editar Visitante" : "Novo Visitante"}</DialogTitle>
+          <DialogDescription>
+            {isEditing ? "Edite as informações do visitante." : "Cadastre um novo visitante manualmente."}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -271,7 +303,7 @@ export default function NovoVisitanteDialog({ onClose, onSave }: NovoVisitanteDi
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Salvando..." : "Salvar"}
+                {isSubmitting ? "Salvando..." : isEditing ? "Atualizar" : "Salvar"}
               </Button>
             </DialogFooter>
           </form>

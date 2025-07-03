@@ -16,8 +16,9 @@ import { Switch } from "@/components/ui/switch"
 import { supabase } from "@/lib/supabase"
 import { formatarData, gerarMensagemWhatsApp } from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"
-import { MessageSquare } from "lucide-react"
+import { MessageSquare, Edit } from "lucide-react"
 import type { Visitante, Responsavel } from "@/types/supabase"
+import NovoVisitanteDialog from "./novo-visitante-dialog"
 
 interface VisitanteDialogProps {
   visitante: Visitante & { responsavel_nome?: string | null }
@@ -33,6 +34,7 @@ export default function VisitanteDialog({ visitante, onClose, onUpdate }: Visita
   const [semWhatsapp, setSemWhatsapp] = useState<boolean>(visitante.sem_whatsapp || false)
   const [salvando, setSalvando] = useState(false)
   const [carregandoResponsaveis, setCarregandoResponsaveis] = useState(true)
+  const [editandoCadastro, setEditandoCadastro] = useState(false)
 
   useEffect(() => {
     const carregarResponsaveis = async () => {
@@ -122,11 +124,26 @@ export default function VisitanteDialog({ visitante, onClose, onUpdate }: Visita
     window.open(`https://wa.me/55${telefone}?text=${mensagem}`, "_blank")
   }
 
+  const handleEdicaoCadastro = (visitanteAtualizado: Visitante) => {
+    onUpdate(visitanteAtualizado)
+    setEditandoCadastro(false)
+  }
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Detalhes do Visitante</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            Detalhes do Visitante
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setEditandoCadastro(true)}
+              className="h-8 w-8 p-0"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          </DialogTitle>
           <DialogDescription>Cadastrado em {formatarData(visitante.data_cadastro)}</DialogDescription>
         </DialogHeader>
 
@@ -274,6 +291,14 @@ export default function VisitanteDialog({ visitante, onClose, onUpdate }: Visita
           </div>
         </DialogFooter>
       </DialogContent>
+
+      {editandoCadastro && (
+        <NovoVisitanteDialog
+          visitanteParaEdicao={visitante}
+          onClose={() => setEditandoCadastro(false)}
+          onSave={handleEdicaoCadastro}
+        />
+      )}
     </Dialog>
   )
 }
