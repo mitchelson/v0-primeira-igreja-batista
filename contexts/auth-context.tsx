@@ -1,55 +1,87 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { createContext, useContext, useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import type React from "react";
+import { createContext, useContext, useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { AUTH_CONFIG } from "@/lib/constants";
 
 // Senha hardcoded para acesso às áreas protegidas
-const SENHA_ADMIN = "igreja123"
+const SENHA_ADMIN = AUTH_CONFIG.ADMIN_PASSWORD;
 
 type AuthContextType = {
-  isAuthenticated: boolean
-  login: (password: string) => boolean
-  logout: () => void
+  readonly isAuthenticated: boolean;
+  readonly login: (password: string) => boolean;
+  readonly logout: () => void;
+  readonly isLoading: boolean;
+};
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+interface AuthProviderProps {
+  readonly children: React.ReactNode;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const router = useRouter()
+export function AuthProvider({ children }: AuthProviderProps) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   // Verificar se o usuário já está autenticado ao carregar a página
   useEffect(() => {
-    const auth = localStorage.getItem("pib_auth")
-    if (auth === "true") {
-      setIsAuthenticated(true)
+    try {
+      const auth = localStorage.getItem(AUTH_CONFIG.STORAGE_KEY);
+      if (auth === "true") {
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      console.error("Erro ao verificar autenticação:", error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [])
+  }, []);
 
-  const login = (password: string) => {
+  const login = (password: string): boolean => {
     if (password === SENHA_ADMIN) {
-      setIsAuthenticated(true)
-      localStorage.setItem("pib_auth", "true")
-      return true
+      setIsAuthenticated(true);
+      try {
+        localStorage.setItem(AUTH_CONFIG.STORAGE_KEY, "true");
+      } catch (error) {
+        console.error("Erro ao salvar autenticação:", error);
+      }
+      return true;
     }
-    return false
-  }
+    return false;
+  };
 
   const logout = () => {
-    setIsAuthenticated(false)
-    localStorage.removeItem("pib_auth")
-    router.push("/")
-  }
+    setIsAuthenticated(false);
+    try {
+      localStorage.removeItem(AUTH_CONFIG.STORAGE_KEY);
+    } catch (error) {
+      console.error("Erro ao remover autenticação:", error);
+    }
+    router.push("/");
+  };
 
-  return <AuthContext.Provider value={{ isAuthenticated, login, logout }}>{children}</AuthContext.Provider>
+  const contextValue = useMemo(
+    () => ({
+      isAuthenticated,
+      login,
+      logout,
+      isLoading,
+    }),
+    [isAuthenticated, isLoading]
+  );
+
+  return (
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth deve ser usado dentro de um AuthProvider")
+    throw new Error("useAuth deve ser usado dentro de um AuthProvider");
   }
-  return context
+  return context;
 }

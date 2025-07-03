@@ -102,10 +102,12 @@ export default function AdminPage() {
             // Converter de dd/mm/yyyy para Date e comparar
             const [diaA, mesA, anoA] = a.split("/").map(Number);
             const [diaB, mesB, anoB] = b.split("/").map(Number);
-            return (
-              new Date(anoB, mesB - 1, diaB).getTime() -
-              new Date(anoA, mesA - 1, diaA).getTime()
-            );
+            if (anoA && anoB && mesA && mesB && diaA && diaB)
+              return (
+                new Date(anoB, mesB - 1, diaB).getTime() -
+                new Date(anoA, mesA - 1, diaA).getTime()
+              );
+            return 0;
           })
         );
       }
@@ -136,10 +138,12 @@ export default function AdminPage() {
         Object.keys(grupos).sort((a, b) => {
           const [diaA, mesA, anoA] = a.split("/").map(Number);
           const [diaB, mesB, anoB] = b.split("/").map(Number);
-          return (
-            new Date(anoB, mesB - 1, diaB).getTime() -
-            new Date(anoA, mesA - 1, diaA).getTime()
-          );
+          if (anoA && anoB && mesA && mesB && diaA && diaB)
+            return (
+              new Date(anoB, mesB - 1, diaB).getTime() -
+              new Date(anoA, mesA - 1, diaA).getTime()
+            );
+          return 0; // Se não puder comparar, retorna 0
         })
       );
     } else {
@@ -148,8 +152,7 @@ export default function AdminPage() {
         (v) =>
           v.nome.toLowerCase().includes(termo) ||
           v.celular.includes(termo) ||
-          (v.responsavel_nome &&
-            v.responsavel_nome.toLowerCase().includes(termo))
+          v.responsavel_nome?.toLowerCase().includes(termo)
       );
       setVisitantesFiltrados(filtrados);
 
@@ -168,10 +171,12 @@ export default function AdminPage() {
         Object.keys(grupos).sort((a, b) => {
           const [diaA, mesA, anoA] = a.split("/").map(Number);
           const [diaB, mesB, anoB] = b.split("/").map(Number);
-          return (
-            new Date(anoB, mesB - 1, diaB).getTime() -
-            new Date(anoA, mesA - 1, diaA).getTime()
-          );
+          if (anoA && anoB && mesA && mesB && diaA && diaB)
+            return (
+              new Date(anoB, mesB - 1, diaB).getTime() -
+              new Date(anoA, mesA - 1, diaA).getTime()
+            );
+          return 0; // Se não puder comparar, retorna 0
         })
       );
     }
@@ -181,7 +186,11 @@ export default function AdminPage() {
     setVisitantes((prev) =>
       prev.map((v) =>
         v.id === visitanteAtualizado.id
-          ? { ...visitanteAtualizado, responsavel_nome: v.responsavel_nome }
+          ? {
+              ...visitanteAtualizado,
+              responsavel_nome:
+                v.responsavel_nome !== undefined ? v.responsavel_nome : null,
+            }
           : v
       )
     );
@@ -226,11 +235,7 @@ export default function AdminPage() {
             />
           </div>
 
-          {carregando ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : visitantesFiltrados.length === 0 ? (
+          {visitantesFiltrados.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {termoBusca
                 ? "Nenhum visitante encontrado para esta busca."
@@ -252,13 +257,15 @@ export default function AdminPage() {
               {datasAgrupadas.map((data) => (
                 <TabsContent key={data} value={data} className="space-y-4">
                   {visitantesPorData[data]?.map((visitante) => (
-                    <div
+                    <button
                       key={visitante.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer"
+                      className="flex flex-row w-full items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer"
                       onClick={() => setVisitanteSelecionado(visitante)}
                     >
-                      <div>
-                        <h3 className="font-medium">{visitante.nome}</h3>
+                      <div className="flex flex-col text-left align-start justify-start">
+                        <h3 className="font-medium text-left">
+                          {visitante.nome}
+                        </h3>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-sm text-muted-foreground">
                           <span>{visitante.celular}</span>
                           {visitante.responsavel_nome && (
@@ -287,7 +294,7 @@ export default function AdminPage() {
                           </div>
                         )}
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </TabsContent>
               ))}

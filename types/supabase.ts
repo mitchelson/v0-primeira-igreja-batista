@@ -77,3 +77,34 @@ export type VisitanteUpdate = Database["public"]["Tables"]["visitantes"]["Update
 
 export type Responsavel = Database["public"]["Tables"]["responsaveis"]["Row"]
 export type ResponsavelInsert = Database["public"]["Tables"]["responsaveis"]["Insert"]
+export type ResponsavelUpdate = Database["public"]["Tables"]["responsaveis"]["Update"]
+
+// Tipos derivados mais específicos
+export type VisitanteComResponsavel = Visitante & {
+  responsavel_nome?: string | null
+}
+
+// Enum para campos específicos
+export const IntencaoEnum = {
+  MEMBRO_OUTRA_IGREJA: "Sou membro de outra igreja",
+  CONHECER_MELHOR: "Gostaria de conhecer melhor",
+  QUERO_SER_MEMBRO: "Quero ser membro"
+} as const
+
+export type IntencaoType = typeof IntencaoEnum[keyof typeof IntencaoEnum]
+
+export const SexoEnum = {
+  MASCULINO: "Masculino",
+  FEMININO: "Feminino"
+} as const
+
+export type SexoType = typeof SexoEnum[keyof typeof SexoEnum]
+
+// Hook personalizado para validação de tipos
+export function isValidIntencao(intencao: string): intencao is IntencaoType {
+  return Object.values(IntencaoEnum).includes(intencao as IntencaoType)
+}
+
+export function isValidSexo(sexo: string): sexo is SexoType {
+  return Object.values(SexoEnum).includes(sexo as SexoType)
+}

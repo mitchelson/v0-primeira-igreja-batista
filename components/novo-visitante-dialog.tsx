@@ -29,27 +29,61 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
 import { formatarTelefone } from "@/lib/utils";
-import type { Visitante, VisitanteInsert } from "@/types/supabase";
+import type {
+  Visitante,
+  VisitanteInsert,
+  IntencaoType,
+  SexoType,
+} from "@/types/supabase";
+import { IntencaoEnum, SexoEnum } from "@/types/supabase";
 
-// Definindo o schema sem transformações complexas
+// Constantes para validação e reutilização
+const INTENCAO_OPTIONS = Object.values(IntencaoEnum) as [
+  IntencaoType,
+  ...IntencaoType[]
+];
+const SEXO_OPTIONS = Object.values(SexoEnum) as [SexoType, ...SexoType[]];
+
+// Schema melhorado com validações mais específicas
 const formSchema = z.object({
-  nome: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
-  celular: z.string().min(14, { message: "Celular inválido" }).max(15),
-  cidade: z.string().optional(),
-  bairro: z.string().optional(),
-  idade: z.string().optional(),
-  pedidos_oracao: z.string().optional(),
-  intencao: z.enum(
-    [
-      "Sou membro de outra igreja",
-      "Gostaria de conhecer melhor",
-      "Quero ser membro",
-    ],
-    {
-      required_error: "Por favor selecione uma opção",
-    }
-  ),
-  sexo: z.enum(["Masculino", "Feminino"], {
+  nome: z
+    .string()
+    .min(3, { message: "Nome deve ter pelo menos 3 caracteres" })
+    .max(100, { message: "Nome deve ter no máximo 100 caracteres" })
+    .regex(/^[a-zA-ZÀ-ÿ\s]+$/, {
+      message: "Nome deve conter apenas letras e espaços",
+    }),
+  celular: z
+    .string()
+    .min(14, { message: "Celular inválido" })
+    .max(15, { message: "Celular inválido" })
+    .regex(/^\(\d{2}\) \d{4,5}-\d{4}$/, {
+      message: "Formato de celular inválido",
+    }),
+  cidade: z
+    .string()
+    .max(50, { message: "Cidade deve ter no máximo 50 caracteres" })
+    .optional(),
+  bairro: z
+    .string()
+    .max(50, { message: "Bairro deve ter no máximo 50 caracteres" })
+    .optional(),
+  idade: z
+    .string()
+    .optional()
+    .refine((val) => !val || (parseInt(val) >= 0 && parseInt(val) <= 120), {
+      message: "Idade deve estar entre 0 e 120 anos",
+    }),
+  pedidos_oracao: z
+    .string()
+    .max(500, {
+      message: "Pedidos de oração devem ter no máximo 500 caracteres",
+    })
+    .optional(),
+  intencao: z.enum(INTENCAO_OPTIONS, {
+    required_error: "Por favor selecione uma opção",
+  }),
+  sexo: z.enum(SEXO_OPTIONS, {
     required_error: "Por favor selecione uma opção",
   }),
 });
@@ -57,10 +91,19 @@ const formSchema = z.object({
 // Tipo inferido do schema
 type FormValues = z.infer<typeof formSchema>;
 
+// Props do componente com tipagem mais específica
 interface NovoVisitanteDialogProps {
-  onClose: () => void;
-  onSave: (visitante: Visitante) => void;
-  visitanteParaEdicao?: Visitante & { responsavel_nome?: string | null };
+  readonly onClose: () => void;
+  readonly onSave: (visitante: Visitante) => void;
+  readonly visitanteParaEdicao?: Visitante & {
+    responsavel_nome?: string | null;
+  };
+}
+
+// Tipo para tratamento de erros
+interface FormError {
+  message: string;
+  field?: keyof FormValues;
 }
 
 export default function NovoVisitanteDialog({
@@ -74,90 +117,104 @@ export default function NovoVisitanteDialog({
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      nome: visitanteParaEdicao?.nome || "",
-      celular: visitanteParaEdicao?.celular || "",
-      cidade: visitanteParaEdicao?.cidade || "",
-      bairro: visitanteParaEdicao?.bairro || "",
+      nome: visitanteParaEdicao?.nome ?? "",
+      celular: visitanteParaEdicao?.celular ?? "",
+      cidade: visitanteParaEdicao?.cidade ?? "",
+      bairro: visitanteParaEdicao?.bairro ?? "",
       idade: visitanteParaEdicao?.idade
         ? String(visitanteParaEdicao.idade)
         : "",
-      pedidos_oracao: visitanteParaEdicao?.pedidos_oracao || "",
+      pedidos_oracao: visitanteParaEdicao?.pedidos_oracao ?? "",
       intencao:
-        (visitanteParaEdicao?.intencao as
-          | "Sou membro de outra igreja"
-          | "Gostaria de conhecer melhor"
-          | "Quero ser membro") || "Gostaria de conhecer melhor",
-      sexo:
-        (visitanteParaEdicao?.sexo as "Masculino" | "Feminino") || "Masculino",
+        (visitanteParaEdicao?.intencao as IntencaoType) ??
+        IntencaoEnum.CONHECER_MELHOR,
+      sexo: (visitanteParaEdicao?.sexo as SexoType) ?? SexoEnum.MASCULINO,
     },
   });
+
+  // Funções auxiliares para reduzir complexidade
+  const prepareVisitanteData = (values: FormValues): VisitanteInsert => ({
+    nome: values.nome,
+    celular: values.celular,
+    cidade: values.cidade ?? null,
+    bairro: values.bairro ?? null,
+    idade: values.idade ? Number(values.idade) : null,
+    pedidos_oracao: values.pedidos_oracao ?? null,
+    intencao: values.intencao,
+    mensagem_enviada: false,
+    sexo: values.sexo,
+  });
+
+  const prepareUpdateData = (values: FormValues) => ({
+    nome: values.nome,
+    celular: values.celular,
+    cidade: values.cidade ?? null,
+    bairro: values.bairro ?? null,
+    idade: values.idade ? Number(values.idade) : null,
+    pedidos_oracao: values.pedidos_oracao ?? null,
+    intencao: values.intencao,
+    sexo: values.sexo,
+  });
+
+  const handleSuccess = (data: Visitante[], isEditing: boolean) => {
+    const visitante = data?.[0];
+    if (visitante) {
+      onSave(visitante);
+      toast({
+        title: isEditing ? "Visitante atualizado" : "Visitante cadastrado",
+        description: `O visitante foi ${
+          isEditing ? "atualizado" : "cadastrado"
+        } com sucesso.`,
+      });
+    }
+  };
+
+  const handleError = (error: unknown, isEditing: boolean) => {
+    console.error(`Erro ao ${isEditing ? "atualizar" : "cadastrar"}:`, error);
+    toast({
+      variant: "destructive",
+      title: `Erro ao ${isEditing ? "atualizar" : "cadastrar"}`,
+      description: "Ocorreu um erro ao salvar o visitante.",
+    });
+  };
+
+  async function updateVisitante(values: FormValues) {
+    if (!visitanteParaEdicao) return;
+
+    const { data, error } = await supabase
+      .from("visitantes")
+      .update(prepareUpdateData(values))
+      .eq("id", visitanteParaEdicao.id)
+      .select();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async function createVisitante(values: FormValues) {
+    const visitanteData = prepareVisitanteData(values);
+
+    const { data, error } = await supabase
+      .from("visitantes")
+      .insert(visitanteData)
+      .select();
+
+    if (error) throw error;
+    return data;
+  }
 
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     try {
-      if (isEditing && visitanteParaEdicao) {
-        // Atualizar visitante existente
-        const { data, error } = await supabase
-          .from("visitantes")
-          .update({
-            nome: values.nome,
-            celular: values.celular,
-            cidade: values.cidade || null,
-            bairro: values.bairro || null,
-            idade: values.idade ? Number(values.idade) : null,
-            pedidos_oracao: values.pedidos_oracao || null,
-            intencao: values.intencao,
-            sexo: values.sexo,
-          })
-          .eq("id", visitanteParaEdicao.id)
-          .select();
+      const data = isEditing
+        ? await updateVisitante(values)
+        : await createVisitante(values);
 
-        if (error) throw error;
-
-        if (data && data[0]) {
-          onSave(data[0]);
-          toast({
-            title: "Visitante atualizado",
-            description: "O visitante foi atualizado com sucesso.",
-          });
-        }
-      } else {
-        // Preparar dados para inserção
-        const visitanteData: VisitanteInsert = {
-          nome: values.nome,
-          celular: values.celular,
-          cidade: values.cidade || null,
-          bairro: values.bairro || null,
-          idade: values.idade ? Number(values.idade) : null,
-          pedidos_oracao: values.pedidos_oracao || null,
-          intencao: values.intencao,
-          mensagem_enviada: false,
-          sexo: values.sexo,
-        };
-
-        // Inserir no Supabase
-        const { data, error } = await supabase
-          .from("visitantes")
-          .insert(visitanteData)
-          .select();
-
-        if (error) throw error;
-
-        if (data && data[0]) {
-          onSave(data[0]);
-          toast({
-            title: "Visitante cadastrado",
-            description: "O visitante foi cadastrado com sucesso.",
-          });
-        }
+      if (data) {
+        handleSuccess(data, isEditing);
       }
     } catch (error) {
-      console.error(`Erro ao ${isEditing ? "atualizar" : "cadastrar"}:`, error);
-      toast({
-        variant: "destructive",
-        title: `Erro ao ${isEditing ? "atualizar" : "cadastrar"}`,
-        description: "Ocorreu um erro ao salvar o visitante.",
-      });
+      handleError(error, isEditing);
     } finally {
       setIsSubmitting(false);
     }
@@ -361,11 +418,11 @@ export default function NovoVisitanteDialog({
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting
-                  ? "Salvando..."
-                  : isEditing
-                  ? "Atualizar"
-                  : "Salvar"}
+                {(() => {
+                  if (isSubmitting) return "Salvando...";
+                  if (isEditing) return "Atualizar";
+                  return "Salvar";
+                })()}
               </Button>
             </DialogFooter>
           </form>
