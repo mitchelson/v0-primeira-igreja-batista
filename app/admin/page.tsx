@@ -20,9 +20,11 @@ import {
   User,
   AlertCircle,
   MessageSquare,
+  FileText,
 } from "lucide-react";
 import VisitanteDialog from "@/components/visitante-dialog";
 import NovoVisitanteDialog from "@/components/novo-visitante-dialog";
+import RelatorioMensalDialog from "@/components/relatorio-mensal-dialog";
 import { useAuth } from "@/contexts/auth-context";
 import LoginForm from "@/components/login-form";
 import type { Visitante } from "@/types/supabase";
@@ -43,6 +45,7 @@ export default function AdminPage() {
     useState<VisitanteComResponsavel | null>(null);
   const [novoVisitanteDialogAberto, setNovoVisitanteDialogAberto] =
     useState(false);
+  const [relatorioDialogAberto, setRelatorioDialogAberto] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [datasAgrupadas, setDatasAgrupadas] = useState<string[]>([]);
   const [visitantesPorData, setVisitantesPorData] = useState<
@@ -219,9 +222,17 @@ export default function AdminPage() {
                 Gerencie os visitantes cadastrados
               </CardDescription>
             </div>
-            <Button onClick={() => setNovoVisitanteDialogAberto(true)}>
-              <Plus className="mr-2 h-4 w-4" /> Novo Visitante
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setRelatorioDialogAberto(true)}
+                variant="outline"
+              >
+                <FileText className="mr-2 h-4 w-4" /> Relatório Mensal
+              </Button>
+              <Button onClick={() => setNovoVisitanteDialogAberto(true)}>
+                <Plus className="mr-2 h-4 w-4" /> Novo Visitante
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -317,6 +328,12 @@ export default function AdminPage() {
           onSave={handleNovoVisitante}
         />
       )}
+
+      <RelatorioMensalDialog
+        isOpen={relatorioDialogAberto}
+        onClose={() => setRelatorioDialogAberto(false)}
+        visitantes={visitantes}
+      />
     </div>
   );
 }

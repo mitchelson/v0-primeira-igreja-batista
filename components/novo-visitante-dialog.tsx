@@ -100,12 +100,6 @@ interface NovoVisitanteDialogProps {
   };
 }
 
-// Tipo para tratamento de erros
-interface FormError {
-  message: string;
-  field?: keyof FormValues;
-}
-
 export default function NovoVisitanteDialog({
   onClose,
   onSave,
