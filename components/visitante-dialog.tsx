@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,78 +9,99 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { supabase } from "@/lib/supabase"
-import { formatarData, gerarMensagemWhatsApp } from "@/lib/utils"
-import { toast } from "@/components/ui/use-toast"
-import { MessageSquare, Edit } from "lucide-react"
-import type { Visitante, Responsavel } from "@/types/supabase"
-import NovoVisitanteDialog from "./novo-visitante-dialog"
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { supabase } from "@/lib/supabase";
+import { formatarData, gerarMensagemWhatsApp } from "@/lib/utils";
+import { toast } from "@/components/ui/use-toast";
+import { MessageSquare, Edit } from "lucide-react";
+import type { Visitante, Responsavel } from "@/types/supabase";
+import NovoVisitanteDialog from "./novo-visitante-dialog";
 
 interface VisitanteDialogProps {
-  visitante: Visitante & { responsavel_nome?: string | null }
-  onClose: () => void
-  onUpdate: (visitante: Visitante) => void
+  visitante: Visitante & { responsavel_nome?: string | null };
+  onClose: () => void;
+  onUpdate: (visitante: Visitante) => void;
 }
 
-export default function VisitanteDialog({ visitante, onClose, onUpdate }: VisitanteDialogProps) {
-  const [responsaveis, setResponsaveis] = useState<Responsavel[]>([])
-  const [responsavelSelecionado, setResponsavelSelecionado] = useState<string | null>(visitante.responsavel_id || null)
-  const [nomeResponsavel, setNomeResponsavel] = useState<string>(visitante.responsavel_nome || "")
-  const [mensagemEnviada, setMensagemEnviada] = useState<boolean>(visitante.mensagem_enviada)
-  const [semWhatsapp, setSemWhatsapp] = useState<boolean>(visitante.sem_whatsapp || false)
-  const [salvando, setSalvando] = useState(false)
-  const [carregandoResponsaveis, setCarregandoResponsaveis] = useState(true)
-  const [editandoCadastro, setEditandoCadastro] = useState(false)
+export default function VisitanteDialog({
+  visitante,
+  onClose,
+  onUpdate,
+}: VisitanteDialogProps) {
+  const [responsaveis, setResponsaveis] = useState<Responsavel[]>([]);
+  const [responsavelSelecionado, setResponsavelSelecionado] = useState<
+    string | null
+  >(visitante.responsavel_id || null);
+  const [nomeResponsavel, setNomeResponsavel] = useState<string>(
+    visitante.responsavel_nome || ""
+  );
+  const [mensagemEnviada, setMensagemEnviada] = useState<boolean>(
+    visitante.mensagem_enviada
+  );
+  const [semWhatsapp, setSemWhatsapp] = useState<boolean>(
+    visitante.sem_whatsapp || false
+  );
+  const [salvando, setSalvando] = useState(false);
+  const [carregandoResponsaveis, setCarregandoResponsaveis] = useState(true);
+  const [editandoCadastro, setEditandoCadastro] = useState(false);
 
   useEffect(() => {
     const carregarResponsaveis = async () => {
-      setCarregandoResponsaveis(true)
+      setCarregandoResponsaveis(true);
       try {
-        console.log("Carregando responsáveis...")
-        const { data, error } = await supabase.from("responsaveis").select("*").order("nome")
+        console.log("Carregando responsáveis...");
+        const { data, error } = await supabase
+          .from("responsaveis")
+          .select("*")
+          .order("nome");
 
         if (error) {
-          console.error("Erro ao carregar responsáveis:", error)
-          throw error
+          console.error("Erro ao carregar responsáveis:", error);
+          throw error;
         }
 
-        console.log("Responsáveis carregados:", data)
-        if (data) setResponsaveis(data)
+        console.log("Responsáveis carregados:", data);
+        if (data) setResponsaveis(data);
       } catch (error) {
-        console.error("Erro ao carregar responsáveis:", error)
+        console.error("Erro ao carregar responsáveis:", error);
       } finally {
-        setCarregandoResponsaveis(false)
+        setCarregandoResponsaveis(false);
       }
-    }
+    };
 
-    carregarResponsaveis()
-  }, [])
+    carregarResponsaveis();
+  }, []);
 
   // Atualizar o nome do responsável quando o responsável selecionado mudar
   useEffect(() => {
     if (responsavelSelecionado) {
-      const resp = responsaveis.find((r) => r.id === responsavelSelecionado)
+      const resp = responsaveis.find((r) => r.id === responsavelSelecionado);
       if (resp) {
-        setNomeResponsavel(resp.nome)
+        setNomeResponsavel(resp.nome);
       }
     } else {
-      setNomeResponsavel("")
+      setNomeResponsavel("");
     }
-  }, [responsavelSelecionado, responsaveis])
+  }, [responsavelSelecionado, responsaveis]);
 
   // Atualizar o estado de mensagem enviada quando o checkbox "sem WhatsApp" for marcado
   useEffect(() => {
     if (semWhatsapp) {
-      setMensagemEnviada(true) // Se não tem WhatsApp, considera a mensagem como enviada
+      setMensagemEnviada(true); // Se não tem WhatsApp, considera a mensagem como enviada
     }
-  }, [semWhatsapp])
+  }, [semWhatsapp]);
 
   const handleSalvar = async () => {
-    setSalvando(true)
+    setSalvando(true);
     try {
       const { error } = await supabase
         .from("visitantes")
@@ -89,9 +110,9 @@ export default function VisitanteDialog({ visitante, onClose, onUpdate }: Visita
           mensagem_enviada: mensagemEnviada || semWhatsapp, // Se não tem WhatsApp, considera a mensagem como enviada
           sem_whatsapp: semWhatsapp,
         })
-        .eq("id", visitante.id)
+        .eq("id", visitante.id);
 
-      if (error) throw error
+      if (error) throw error;
 
       // Atualizar o objeto visitante com os novos valores
       const visitanteAtualizado: Visitante = {
@@ -99,35 +120,35 @@ export default function VisitanteDialog({ visitante, onClose, onUpdate }: Visita
         responsavel_id: responsavelSelecionado,
         mensagem_enviada: mensagemEnviada || semWhatsapp,
         sem_whatsapp: semWhatsapp,
-      }
+      };
 
-      onUpdate(visitanteAtualizado)
+      onUpdate(visitanteAtualizado);
       toast({
         title: "Visitante atualizado",
         description: "As informações foram salvas com sucesso.",
-      })
+      });
     } catch (error) {
-      console.error("Erro ao atualizar visitante:", error)
+      console.error("Erro ao atualizar visitante:", error);
       toast({
         variant: "destructive",
         title: "Erro ao salvar",
         description: "Ocorreu um erro ao atualizar o visitante.",
-      })
+      });
     } finally {
-      setSalvando(false)
+      setSalvando(false);
     }
-  }
+  };
 
   const handleEnviarWhatsApp = () => {
-    const mensagem = gerarMensagemWhatsApp(visitante, nomeResponsavel)
-    const telefone = visitante.celular.replace(/\D/g, "")
-    window.open(`https://wa.me/55${telefone}?text=${mensagem}`, "_blank")
-  }
+    const mensagem = gerarMensagemWhatsApp(visitante, nomeResponsavel);
+    const telefone = visitante.celular.replace(/\D/g, "");
+    window.open(`https://wa.me/55${telefone}?text=${mensagem}`, "_blank");
+  };
 
   const handleEdicaoCadastro = (visitanteAtualizado: Visitante) => {
-    onUpdate(visitanteAtualizado)
-    setEditandoCadastro(false)
-  }
+    onUpdate(visitanteAtualizado);
+    setEditandoCadastro(false);
+  };
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -144,7 +165,9 @@ export default function VisitanteDialog({ visitante, onClose, onUpdate }: Visita
               <Edit className="h-4 w-4" />
             </Button>
           </DialogTitle>
-          <DialogDescription>Cadastrado em {formatarData(visitante.data_cadastro)}</DialogDescription>
+          <DialogDescription>
+            Cadastrado em {formatarData(visitante.data_cadastro)}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
@@ -155,7 +178,9 @@ export default function VisitanteDialog({ visitante, onClose, onUpdate }: Visita
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Sexo</Label>
-            <div className="col-span-3">{visitante.sexo || "Não informado"}</div>
+            <div className="col-span-3">
+              {visitante.sexo || "Não informado"}
+            </div>
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
@@ -192,7 +217,9 @@ export default function VisitanteDialog({ visitante, onClose, onUpdate }: Visita
           {visitante.pedidos_oracao && (
             <div className="grid grid-cols-4 items-start gap-4">
               <Label className="text-right pt-2">Pedidos de oração</Label>
-              <div className="col-span-3 bg-muted p-2 rounded-md">{visitante.pedidos_oracao}</div>
+              <div className="col-span-3 bg-muted p-2 rounded-md">
+                {visitante.pedidos_oracao}
+              </div>
             </div>
           )}
 
@@ -204,12 +231,16 @@ export default function VisitanteDialog({ visitante, onClose, onUpdate }: Visita
               {carregandoResponsaveis ? (
                 <div className="flex items-center space-x-2">
                   <div className="animate-spin h-4 w-4 border-b-2 border-primary rounded-full"></div>
-                  <span className="text-sm text-muted-foreground">Carregando responsáveis...</span>
+                  <span className="text-sm text-muted-foreground">
+                    Carregando responsáveis...
+                  </span>
                 </div>
               ) : (
                 <Select
                   value={responsavelSelecionado || "none"}
-                  onValueChange={(value) => setResponsavelSelecionado(value === "none" ? null : value)}
+                  onValueChange={(value) =>
+                    setResponsavelSelecionado(value === "none" ? null : value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um responsável" />
@@ -242,13 +273,15 @@ export default function VisitanteDialog({ visitante, onClose, onUpdate }: Visita
                 id="sem-whatsapp"
                 checked={semWhatsapp}
                 onCheckedChange={(checked) => {
-                  setSemWhatsapp(checked)
+                  setSemWhatsapp(checked);
                   if (checked) {
-                    setMensagemEnviada(true) // Se não tem WhatsApp, considera a mensagem como enviada
+                    setMensagemEnviada(true); // Se não tem WhatsApp, considera a mensagem como enviada
                   }
                 }}
               />
-              <Label htmlFor="sem-whatsapp">{semWhatsapp ? "Sim" : "Não"}</Label>
+              <Label htmlFor="sem-whatsapp">
+                {semWhatsapp ? "Sim" : "Não"}
+              </Label>
             </div>
           </div>
 
@@ -263,9 +296,13 @@ export default function VisitanteDialog({ visitante, onClose, onUpdate }: Visita
                 onCheckedChange={setMensagemEnviada}
                 disabled={semWhatsapp} // Desabilita se não tem WhatsApp
               />
-              <Label htmlFor="mensagem-enviada">{mensagemEnviada ? "Sim" : "Não"}</Label>
+              <Label htmlFor="mensagem-enviada">
+                {mensagemEnviada ? "Sim" : "Não"}
+              </Label>
               {semWhatsapp && (
-                <span className="text-xs text-muted-foreground">(Automático para visitantes sem WhatsApp)</span>
+                <span className="text-xs text-muted-foreground">
+                  (Automático para visitantes sem WhatsApp)
+                </span>
               )}
             </div>
           </div>
@@ -285,7 +322,11 @@ export default function VisitanteDialog({ visitante, onClose, onUpdate }: Visita
             <Button variant="outline" onClick={onClose} className="flex-1">
               Cancelar
             </Button>
-            <Button onClick={handleSalvar} disabled={salvando} className="flex-1">
+            <Button
+              onClick={handleSalvar}
+              disabled={salvando}
+              className="flex-1"
+            >
               {salvando ? "Salvando..." : "Salvar"}
             </Button>
           </div>
@@ -300,5 +341,5 @@ export default function VisitanteDialog({ visitante, onClose, onUpdate }: Visita
         />
       )}
     </Dialog>
-  )
+  );
 }
