@@ -9,6 +9,7 @@ export interface Database {
           nome: string
           celular: string
           cidade: string | null
+          civil_status: string | null
           bairro: string | null
           idade: number | null
           pedidos_oracao: string | null
@@ -24,6 +25,7 @@ export interface Database {
           nome: string
           celular: string
           cidade?: string | null
+          civil_status?: string | null
           bairro?: string | null
           idade?: number | null
           pedidos_oracao?: string | null
@@ -39,6 +41,7 @@ export interface Database {
           nome?: string
           celular?: string
           cidade?: string | null
+          civil_status?: string | null
           bairro?: string | null
           idade?: number | null
           pedidos_oracao?: string | null
@@ -98,7 +101,15 @@ export const SexoEnum = {
   FEMININO: "Feminino"
 } as const
 
+export const CivilStatusEnum = {
+  SOLTEIRO: "solteiro",
+  CASADO: "casado",
+  DIVORCIADO: "divorciado",
+  VIUVO: "viúvo"
+} as const
+
 export type SexoType = typeof SexoEnum[keyof typeof SexoEnum]
+export type CivilStatusType = typeof CivilStatusEnum[keyof typeof CivilStatusEnum]
 
 // Hook personalizado para validação de tipos
 export function isValidIntencao(intencao: string): intencao is IntencaoType {

@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -34,8 +34,16 @@ import type {
   VisitanteInsert,
   IntencaoType,
   SexoType,
+  CivilStatusType,
 } from "@/types/supabase";
-import { IntencaoEnum, SexoEnum } from "@/types/supabase";
+import { IntencaoEnum, SexoEnum, CivilStatusEnum } from "@/types/supabase";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "./ui/select";
 
 // Constantes para validação e reutilização
 const INTENCAO_OPTIONS = Object.values(IntencaoEnum) as [
@@ -43,6 +51,10 @@ const INTENCAO_OPTIONS = Object.values(IntencaoEnum) as [
   ...IntencaoType[]
 ];
 const SEXO_OPTIONS = Object.values(SexoEnum) as [SexoType, ...SexoType[]];
+const CIVIL_STATUS_OPTIONS = Object.values(CivilStatusEnum) as [
+  CivilStatusType,
+  ...CivilStatusType[]
+];
 
 // Schema melhorado com validações mais específicas
 const formSchema = z.object({
@@ -60,6 +72,9 @@ const formSchema = z.object({
     .regex(/^\(\d{2}\) \d{4,5}-\d{4}$/, {
       message: "Formato de celular inválido",
     }),
+  civil_status: z.enum(CIVIL_STATUS_OPTIONS, {
+    required_error: "Por favor selecione uma opção",
+  }),
   cidade: z
     .string()
     .max(50, { message: "Cidade deve ter no máximo 50 caracteres" })
@@ -113,6 +128,9 @@ export default function NovoVisitanteDialog({
     defaultValues: {
       nome: visitanteParaEdicao?.nome ?? "",
       celular: visitanteParaEdicao?.celular ?? "",
+      civil_status:
+        (visitanteParaEdicao?.civil_status as CivilStatusType) ??
+        CivilStatusEnum.SOLTEIRO,
       cidade: visitanteParaEdicao?.cidade ?? "",
       bairro: visitanteParaEdicao?.bairro ?? "",
       idade: visitanteParaEdicao?.idade
@@ -132,6 +150,7 @@ export default function NovoVisitanteDialog({
     celular: values.celular,
     cidade: values.cidade ?? null,
     bairro: values.bairro ?? null,
+    civil_status: values.civil_status,
     idade: values.idade ? Number(values.idade) : null,
     pedidos_oracao: values.pedidos_oracao ?? null,
     intencao: values.intencao,
@@ -145,6 +164,7 @@ export default function NovoVisitanteDialog({
     cidade: values.cidade ?? null,
     bairro: values.bairro ?? null,
     idade: values.idade ? Number(values.idade) : null,
+    civil_status: values.civil_status,
     pedidos_oracao: values.pedidos_oracao ?? null,
     intencao: values.intencao,
     sexo: values.sexo,
@@ -187,7 +207,7 @@ export default function NovoVisitanteDialog({
 
   async function createVisitante(values: FormValues) {
     const visitanteData = prepareVisitanteData(values);
-
+    console.log("visitanteData: ", visitanteData);
     const { data, error } = await supabase
       .from("visitantes")
       .insert(visitanteData)
@@ -218,6 +238,10 @@ export default function NovoVisitanteDialog({
     const formattedValue = formatarTelefone(e.target.value);
     form.setValue("celular", formattedValue);
   };
+
+  useEffect(() => {
+    console.log("CivilStatusEnum: ", form.getValues("civil_status"));
+  }, [form.watch("civil_status")]);
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -298,23 +322,59 @@ export default function NovoVisitanteDialog({
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="celular"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Celular*</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="(99) 99999-9999"
-                      {...field}
-                      onChange={handlePhoneChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="celular"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Celular*</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="(99) 99999-9999"
+                        {...field}
+                        onChange={handlePhoneChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="civil_status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estado Civil*</FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecione o estado civil" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={CivilStatusEnum.SOLTEIRO}>
+                            Solteiro(a)
+                          </SelectItem>
+                          <SelectItem value={CivilStatusEnum.CASADO}>
+                            Casado(a)
+                          </SelectItem>
+                          <SelectItem value={CivilStatusEnum.DIVORCIADO}>
+                            Divorciado(a)
+                          </SelectItem>
+                          <SelectItem value={CivilStatusEnum.VIUVO}>
+                            Viúvo(a)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField

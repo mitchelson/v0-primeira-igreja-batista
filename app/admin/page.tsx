@@ -10,7 +10,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
 import { formatarData } from "@/lib/utils";
 import {
@@ -46,6 +52,7 @@ export default function AdminPage() {
   const [novoVisitanteDialogAberto, setNovoVisitanteDialogAberto] =
     useState(false);
   const [relatorioDialogAberto, setRelatorioDialogAberto] = useState(false);
+  const [dataSelecionada, setDataSelecionada] = useState<string>("");
   const [carregando, setCarregando] = useState(true);
   const [datasAgrupadas, setDatasAgrupadas] = useState<string[]>([]);
   const [visitantesPorData, setVisitantesPorData] = useState<
@@ -58,6 +65,12 @@ export default function AdminPage() {
       carregarVisitantes();
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (datasAgrupadas.length > 0 && !dataSelecionada) {
+      setDataSelecionada(datasAgrupadas[0]);
+    }
+  }, [datasAgrupadas, dataSelecionada]);
 
   const carregarVisitantes = async () => {
     setCarregando(true);
@@ -102,7 +115,6 @@ export default function AdminPage() {
         setVisitantesPorData(grupos);
         setDatasAgrupadas(
           Object.keys(grupos).sort((a, b) => {
-            // Converter de dd/mm/yyyy para Date e comparar
             const [diaA, mesA, anoA] = a.split("/").map(Number);
             const [diaB, mesB, anoB] = b.split("/").map(Number);
             if (anoA && anoB && mesA && mesB && diaA && diaB)
@@ -253,21 +265,38 @@ export default function AdminPage() {
                 : "Nenhum visitante cadastrado."}
             </div>
           ) : (
-            <Tabs
-              defaultValue={datasAgrupadas[0] || "todos"}
-              className="overflow-hidden"
-            >
-              <TabsList className="h-16 mb-4 flex flex-row overflow-x-scroll ">
-                {datasAgrupadas.map((data) => (
-                  <TabsTrigger key={data} value={data}>
-                    {data}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+            <div className="space-y-4">
+              {/* Select para escolher a data */}
+              {datasAgrupadas.length > 1 && (
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="select-data"
+                    className="text-sm font-medium whitespace-nowrap"
+                  >
+                    Data:
+                  </label>
+                  <Select
+                    value={dataSelecionada}
+                    onValueChange={setDataSelecionada}
+                  >
+                    <SelectTrigger id="select-data" className="w-40">
+                      <SelectValue placeholder="Selecione uma data" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {datasAgrupadas.map((data) => (
+                        <SelectItem key={data} value={data}>
+                          {data}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-              {datasAgrupadas.map((data) => (
-                <TabsContent key={data} value={data} className="space-y-4">
-                  {visitantesPorData[data]?.map((visitante) => (
+              {/* Lista de visitantes da data selecionada */}
+              <div className="space-y-4">
+                {dataSelecionada &&
+                  visitantesPorData[dataSelecionada]?.map((visitante) => (
                     <button
                       key={visitante.id}
                       className="flex flex-row w-full items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer"
@@ -307,9 +336,8 @@ export default function AdminPage() {
                       </div>
                     </button>
                   ))}
-                </TabsContent>
-              ))}
-            </Tabs>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

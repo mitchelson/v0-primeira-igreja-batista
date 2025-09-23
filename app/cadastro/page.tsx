@@ -197,24 +197,44 @@ export default function CadastroPage() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="celular"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Celular*</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="(99) 99999-9999"
-                      {...field}
-                      onChange={handlePhoneChange}
-                    />
-                  </FormControl>
-                  <FormDescription>Formato: (99) 99999-9999</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="celular"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Celular*</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="(99) 99999-9999"
+                        {...field}
+                        onChange={handlePhoneChange}
+                      />
+                    </FormControl>
+                    <FormDescription>Formato: (99) 99999-9999</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="celular"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Celular*</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="(99) 99999-9999"
+                        {...field}
+                        onChange={handlePhoneChange}
+                      />
+                    </FormControl>
+                    <FormDescription>Formato: (99) 99999-9999</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField

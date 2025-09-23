@@ -188,6 +188,13 @@ export default function VisitanteDialog({
             <div className="col-span-3">{visitante.celular}</div>
           </div>
 
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right">Status Civil</Label>
+            <div className="col-span-3">
+              {visitante.civil_status || "Não informado"}
+            </div>
+          </div>
+
           {visitante.cidade && (
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">Cidade</Label>
