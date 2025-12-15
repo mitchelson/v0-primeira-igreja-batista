@@ -1,0 +1,9 @@
+body {
+  font-family: 'Arial', sans-serif;
+}
+
+.hero-section {
+  background-size: cover;
+  background-position: center;
+  color: white;
+}
