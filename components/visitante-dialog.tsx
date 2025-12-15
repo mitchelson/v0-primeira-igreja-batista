@@ -152,7 +152,7 @@ export default function VisitanteDialog({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[100vh] md:max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             Detalhes do Visitante
@@ -175,52 +175,44 @@ export default function VisitanteDialog({
             <Label className="text-right">Nome</Label>
             <div className="col-span-3 font-medium">{visitante.nome}</div>
           </div>
-
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Sexo</Label>
             <div className="col-span-3">
               {visitante.sexo || "Não informado"}
             </div>
           </div>
-
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Celular</Label>
             <div className="col-span-3">{visitante.celular}</div>
           </div>
-
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Status Civil</Label>
             <div className="col-span-3">
               {visitante.civil_status || "Não informado"}
             </div>
           </div>
-
           {visitante.cidade && (
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">Cidade</Label>
               <div className="col-span-3">{visitante.cidade}</div>
             </div>
           )}
-
           {visitante.bairro && (
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">Bairro</Label>
               <div className="col-span-3">{visitante.bairro}</div>
             </div>
           )}
-
           {visitante.idade && (
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">Idade</Label>
               <div className="col-span-3">{visitante.idade} anos</div>
             </div>
           )}
-
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Intenção</Label>
             <div className="col-span-3">{visitante.intencao}</div>
           </div>
-
           {visitante.pedidos_oracao && (
             <div className="grid grid-cols-4 items-start gap-4">
               <Label className="text-right pt-2">Pedidos de oração</Label>
@@ -229,7 +221,6 @@ export default function VisitanteDialog({
               </div>
             </div>
           )}
-
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="responsavel" className="text-right">
               Responsável
@@ -270,7 +261,6 @@ export default function VisitanteDialog({
               )}
             </div>
           </div>
-
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="sem-whatsapp" className="text-right">
               Sem WhatsApp
@@ -282,7 +272,7 @@ export default function VisitanteDialog({
                 onCheckedChange={(checked) => {
                   setSemWhatsapp(checked);
                   if (checked) {
-                    setMensagemEnviada(true); // Se não tem WhatsApp, considera a mensagem como enviada
+                    setMensagemEnviada(true);
                   }
                 }}
               />
@@ -291,7 +281,6 @@ export default function VisitanteDialog({
               </Label>
             </div>
           </div>
-
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="mensagem-enviada" className="text-right">
               Mensagem enviada
@@ -301,7 +290,7 @@ export default function VisitanteDialog({
                 id="mensagem-enviada"
                 checked={mensagemEnviada}
                 onCheckedChange={setMensagemEnviada}
-                disabled={semWhatsapp} // Desabilita se não tem WhatsApp
+                disabled={semWhatsapp}
               />
               <Label htmlFor="mensagem-enviada">
                 {mensagemEnviada ? "Sim" : "Não"}
@@ -338,15 +327,14 @@ export default function VisitanteDialog({
             </Button>
           </div>
         </DialogFooter>
+        {editandoCadastro && (
+          <NovoVisitanteDialog
+            visitanteParaEdicao={visitante}
+            onClose={() => setEditandoCadastro(false)}
+            onSave={handleEdicaoCadastro}
+          />
+        )}
       </DialogContent>
-
-      {editandoCadastro && (
-        <NovoVisitanteDialog
-          visitanteParaEdicao={visitante}
-          onClose={() => setEditandoCadastro(false)}
-          onSave={handleEdicaoCadastro}
-        />
-      )}
     </Dialog>
   );
 }
