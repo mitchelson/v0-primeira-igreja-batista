@@ -66,8 +66,8 @@ Sou ${nomeResp} da Primeira Igreja Batista de Roraima.
 Ficamos muito felizes e honrados em ter você compartilhando no culto conosco, sinta-se abraçad${pronome} e seja sempre bem-vind${pronome}!!`
   // mensagem de recesso 
   return `${mensagemBase}
-Desejamos a você e sua família um abençoado Ano Novo, repleto de paz, saúde e realizações.
-Agradecemos sua presença conosco e esperamos revê-lo em nossos próximos encontros após o recesso.
+Tenha uma semana abençoada e cheia da presença de Jesus!
+Agradecemos sua presença conosco e esperamos revê-lo em nossos próximos encontros e após o recesso nas nossas células.
 
 Que Deus continue guiando seus passos e abençoando sua vida.
 Grande abraço!`
