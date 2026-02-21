@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -9,31 +9,25 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "@/components/ui/use-toast";
-import {
-  FileText,
-  Download,
-  Users,
-  MessageSquare,
-  TrendingUp,
-} from "lucide-react";
-import { useRelatorios } from "@/hooks/use-relatorios";
-import { gerarRelatorioPDF } from "@/lib/pdf-generator";
+} from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { toast } from "@/components/ui/use-toast"
+import { FileText, Users, MessageSquare, TrendingUp } from "lucide-react"
+import { useRelatorios } from "@/hooks/use-relatorios"
+import { gerarRelatorioPDF } from "@/lib/pdf-generator"
 import type {
   RelatorioMensalDialogProps,
   PeriodoRelatorio,
-} from "@/types/relatorio";
+} from "@/types/relatorio"
 
 export default function RelatorioMensalDialog({
   isOpen,
@@ -43,8 +37,7 @@ export default function RelatorioMensalDialog({
   const [periodo, setPeriodo] = useState<PeriodoRelatorio>({
     mes: new Date().getMonth() + 1,
     ano: new Date().getFullYear(),
-  });
-  const [gerando, setGerando] = useState(false);
+  })
 
   const {
     dadosRelatorio,
@@ -53,23 +46,21 @@ export default function RelatorioMensalDialog({
     gerarDadosRelatorio,
     validarPeriodo,
     limparDados,
-  } = useRelatorios();
+  } = useRelatorios()
 
-  // Gerar opções de anos (últimos 5 anos + ano atual + próximo ano)
   const anosDisponiveis = React.useMemo(() => {
-    const anoAtual = new Date().getFullYear();
-    const anos = [];
+    const anoAtual = new Date().getFullYear()
+    const anos = []
     for (let i = anoAtual - 4; i <= anoAtual + 1; i++) {
-      anos.push(i);
+      anos.push(i)
     }
-    return anos;
-  }, []);
+    return anos
+  }, [])
 
-  // Gerar opções de meses
   const mesesDisponiveis = [
     { valor: 1, nome: "Janeiro" },
     { valor: 2, nome: "Fevereiro" },
-    { valor: 3, nome: "Março" },
+    { valor: 3, nome: "Marco" },
     { valor: 4, nome: "Abril" },
     { valor: 5, nome: "Maio" },
     { valor: 6, nome: "Junho" },
@@ -79,76 +70,71 @@ export default function RelatorioMensalDialog({
     { valor: 10, nome: "Outubro" },
     { valor: 11, nome: "Novembro" },
     { valor: 12, nome: "Dezembro" },
-  ];
+  ]
 
   const handleVisualizarDados = async () => {
     if (!validarPeriodo(periodo)) {
       toast({
         variant: "destructive",
-        title: "Período inválido",
-        description: "Por favor, selecione um período válido.",
-      });
-      return;
+        title: "Periodo invalido",
+        description: "Por favor, selecione um periodo valido.",
+      })
+      return
     }
 
     try {
-      await gerarDadosRelatorio(visitantes, periodo);
+      await gerarDadosRelatorio(visitantes, periodo)
     } catch (err) {
-      console.error("Erro ao gerar dados:", err);
+      console.error("Erro ao gerar dados:", err)
       toast({
         variant: "destructive",
         title: "Erro ao gerar dados",
-        description: "Não foi possível gerar os dados do relatório.",
-      });
+        description: "Nao foi possivel gerar os dados do relatorio.",
+      })
     }
-  };
+  }
 
   const handleGerarPDF = async () => {
     if (!dadosRelatorio) {
       toast({
         variant: "destructive",
-        title: "Dados não disponíveis",
+        title: "Dados nao disponiveis",
         description: "Por favor, visualize os dados primeiro.",
-      });
-      return;
+      })
+      return
     }
 
-    setGerando(true);
     try {
-      await gerarRelatorioPDF(dadosRelatorio);
-
+      await gerarRelatorioPDF(dadosRelatorio)
       toast({
         title: "PDF gerado com sucesso!",
-        description: "O relatório foi baixado para seu computador.",
-      });
+        description: "O relatorio foi baixado para seu computador.",
+      })
     } catch (err) {
-      console.error("Erro ao gerar PDF:", err);
+      console.error("Erro ao gerar PDF:", err)
       toast({
         variant: "destructive",
         title: "Erro ao gerar PDF",
-        description: "Não foi possível gerar o arquivo PDF.",
-      });
-    } finally {
-      setGerando(false);
+        description: "Nao foi possivel gerar o arquivo PDF.",
+      })
     }
-  };
+  }
 
   const handleClose = () => {
-    limparDados();
-    onClose();
-  };
+    limparDados()
+    onClose()
+  }
 
   const renderPreviewDados = () => {
-    if (!dadosRelatorio) return null;
+    if (!dadosRelatorio) return null
 
-    const { estatisticas } = dadosRelatorio;
+    const { estatisticas } = dadosRelatorio
 
     return (
       <div className="space-y-4">
         <Separator />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Estatísticas principais */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -161,7 +147,7 @@ export default function RelatorioMensalDialog({
                 {estatisticas.totalVisitantes}
               </div>
               <p className="text-xs text-muted-foreground">
-                no período selecionado
+                no periodo selecionado
               </p>
             </CardContent>
           </Card>
@@ -201,20 +187,22 @@ export default function RelatorioMensalDialog({
           </Card>
         </div>
 
-        {/* Distribuição por intenção */}
+        {/* Distribuicao por Faixa Etaria */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Distribuição por Intenção</CardTitle>
+            <CardTitle className="text-sm">
+              Distribuicao por Faixa Etaria
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(estatisticas.distribuicaoPorIntencao).map(
-                ([intencao, quantidade]) =>
+              {Object.entries(estatisticas.distribuicaoPorFaixaEtaria).map(
+                ([faixa, quantidade]) =>
                   quantidade > 0 && (
-                    <Badge key={intencao} variant="secondary">
-                      {intencao}: {quantidade}
+                    <Badge key={faixa} variant="secondary">
+                      {faixa}: {quantidade}
                     </Badge>
-                  )
+                  ),
               )}
             </div>
           </CardContent>
@@ -240,8 +228,8 @@ export default function RelatorioMensalDialog({
           </Card>
         )}
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -249,20 +237,19 @@ export default function RelatorioMensalDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Relatório Mensal de Visitantes
+            Relatorio Mensal de Visitantes
           </DialogTitle>
           <DialogDescription>
-            Selecione o período e gere um relatório completo em PDF com os dados
+            Selecione o periodo e gere um relatorio completo em PDF com os dados
             dos visitantes.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Seleção de período */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label htmlFor="select-mes" className="text-sm font-medium">
-                Mês
+                Mes
               </label>
               <Select
                 value={periodo.mes.toString()}
@@ -271,7 +258,7 @@ export default function RelatorioMensalDialog({
                 }
               >
                 <SelectTrigger id="select-mes">
-                  <SelectValue placeholder="Selecione o mês" />
+                  <SelectValue placeholder="Selecione o mes" />
                 </SelectTrigger>
                 <SelectContent>
                   {mesesDisponiveis.map(({ valor, nome }) => (
@@ -307,14 +294,12 @@ export default function RelatorioMensalDialog({
             </div>
           </div>
 
-          {/* Mensagem de erro */}
           {error && (
             <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
               {error}
             </div>
           )}
 
-          {/* Preview dos dados */}
           {renderPreviewDados()}
         </div>
 
@@ -323,10 +308,10 @@ export default function RelatorioMensalDialog({
             Cancelar
           </Button>
           <Button onClick={handleVisualizarDados} disabled={loading}>
-            {loading ? "Carregando..." : "Visualizar Dados do Período"}
+            {loading ? "Carregando..." : "Visualizar Dados do Periodo"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

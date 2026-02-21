@@ -1,10 +1,15 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
 import { Trash2 } from "lucide-react"
@@ -20,7 +25,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useAuth } from "@/contexts/auth-context"
 import LoginForm from "@/components/login-form"
-import { supabase } from "@/lib/supabase"
 import type { Responsavel } from "@/types/supabase"
 
 export default function ResponsaveisPage() {
@@ -29,9 +33,9 @@ export default function ResponsaveisPage() {
   const [novoResponsavel, setNovoResponsavel] = useState("")
   const [carregando, setCarregando] = useState(true)
   const [salvando, setSalvando] = useState(false)
-  const [responsavelParaExcluir, setResponsavelParaExcluir] = useState<Responsavel | null>(null)
+  const [responsavelParaExcluir, setResponsavelParaExcluir] =
+    useState<Responsavel | null>(null)
 
-  // Carregar responsáveis apenas se estiver autenticado
   useEffect(() => {
     if (isAuthenticated) {
       carregarResponsaveis()
@@ -41,18 +45,17 @@ export default function ResponsaveisPage() {
   const carregarResponsaveis = async () => {
     setCarregando(true)
     try {
-      const { data, error } = await supabase.from("responsaveis").select("*").order("nome")
-
-      if (error) throw error
-      if (data) setResponsaveis(data)
+      const res = await fetch("/api/responsaveis")
+      if (!res.ok) throw new Error("Erro ao carregar responsaveis")
+      const data = await res.json()
+      setResponsaveis(data)
     } catch (error) {
-      console.error("Erro ao carregar responsáveis:", error)
+      console.error("Erro ao carregar responsaveis:", error)
     } finally {
       setCarregando(false)
     }
   }
 
-  // Se não estiver autenticado, exibe o formulário de login
   if (!isAuthenticated) {
     return <LoginForm />
   }
@@ -63,32 +66,35 @@ export default function ResponsaveisPage() {
     if (!novoResponsavel.trim()) {
       toast({
         variant: "destructive",
-        title: "Nome inválido",
-        description: "Por favor, digite um nome válido.",
+        title: "Nome invalido",
+        description: "Por favor, digite um nome valido.",
       })
       return
     }
 
     setSalvando(true)
     try {
-      const { data, error } = await supabase.from("responsaveis").insert({ nome: novoResponsavel }).select()
+      const res = await fetch("/api/responsaveis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome: novoResponsavel }),
+      })
 
-      if (error) throw error
+      if (!res.ok) throw new Error("Erro ao adicionar responsavel")
 
-      if (data && data[0]) {
-        setResponsaveis((prev) => [...prev, data[0]])
-        setNovoResponsavel("")
-        toast({
-          title: "Responsável adicionado",
-          description: "O responsável foi adicionado com sucesso.",
-        })
-      }
+      const data = await res.json()
+      setResponsaveis((prev) => [...prev, data])
+      setNovoResponsavel("")
+      toast({
+        title: "Responsavel adicionado",
+        description: "O responsavel foi adicionado com sucesso.",
+      })
     } catch (error) {
-      console.error("Erro ao adicionar responsável:", error)
+      console.error("Erro ao adicionar responsavel:", error)
       toast({
         variant: "destructive",
         title: "Erro ao adicionar",
-        description: "Ocorreu um erro ao adicionar o responsável.",
+        description: "Ocorreu um erro ao adicionar o responsavel.",
       })
     } finally {
       setSalvando(false)
@@ -99,21 +105,26 @@ export default function ResponsaveisPage() {
     if (!responsavelParaExcluir) return
 
     try {
-      const { error } = await supabase.from("responsaveis").delete().eq("id", responsavelParaExcluir.id)
+      const res = await fetch(
+        `/api/responsaveis/${responsavelParaExcluir.id}`,
+        { method: "DELETE" },
+      )
 
-      if (error) throw error
+      if (!res.ok) throw new Error("Erro ao remover responsavel")
 
-      setResponsaveis((prev) => prev.filter((r) => r.id !== responsavelParaExcluir.id))
+      setResponsaveis((prev) =>
+        prev.filter((r) => r.id !== responsavelParaExcluir.id),
+      )
       toast({
-        title: "Responsável removido",
-        description: "O responsável foi removido com sucesso.",
+        title: "Responsavel removido",
+        description: "O responsavel foi removido com sucesso.",
       })
     } catch (error) {
-      console.error("Erro ao remover responsável:", error)
+      console.error("Erro ao remover responsavel:", error)
       toast({
         variant: "destructive",
         title: "Erro ao remover",
-        description: "Ocorreu um erro ao remover o responsável.",
+        description: "Ocorreu um erro ao remover o responsavel.",
       })
     } finally {
       setResponsavelParaExcluir(null)
@@ -124,13 +135,16 @@ export default function ResponsaveisPage() {
     <div className="max-w-2xl mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle>Gerenciar Responsáveis</CardTitle>
-          <CardDescription>Adicione ou remova responsáveis pelo envio de mensagens aos visitantes</CardDescription>
+          <CardTitle>Gerenciar Responsaveis</CardTitle>
+          <CardDescription>
+            Adicione ou remova responsaveis pelo envio de mensagens aos
+            visitantes
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSalvar} className="flex gap-2 mb-6">
             <Input
-              placeholder="Nome do responsável"
+              placeholder="Nome do responsavel"
               value={novoResponsavel}
               onChange={(e) => setNovoResponsavel(e.target.value)}
               className="flex-1"
@@ -142,16 +156,25 @@ export default function ResponsaveisPage() {
 
           {carregando ? (
             <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
             </div>
           ) : responsaveis.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">Nenhum responsável cadastrado.</div>
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhum responsavel cadastrado.
+            </div>
           ) : (
             <div className="space-y-2">
               {responsaveis.map((responsavel) => (
-                <div key={responsavel.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div
+                  key={responsavel.id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
                   <span>{responsavel.nome}</span>
-                  <Button variant="ghost" size="icon" onClick={() => setResponsavelParaExcluir(responsavel)}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setResponsavelParaExcluir(responsavel)}
+                  >
                     <Trash2 className="h-4 w-4 text-destructive" />
                     <span className="sr-only">Remover</span>
                   </Button>
@@ -162,18 +185,24 @@ export default function ResponsaveisPage() {
         </CardContent>
       </Card>
 
-      <AlertDialog open={!!responsavelParaExcluir} onOpenChange={() => setResponsavelParaExcluir(null)}>
+      <AlertDialog
+        open={!!responsavelParaExcluir}
+        onOpenChange={() => setResponsavelParaExcluir(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar exclusao</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o responsável "{responsavelParaExcluir?.nome}"? Esta ação não pode ser
+              Tem certeza que deseja excluir o responsavel &quot;
+              {responsavelParaExcluir?.nome}&quot;? Esta acao nao pode ser
               desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleExcluir}>Excluir</AlertDialogAction>
+            <AlertDialogAction onClick={handleExcluir}>
+              Excluir
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

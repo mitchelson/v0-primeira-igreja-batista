@@ -1,9 +1,11 @@
-import { useState, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
-import type { Visitante, VisitanteInsert, VisitanteUpdate, VisitanteComResponsavel } from '@/types/supabase'
-import { SUPABASE_CONFIG } from '@/lib/constants'
+import { useState, useCallback } from "react"
+import type {
+  Visitante,
+  VisitanteInsert,
+  VisitanteUpdate,
+  VisitanteComResponsavel,
+} from "@/types/supabase"
 
-// Hook para operações de visitantes
 export function useVisitantes() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -13,25 +15,13 @@ export function useVisitantes() {
     setError(null)
 
     try {
-      const { data, error: supabaseError } = await supabase
-        .from(SUPABASE_CONFIG.TABLE_NAMES.VISITANTES)
-        .select(`
-          *,
-          responsaveis (nome)
-        `)
-        .order('data_cadastro', { ascending: false })
-
-      if (supabaseError) throw supabaseError
-
-      // Transforma os dados para incluir responsavel_nome
-      const visitantesComResponsavel: VisitanteComResponsavel[] = data?.map(visitante => ({
-        ...visitante,
-        responsavel_nome: visitante.responsaveis?.nome ?? null
-      })) ?? []
-
-      return visitantesComResponsavel
+      const res = await fetch("/api/visitantes")
+      if (!res.ok) throw new Error("Erro ao buscar visitantes")
+      const data = await res.json()
+      return data as VisitanteComResponsavel[]
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Erro ao buscar visitantes'
+      const errorMsg =
+        err instanceof Error ? err.message : "Erro ao buscar visitantes"
       setError(errorMsg)
       throw new Error(errorMsg)
     } finally {
@@ -39,91 +29,91 @@ export function useVisitantes() {
     }
   }, [])
 
-  const buscarPorId = useCallback(async (id: string): Promise<Visitante | null> => {
-    setLoading(true)
-    setError(null)
+  const buscarPorId = useCallback(
+    async (id: string): Promise<Visitante | null> => {
+      setLoading(true)
+      setError(null)
 
-    try {
-      const { data, error: supabaseError } = await supabase
-        .from(SUPABASE_CONFIG.TABLE_NAMES.VISITANTES)
-        .select('*')
-        .eq('id', id)
-        .single()
+      try {
+        const res = await fetch(`/api/visitantes/${id}`)
+        if (!res.ok) throw new Error("Erro ao buscar visitante")
+        return (await res.json()) as Visitante
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error ? err.message : "Erro ao buscar visitante"
+        setError(errorMsg)
+        return null
+      } finally {
+        setLoading(false)
+      }
+    },
+    [],
+  )
 
-      if (supabaseError) throw supabaseError
+  const criar = useCallback(
+    async (visitanteData: VisitanteInsert): Promise<Visitante | null> => {
+      setLoading(true)
+      setError(null)
 
-      return data
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Erro ao buscar visitante'
-      setError(errorMsg)
-      return null
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+      try {
+        const res = await fetch("/api/visitantes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(visitanteData),
+        })
+        if (!res.ok) throw new Error("Erro ao criar visitante")
+        return (await res.json()) as Visitante
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error ? err.message : "Erro ao criar visitante"
+        setError(errorMsg)
+        return null
+      } finally {
+        setLoading(false)
+      }
+    },
+    [],
+  )
 
-  const criar = useCallback(async (visitanteData: VisitanteInsert): Promise<Visitante | null> => {
-    setLoading(true)
-    setError(null)
+  const atualizar = useCallback(
+    async (
+      id: string,
+      visitanteData: VisitanteUpdate,
+    ): Promise<Visitante | null> => {
+      setLoading(true)
+      setError(null)
 
-    try {
-      const { data, error: supabaseError } = await supabase
-        .from(SUPABASE_CONFIG.TABLE_NAMES.VISITANTES)
-        .insert(visitanteData)
-        .select()
-        .single()
-
-      if (supabaseError) throw supabaseError
-
-      return data
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Erro ao criar visitante'
-      setError(errorMsg)
-      return null
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const atualizar = useCallback(async (id: string, visitanteData: VisitanteUpdate): Promise<Visitante | null> => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const { data, error: supabaseError } = await supabase
-        .from(SUPABASE_CONFIG.TABLE_NAMES.VISITANTES)
-        .update(visitanteData)
-        .eq('id', id)
-        .select()
-        .single()
-
-      if (supabaseError) throw supabaseError
-
-      return data
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Erro ao atualizar visitante'
-      setError(errorMsg)
-      return null
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+      try {
+        const res = await fetch(`/api/visitantes/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(visitanteData),
+        })
+        if (!res.ok) throw new Error("Erro ao atualizar visitante")
+        return (await res.json()) as Visitante
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error ? err.message : "Erro ao atualizar visitante"
+        setError(errorMsg)
+        return null
+      } finally {
+        setLoading(false)
+      }
+    },
+    [],
+  )
 
   const deletar = useCallback(async (id: string): Promise<boolean> => {
     setLoading(true)
     setError(null)
 
     try {
-      const { error: supabaseError } = await supabase
-        .from(SUPABASE_CONFIG.TABLE_NAMES.VISITANTES)
-        .delete()
-        .eq('id', id)
-
-      if (supabaseError) throw supabaseError
-
+      const res = await fetch(`/api/visitantes/${id}`, { method: "DELETE" })
+      if (!res.ok) throw new Error("Erro ao deletar visitante")
       return true
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Erro ao deletar visitante'
+      const errorMsg =
+        err instanceof Error ? err.message : "Erro ao deletar visitante"
       setError(errorMsg)
       return false
     } finally {
@@ -131,27 +121,32 @@ export function useVisitantes() {
     }
   }, [])
 
-  const marcarMensagemEnviada = useCallback(async (id: string): Promise<boolean> => {
-    setLoading(true)
-    setError(null)
+  const marcarMensagemEnviada = useCallback(
+    async (id: string): Promise<boolean> => {
+      setLoading(true)
+      setError(null)
 
-    try {
-      const { error: supabaseError } = await supabase
-        .from(SUPABASE_CONFIG.TABLE_NAMES.VISITANTES)
-        .update({ mensagem_enviada: true })
-        .eq('id', id)
-
-      if (supabaseError) throw supabaseError
-
-      return true
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Erro ao marcar mensagem como enviada'
-      setError(errorMsg)
-      return false
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+      try {
+        const res = await fetch(`/api/visitantes/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mensagem_enviada: true }),
+        })
+        if (!res.ok) throw new Error("Erro ao marcar mensagem como enviada")
+        return true
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error
+            ? err.message
+            : "Erro ao marcar mensagem como enviada"
+        setError(errorMsg)
+        return false
+      } finally {
+        setLoading(false)
+      }
+    },
+    [],
+  )
 
   return {
     buscarTodos,
@@ -162,41 +157,45 @@ export function useVisitantes() {
     marcarMensagemEnviada,
     loading,
     error,
-    clearError: () => setError(null)
+    clearError: () => setError(null),
   }
 }
 
 // Hook para filtros e busca
-export function useFiltrosVisitantes(visitantes: VisitanteComResponsavel[]) {
-  const [termoBusca, setTermoBusca] = useState('')
-  const [filtroIntencao, setFiltroIntencao] = useState<string>('')
-  const [filtroSexo, setFiltroSexo] = useState<string>('')
+export function useFiltrosVisitantes(
+  visitantes: VisitanteComResponsavel[],
+) {
+  const [termoBusca, setTermoBusca] = useState("")
+  const [filtroFaixaEtaria, setFiltroFaixaEtaria] = useState<string>("")
+  const [filtroSexo, setFiltroSexo] = useState<string>("")
 
-  const visitantesFiltrados = visitantes.filter(visitante => {
-    const matchBusca = termoBusca === '' ||
+  const visitantesFiltrados = visitantes.filter((visitante) => {
+    const matchBusca =
+      termoBusca === "" ||
       visitante.nome.toLowerCase().includes(termoBusca.toLowerCase()) ||
       visitante.celular.includes(termoBusca) ||
       visitante.cidade?.toLowerCase().includes(termoBusca.toLowerCase()) ||
       visitante.bairro?.toLowerCase().includes(termoBusca.toLowerCase())
 
-    const matchIntencao = filtroIntencao === '' || visitante.intencao === filtroIntencao
-    const matchSexo = filtroSexo === '' || visitante.sexo === filtroSexo
+    const matchFaixaEtaria =
+      filtroFaixaEtaria === "" || visitante.faixa_etaria === filtroFaixaEtaria
+    const matchSexo = filtroSexo === "" || visitante.sexo === filtroSexo
 
-    return matchBusca && matchIntencao && matchSexo
+    return matchBusca && matchFaixaEtaria && matchSexo
   })
 
   return {
     visitantesFiltrados,
     termoBusca,
     setTermoBusca,
-    filtroIntencao,
-    setFiltroIntencao,
+    filtroFaixaEtaria,
+    setFiltroFaixaEtaria,
     filtroSexo,
     setFiltroSexo,
     limparFiltros: () => {
-      setTermoBusca('')
-      setFiltroIntencao('')
-      setFiltroSexo('')
-    }
+      setTermoBusca("")
+      setFiltroFaixaEtaria("")
+      setFiltroSexo("")
+    },
   }
 }

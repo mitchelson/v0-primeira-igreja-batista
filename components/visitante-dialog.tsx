@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -9,27 +9,26 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { supabase } from "@/lib/supabase";
-import { formatarData, gerarMensagemWhatsApp } from "@/lib/utils";
-import { toast } from "@/components/ui/use-toast";
-import { MessageSquare, Edit } from "lucide-react";
-import type { Visitante, Responsavel } from "@/types/supabase";
-import NovoVisitanteDialog from "./novo-visitante-dialog";
+} from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { formatarData, gerarMensagemWhatsApp } from "@/lib/utils"
+import { toast } from "@/components/ui/use-toast"
+import { MessageSquare, Edit } from "lucide-react"
+import type { Visitante, Responsavel } from "@/types/supabase"
+import NovoVisitanteDialog from "./novo-visitante-dialog"
 
 interface VisitanteDialogProps {
-  visitante: Visitante & { responsavel_nome?: string | null };
-  onClose: () => void;
-  onUpdate: (visitante: Visitante) => void;
+  visitante: Visitante & { responsavel_nome?: string | null }
+  onClose: () => void
+  onUpdate: (visitante: Visitante) => void
 }
 
 export default function VisitanteDialog({
@@ -37,118 +36,112 @@ export default function VisitanteDialog({
   onClose,
   onUpdate,
 }: VisitanteDialogProps) {
-  const [responsaveis, setResponsaveis] = useState<Responsavel[]>([]);
+  const [responsaveis, setResponsaveis] = useState<Responsavel[]>([])
   const [responsavelSelecionado, setResponsavelSelecionado] = useState<
     string | null
-  >(visitante.responsavel_id || null);
+  >(visitante.responsavel_id || null)
   const [nomeResponsavel, setNomeResponsavel] = useState<string>(
-    visitante.responsavel_nome || ""
-  );
+    visitante.responsavel_nome || "",
+  )
   const [mensagemEnviada, setMensagemEnviada] = useState<boolean>(
-    visitante.mensagem_enviada
-  );
+    visitante.mensagem_enviada,
+  )
   const [semWhatsapp, setSemWhatsapp] = useState<boolean>(
-    visitante.sem_whatsapp || false
-  );
-  const [salvando, setSalvando] = useState(false);
-  const [carregandoResponsaveis, setCarregandoResponsaveis] = useState(true);
-  const [editandoCadastro, setEditandoCadastro] = useState(false);
+    visitante.sem_whatsapp || false,
+  )
+  const [salvando, setSalvando] = useState(false)
+  const [carregandoResponsaveis, setCarregandoResponsaveis] = useState(true)
+  const [editandoCadastro, setEditandoCadastro] = useState(false)
 
   useEffect(() => {
     const carregarResponsaveis = async () => {
-      setCarregandoResponsaveis(true);
+      setCarregandoResponsaveis(true)
       try {
-        console.log("Carregando responsáveis...");
-        const { data, error } = await supabase
-          .from("responsaveis")
-          .select("*")
-          .order("nome");
-
-        if (error) {
-          console.error("Erro ao carregar responsáveis:", error);
-          throw error;
-        }
-
-        console.log("Responsáveis carregados:", data);
-        if (data) setResponsaveis(data);
+        const res = await fetch("/api/responsaveis")
+        if (!res.ok) throw new Error("Erro ao carregar responsaveis")
+        const data = await res.json()
+        setResponsaveis(data)
       } catch (error) {
-        console.error("Erro ao carregar responsáveis:", error);
+        console.error("Erro ao carregar responsaveis:", error)
       } finally {
-        setCarregandoResponsaveis(false);
+        setCarregandoResponsaveis(false)
       }
-    };
+    }
 
-    carregarResponsaveis();
-  }, []);
+    carregarResponsaveis()
+  }, [])
 
-  // Atualizar o nome do responsável quando o responsável selecionado mudar
   useEffect(() => {
     if (responsavelSelecionado) {
-      const resp = responsaveis.find((r) => r.id === responsavelSelecionado);
+      const resp = responsaveis.find((r) => r.id === responsavelSelecionado)
       if (resp) {
-        setNomeResponsavel(resp.nome);
+        setNomeResponsavel(resp.nome)
       }
     } else {
-      setNomeResponsavel("");
+      setNomeResponsavel("")
     }
-  }, [responsavelSelecionado, responsaveis]);
+  }, [responsavelSelecionado, responsaveis])
 
-  // Atualizar o estado de mensagem enviada quando o checkbox "sem WhatsApp" for marcado
   useEffect(() => {
     if (semWhatsapp) {
-      setMensagemEnviada(true); // Se não tem WhatsApp, considera a mensagem como enviada
+      setMensagemEnviada(true)
     }
-  }, [semWhatsapp]);
+  }, [semWhatsapp])
 
   const handleSalvar = async () => {
-    setSalvando(true);
+    setSalvando(true)
     try {
-      const { error } = await supabase
-        .from("visitantes")
-        .update({
+      const res = await fetch(`/api/visitantes/${visitante.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           responsavel_id: responsavelSelecionado,
-          mensagem_enviada: mensagemEnviada || semWhatsapp, // Se não tem WhatsApp, considera a mensagem como enviada
+          mensagem_enviada: mensagemEnviada || semWhatsapp,
           sem_whatsapp: semWhatsapp,
-        })
-        .eq("id", visitante.id);
+        }),
+      })
 
-      if (error) throw error;
+      if (!res.ok) throw new Error("Erro ao atualizar visitante")
 
-      // Atualizar o objeto visitante com os novos valores
       const visitanteAtualizado: Visitante = {
         ...visitante,
         responsavel_id: responsavelSelecionado,
         mensagem_enviada: mensagemEnviada || semWhatsapp,
         sem_whatsapp: semWhatsapp,
-      };
+      }
 
-      onUpdate(visitanteAtualizado);
+      onUpdate(visitanteAtualizado)
       toast({
         title: "Visitante atualizado",
-        description: "As informações foram salvas com sucesso.",
-      });
+        description: "As informacoes foram salvas com sucesso.",
+      })
     } catch (error) {
-      console.error("Erro ao atualizar visitante:", error);
+      console.error("Erro ao atualizar visitante:", error)
       toast({
         variant: "destructive",
         title: "Erro ao salvar",
         description: "Ocorreu um erro ao atualizar o visitante.",
-      });
+      })
     } finally {
-      setSalvando(false);
+      setSalvando(false)
     }
-  };
+  }
 
   const handleEnviarWhatsApp = () => {
-    const mensagem = gerarMensagemWhatsApp(visitante, nomeResponsavel);
-    const telefone = visitante.celular.replace(/\D/g, "");
-    window.open(`https://wa.me/55${telefone}?text=${mensagem}`, "_blank");
-  };
+    const mensagem = gerarMensagemWhatsApp(visitante, nomeResponsavel)
+    const telefone = visitante.celular.replace(/\D/g, "")
+    window.open(`https://wa.me/55${telefone}?text=${mensagem}`, "_blank")
+  }
 
   const handleEdicaoCadastro = (visitanteAtualizado: Visitante) => {
-    onUpdate(visitanteAtualizado);
-    setEditandoCadastro(false);
-  };
+    onUpdate(visitanteAtualizado)
+    setEditandoCadastro(false)
+  }
+
+  const cidadeDisplay =
+    visitante.cidade === "Outra" && visitante.cidade_outra
+      ? visitante.cidade_outra
+      : visitante.cidade || "Nao informado"
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -163,6 +156,7 @@ export default function VisitanteDialog({
               className="h-8 w-8 p-0"
             >
               <Edit className="h-4 w-4" />
+              <span className="sr-only">Editar visitante</span>
             </Button>
           </DialogTitle>
           <DialogDescription>
@@ -178,59 +172,64 @@ export default function VisitanteDialog({
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Sexo</Label>
             <div className="col-span-3">
-              {visitante.sexo || "Não informado"}
+              {visitante.sexo || "Nao informado"}
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Celular</Label>
             <div className="col-span-3">{visitante.celular}</div>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Status Civil</Label>
-            <div className="col-span-3">
-              {visitante.civil_status || "Não informado"}
-            </div>
-          </div>
-          {visitante.cidade && (
+          {visitante.telefone && (
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Cidade</Label>
-              <div className="col-span-3">{visitante.cidade}</div>
+              <Label className="text-right">Telefone</Label>
+              <div className="col-span-3">{visitante.telefone}</div>
             </div>
           )}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right">Cidade</Label>
+            <div className="col-span-3">{cidadeDisplay}</div>
+          </div>
           {visitante.bairro && (
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">Bairro</Label>
               <div className="col-span-3">{visitante.bairro}</div>
             </div>
           )}
-          {visitante.idade && (
+          {visitante.faixa_etaria && (
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Idade</Label>
-              <div className="col-span-3">{visitante.idade} anos</div>
+              <Label className="text-right">Faixa Etaria</Label>
+              <div className="col-span-3">{visitante.faixa_etaria}</div>
             </div>
           )}
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Intenção</Label>
-            <div className="col-span-3">{visitante.intencao}</div>
-          </div>
-          {visitante.pedidos_oracao && (
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label className="text-right pt-2">Pedidos de oração</Label>
-              <div className="col-span-3 bg-muted p-2 rounded-md">
-                {visitante.pedidos_oracao}
-              </div>
+            <Label className="text-right">Estado Civil</Label>
+            <div className="col-span-3">
+              {visitante.civil_status || "Nao informado"}
             </div>
-          )}
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right">Membro</Label>
+            <div className="col-span-3">
+              {visitante.membro_igreja ? "Sim" : "Nao"}
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right">Quer visita</Label>
+            <div className="col-span-3">
+              {visitante.quer_visita ? "Sim" : "Nao"}
+            </div>
+          </div>
+
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="responsavel" className="text-right">
-              Responsável
+              Responsavel
             </Label>
             <div className="col-span-3">
               {carregandoResponsaveis ? (
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin h-4 w-4 border-b-2 border-primary rounded-full"></div>
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin h-4 w-4 border-b-2 border-primary rounded-full" />
                   <span className="text-sm text-muted-foreground">
-                    Carregando responsáveis...
+                    Carregando responsaveis...
                   </span>
                 </div>
               ) : (
@@ -241,7 +240,7 @@ export default function VisitanteDialog({
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um responsável" />
+                    <SelectValue placeholder="Selecione um responsavel" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Nenhum</SelectItem>
@@ -253,7 +252,7 @@ export default function VisitanteDialog({
                       ))
                     ) : (
                       <SelectItem value="no-options" disabled>
-                        Nenhum responsável cadastrado
+                        Nenhum responsavel cadastrado
                       </SelectItem>
                     )}
                   </SelectContent>
@@ -261,31 +260,33 @@ export default function VisitanteDialog({
               )}
             </div>
           </div>
+
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="sem-whatsapp" className="text-right">
               Sem WhatsApp
             </Label>
-            <div className="flex items-center space-x-2 col-span-3">
+            <div className="flex items-center gap-2 col-span-3">
               <Switch
                 id="sem-whatsapp"
                 checked={semWhatsapp}
                 onCheckedChange={(checked) => {
-                  setSemWhatsapp(checked);
+                  setSemWhatsapp(checked)
                   if (checked) {
-                    setMensagemEnviada(true);
+                    setMensagemEnviada(true)
                   }
                 }}
               />
               <Label htmlFor="sem-whatsapp">
-                {semWhatsapp ? "Sim" : "Não"}
+                {semWhatsapp ? "Sim" : "Nao"}
               </Label>
             </div>
           </div>
+
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="mensagem-enviada" className="text-right">
               Mensagem enviada
             </Label>
-            <div className="flex items-center space-x-2 col-span-3">
+            <div className="flex items-center gap-2 col-span-3">
               <Switch
                 id="mensagem-enviada"
                 checked={mensagemEnviada}
@@ -293,11 +294,11 @@ export default function VisitanteDialog({
                 disabled={semWhatsapp}
               />
               <Label htmlFor="mensagem-enviada">
-                {mensagemEnviada ? "Sim" : "Não"}
+                {mensagemEnviada ? "Sim" : "Nao"}
               </Label>
               {semWhatsapp && (
                 <span className="text-xs text-muted-foreground">
-                  (Automático para visitantes sem WhatsApp)
+                  (Automatico para visitantes sem WhatsApp)
                 </span>
               )}
             </div>
@@ -327,6 +328,7 @@ export default function VisitanteDialog({
             </Button>
           </div>
         </DialogFooter>
+
         {editandoCadastro && (
           <NovoVisitanteDialog
             visitanteParaEdicao={visitante}
@@ -336,5 +338,5 @@ export default function VisitanteDialog({
         )}
       </DialogContent>
     </Dialog>
-  );
+  )
 }

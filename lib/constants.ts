@@ -1,6 +1,6 @@
 // Constantes globais do projeto
 
-// Configurações de validação
+// Configuracoes de validacao
 export const VALIDATION_CONFIG = {
   NOME_MIN_LENGTH: 3,
   NOME_MAX_LENGTH: 100,
@@ -8,28 +8,22 @@ export const VALIDATION_CONFIG = {
   TELEFONE_MAX_LENGTH: 15,
   CIDADE_MAX_LENGTH: 50,
   BAIRRO_MAX_LENGTH: 50,
-  IDADE_MIN: 0,
-  IDADE_MAX: 120,
-  ORACAO_MAX_LENGTH: 500,
 } as const
 
-// Mensagens de erro padrão
+// Mensagens de erro padrao
 export const ERROR_MESSAGES = {
-  NOME_REQUIRED: "Nome é obrigatório",
+  NOME_REQUIRED: "Nome e obrigatorio",
   NOME_MIN_LENGTH: `Nome deve ter pelo menos ${VALIDATION_CONFIG.NOME_MIN_LENGTH} caracteres`,
-  NOME_MAX_LENGTH: `Nome deve ter no máximo ${VALIDATION_CONFIG.NOME_MAX_LENGTH} caracteres`,
-  NOME_INVALID_CHARS: "Nome deve conter apenas letras e espaços",
-  TELEFONE_INVALID: "Formato de telefone inválido",
-  TELEFONE_REQUIRED: "Telefone é obrigatório",
-  IDADE_INVALID: `Idade deve estar entre ${VALIDATION_CONFIG.IDADE_MIN} e ${VALIDATION_CONFIG.IDADE_MAX} anos`,
-  CIDADE_MAX_LENGTH: `Cidade deve ter no máximo ${VALIDATION_CONFIG.CIDADE_MAX_LENGTH} caracteres`,
-  BAIRRO_MAX_LENGTH: `Bairro deve ter no máximo ${VALIDATION_CONFIG.BAIRRO_MAX_LENGTH} caracteres`,
-  ORACAO_MAX_LENGTH: `Pedidos de oração devem ter no máximo ${VALIDATION_CONFIG.ORACAO_MAX_LENGTH} caracteres`,
-  INTENCAO_REQUIRED: "Por favor selecione uma opção",
-  SEXO_REQUIRED: "Por favor selecione uma opção",
+  NOME_MAX_LENGTH: `Nome deve ter no maximo ${VALIDATION_CONFIG.NOME_MAX_LENGTH} caracteres`,
+  NOME_INVALID_CHARS: "Nome deve conter apenas letras e espacos",
+  TELEFONE_INVALID: "Formato de telefone invalido",
+  TELEFONE_REQUIRED: "Telefone e obrigatorio",
+  CIDADE_MAX_LENGTH: `Cidade deve ter no maximo ${VALIDATION_CONFIG.CIDADE_MAX_LENGTH} caracteres`,
+  BAIRRO_MAX_LENGTH: `Bairro deve ter no maximo ${VALIDATION_CONFIG.BAIRRO_MAX_LENGTH} caracteres`,
+  SEXO_REQUIRED: "Por favor selecione uma opcao",
 } as const
 
-// Configurações de UI
+// Configuracoes de UI
 export const UI_CONFIG = {
   DEBOUNCE_DELAY: 300,
   TOAST_DURATION: 3000,
@@ -43,29 +37,20 @@ export const REGEX_PATTERNS = {
   APENAS_NUMEROS: /\D/g,
 } as const
 
-// Configurações do Supabase
-export const SUPABASE_CONFIG = {
-  TABLE_NAMES: {
-    VISITANTES: 'visitantes',
-    RESPONSAVEIS: 'responsaveis',
-  } as const,
-  SCHEMA: 'public',
-} as const
-
-// Configurações de autenticação
+// Configuracoes de autenticacao
 export const AUTH_CONFIG = {
-  STORAGE_KEY: 'pib_auth',
-  ADMIN_PASSWORD: 'igreja123', // Em produção, isso deveria vir de variáveis de ambiente
+  STORAGE_KEY: "pib_auth",
+  ADMIN_PASSWORD: "igreja123",
 } as const
 
 // URLs e contatos
 export const CONTACT_INFO = {
-  CAPELANIA_PHONE: '+55 95 9152-2392',
-  CAPELANIA_CONTACT: 'Manuela',
-  PASTOR: 'Pr. Marcelo',
+  CAPELANIA_PHONE: "+55 95 9152-2392",
+  CAPELANIA_CONTACT: "Manuela",
+  PASTOR: "Pr. Marcelo",
 } as const
 
 export const CHURCH_INFO = {
-  NAME: 'Primeira Igreja Batista de Roraima',
-  SHORT_NAME: 'PIB',
+  NAME: "Primeira Igreja Batista de Roraima",
+  SHORT_NAME: "PIB",
 } as const

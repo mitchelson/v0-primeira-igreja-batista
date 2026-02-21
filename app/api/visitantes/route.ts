@@ -1,0 +1,73 @@
+import { NextRequest, NextResponse } from "next/server"
+import { sql } from "@/lib/neon"
+
+export async function GET() {
+  try {
+    const rows = await sql`
+      SELECT
+        v.*,
+        r.nome AS responsavel_nome
+      FROM visitantes v
+      LEFT JOIN responsaveis r ON v.responsavel_id = r.id
+      ORDER BY v.data_cadastro DESC
+    `
+    return NextResponse.json(rows)
+  } catch (error) {
+    console.error("Erro ao buscar visitantes:", error)
+    return NextResponse.json(
+      { error: "Erro ao buscar visitantes" },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const {
+      nome,
+      celular,
+      sexo,
+      cidade,
+      cidade_outra,
+      bairro,
+      faixa_etaria,
+      civil_status,
+      telefone,
+      membro_igreja,
+      quer_visita,
+      sem_whatsapp,
+      responsavel_id,
+    } = body
+
+    if (!nome || !celular) {
+      return NextResponse.json(
+        { error: "Nome e celular são obrigatórios" },
+        { status: 400 }
+      )
+    }
+
+    const rows = await sql`
+      INSERT INTO visitantes (
+        nome, celular, sexo, cidade, cidade_outra, bairro,
+        faixa_etaria, civil_status, telefone, membro_igreja,
+        quer_visita, sem_whatsapp, responsavel_id
+      ) VALUES (
+        ${nome}, ${celular}, ${sexo || null}, ${cidade || null},
+        ${cidade_outra || null}, ${bairro || null}, ${faixa_etaria || null},
+        ${civil_status || null}, ${telefone || null},
+        ${membro_igreja ?? false}, ${quer_visita ?? false},
+        ${sem_whatsapp ?? false}, ${responsavel_id || null}
+      )
+      RETURNING *
+    `
+
+    return NextResponse.json(rows[0], { status: 201 })
+  } catch (error) {
+    console.error("Erro ao criar visitante:", error)
+    return NextResponse.json(
+      { error: "Erro ao criar visitante" },
+      { status: 500 }
+    )
+  }
+}
