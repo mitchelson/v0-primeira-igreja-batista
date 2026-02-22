@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useVisitantes } from "@/hooks/use-visitantes"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -34,7 +35,8 @@ import RelatorioMensalDialog from "@/components/relatorio-mensal-dialog"
 import type { Visitante, VisitanteComResponsavel } from "@/types/supabase"
 
 export default function AdminPage() {
-  const [visitantes, setVisitantes] = useState<VisitanteComResponsavel[]>([])
+  const { visitantes, isLoading, criar, atualizar, deletar, mutate } =
+    useVisitantes()
   const [visitantesFiltrados, setVisitantesFiltrados] = useState<
     VisitanteComResponsavel[]
   >([])
@@ -45,21 +47,17 @@ export default function AdminPage() {
     useState(false)
   const [relatorioDialogAberto, setRelatorioDialogAberto] = useState(false)
   const [dataSelecionada, setDataSelecionada] = useState<string>("")
-  const [carregando, setCarregando] = useState(true)
   const [datasAgrupadas, setDatasAgrupadas] = useState<string[]>([])
   const [visitantesPorData, setVisitantesPorData] = useState<
     Record<string, VisitanteComResponsavel[]>
   >({})
 
   useEffect(() => {
-    carregarVisitantes()
-  }, [])
-
-  useEffect(() => {
-    if (datasAgrupadas.length > 0 && !dataSelecionada) {
-      setDataSelecionada(datasAgrupadas[0])
+    if (!isLoading) {
+      setVisitantesFiltrados(visitantes)
+      agruparPorData(visitantes)
     }
-  }, [datasAgrupadas, dataSelecionada])
+  }, [visitantes, isLoading])
 
   const agruparPorData = (lista: VisitanteComResponsavel[]) => {
     const grupos: Record<string, VisitanteComResponsavel[]> = {}
@@ -87,19 +85,10 @@ export default function AdminPage() {
   }
 
   const carregarVisitantes = async () => {
-    setCarregando(true)
     try {
-      const res = await fetch("/api/visitantes")
-      if (!res.ok) throw new Error("Erro ao carregar visitantes")
-      const data: VisitanteComResponsavel[] = await res.json()
-
-      setVisitantes(data)
-      setVisitantesFiltrados(data)
-      agruparPorData(data)
+      await mutate()
     } catch (error) {
       console.error("Erro ao carregar visitantes:", error)
-    } finally {
-      setCarregando(false)
     }
   }
 
@@ -198,7 +187,7 @@ export default function AdminPage() {
             />
           </div>
 
-          {carregando ? (
+          {isLoading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
             </div>
