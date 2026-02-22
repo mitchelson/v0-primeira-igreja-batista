@@ -118,21 +118,16 @@ export default function MensagensPage() {
             descricao: catDescricao.trim() || null,
           }),
         })
-        console.log("[v0] PUT categoria response:", res.status, await res.clone().text())
         if (res.ok) await fetchCategorias()
       } else {
-        const payload = {
-          nome: catNome.trim(),
-          descricao: catDescricao.trim() || null,
-        }
-        console.log("[v0] POST categoria payload:", payload)
         const res = await fetch("/api/mensagens/categorias", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            nome: catNome.trim(),
+            descricao: catDescricao.trim() || null,
+          }),
         })
-        const responseText = await res.clone().text()
-        console.log("[v0] POST categoria response:", res.status, responseText)
         if (res.ok) await fetchCategorias()
       }
       setCatDialogOpen(false)
@@ -140,7 +135,7 @@ export default function MensagensPage() {
       setCatNome("")
       setCatDescricao("")
     } catch (err) {
-      console.error("[v0] Erro ao salvar categoria:", err)
+      console.error("Erro ao salvar categoria:", err)
     } finally {
       setCatSaving(false)
     }
