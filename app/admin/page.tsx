@@ -61,28 +61,13 @@ export default function AdminPage() {
   }, [visitantes, isLoading])
 
   const agruparPorData = (lista: VisitanteComResponsavel[]) => {
-    const agrupado: Record<string, VisitanteComResponsavel[]> = {}
-    const datas: string[] = []
+    const grupos: Record<string, VisitanteComResponsavel[]> = {}
 
-    lista.forEach((v) => {
-      const data = formatarData(v.data_cadastro)
-      if (!agrupado[data]) {
-        agrupado[data] = []
-        datas.push(data)
+    lista.forEach((visitante) => {
+      const dataFormatada = formatarData(visitante.data_cadastro)
+      if (!grupos[dataFormatada]) {
+        grupos[dataFormatada] = []
       }
-      agrupado[data].push(v)
-    })
-
-    datas.sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
-    setDatasAgrupadas(datas)
-    setVisitantesPorData(agrupado)
-    
-    // Set dataSelecionada to the first date
-    if (datas.length > 0 && !dataSelecionada) {
-      setDataSelecionada(datas[0])
-      console.log("[v0] dataSelecionada set to:", datas[0])
-    }
-  }
       grupos[dataFormatada].push(visitante)
     })
 
@@ -99,6 +84,21 @@ export default function AdminPage() {
         return 0
       }),
     )
+
+    // Set dataSelecionada to the first date
+    const primeiradata = Object.keys(grupos).sort((a, b) => {
+      const [diaA, mesA, anoA] = a.split("/").map(Number)
+      const [diaB, mesB, anoB] = b.split("/").map(Number)
+      if (anoA && anoB && mesA && mesB && diaA && diaB)
+        return (
+          new Date(anoB, mesB - 1, diaB).getTime() -
+          new Date(anoA, mesA - 1, diaA).getTime()
+        )
+      return 0
+    })[0]
+    if (primeiradata) {
+      setDataSelecionada(primeiradata)
+    }
   }
 
   const carregarVisitantes = async () => {
@@ -232,7 +232,6 @@ export default function AdminPage() {
               )}
 
               <div className="space-y-3">
-                {console.log("[v0] dataSelecionada:", dataSelecionada, "visitantesPorData keys:", Object.keys(visitantesPorData))}
                 {dataSelecionada &&
                   visitantesPorData[dataSelecionada]?.map((visitante) => (
                     <button
