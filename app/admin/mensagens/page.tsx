@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/contexts/auth-context"
-import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -45,7 +43,6 @@ import {
 import type { MensagemCategoria, MensagemModelo } from "@/types/supabase"
 
 export default function MensagensPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
 
   const [categorias, setCategorias] = useState<MensagemCategoria[]>([])
@@ -86,14 +83,8 @@ export default function MensagensPage() {
   }, [])
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/")
-      return
-    }
-    if (isAuthenticated) {
-      fetchCategorias()
-    }
-  }, [isAuthenticated, authLoading, router, fetchCategorias])
+    fetchCategorias()
+  }, [fetchCategorias])
 
   // Toggle category active
   const toggleCategoriaAtiva = async (cat: MensagemCategoria) => {
@@ -251,19 +242,9 @@ export default function MensagensPage() {
     setModelDialogOpen(true)
   }
 
-  if (authLoading || (!isAuthenticated && !authLoading)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container mx-auto max-w-2xl px-4 py-6">
-        <div className="mb-6 flex items-center gap-3">
+    <div>
+      <div className="mb-6 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => router.push("/admin")}>
             <ArrowLeft className="h-5 w-5" />
             <span className="sr-only">Voltar</span>
@@ -431,7 +412,6 @@ export default function MensagensPage() {
             ))}
           </Accordion>
         )}
-      </main>
 
       {/* Category Dialog */}
       <Dialog open={catDialogOpen} onOpenChange={setCatDialogOpen}>

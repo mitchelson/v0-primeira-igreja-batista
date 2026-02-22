@@ -31,12 +31,9 @@ import Link from "next/link"
 import VisitanteDialog from "@/components/visitante-dialog"
 import NovoVisitanteDialog from "@/components/novo-visitante-dialog"
 import RelatorioMensalDialog from "@/components/relatorio-mensal-dialog"
-import { useAuth } from "@/contexts/auth-context"
-import LoginForm from "@/components/login-form"
 import type { Visitante, VisitanteComResponsavel } from "@/types/supabase"
 
 export default function AdminPage() {
-  const { isAuthenticated } = useAuth()
   const [visitantes, setVisitantes] = useState<VisitanteComResponsavel[]>([])
   const [visitantesFiltrados, setVisitantesFiltrados] = useState<
     VisitanteComResponsavel[]
@@ -55,10 +52,8 @@ export default function AdminPage() {
   >({})
 
   useEffect(() => {
-    if (isAuthenticated) {
-      carregarVisitantes()
-    }
-  }, [isAuthenticated])
+    carregarVisitantes()
+  }, [])
 
   useEffect(() => {
     if (datasAgrupadas.length > 0 && !dataSelecionada) {
@@ -158,10 +153,6 @@ export default function AdminPage() {
     return null
   }
 
-  if (!isAuthenticated) {
-    return <LoginForm />
-  }
-
   return (
     <div className="space-y-6">
       <Card>
@@ -184,12 +175,12 @@ export default function AdminPage() {
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" asChild>
-                <Link href="/responsaveis">
+                <Link href="/admin/responsaveis">
                   <Users className="mr-2 h-4 w-4" /> Responsaveis
                 </Link>
               </Button>
               <Button variant="outline" size="sm" asChild>
-                <Link href="/mensagens">
+                <Link href="/admin/mensagens">
                   <MessageSquare className="mr-2 h-4 w-4" /> Mensagens
                 </Link>
               </Button>

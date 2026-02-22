@@ -23,12 +23,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { useAuth } from "@/contexts/auth-context"
-import LoginForm from "@/components/login-form"
 import type { Responsavel } from "@/types/supabase"
 
 export default function ResponsaveisPage() {
-  const { isAuthenticated } = useAuth()
   const [responsaveis, setResponsaveis] = useState<Responsavel[]>([])
   const [novoResponsavel, setNovoResponsavel] = useState("")
   const [carregando, setCarregando] = useState(true)
@@ -37,10 +34,8 @@ export default function ResponsaveisPage() {
     useState<Responsavel | null>(null)
 
   useEffect(() => {
-    if (isAuthenticated) {
-      carregarResponsaveis()
-    }
-  }, [isAuthenticated])
+    carregarResponsaveis()
+  }, [])
 
   const carregarResponsaveis = async () => {
     setCarregando(true)
@@ -54,10 +49,6 @@ export default function ResponsaveisPage() {
     } finally {
       setCarregando(false)
     }
-  }
-
-  if (!isAuthenticated) {
-    return <LoginForm />
   }
 
   const handleSalvar = async (e: React.FormEvent) => {
