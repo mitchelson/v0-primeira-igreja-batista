@@ -138,14 +138,14 @@ export default function AdminPage() {
 
   const renderMensagemStatus = (visitante: VisitanteComResponsavel) => {
     if (visitante.sem_whatsapp) {
-      return (
-        <div className="flex items-center text-muted-foreground">
-          <AlertCircle className="h-4 w-4 mr-1" />
-          <span className="text-xs">Sem WhatsApp</span>
-        </div>
-      )
+      return null
     }
-    return null
+    // Simple visual indicator - we'll fetch detailed status in the dialog
+    return (
+      <div className="flex items-center gap-1.5">
+        <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/40" />
+      </div>
+    )
   }
 
   return (
@@ -168,15 +168,25 @@ export default function AdminPage() {
                 <FileText className="mr-2 h-4 w-4" /> Relatorio
               </Button>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" asChild>
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" size="sm" asChild className="hidden sm:flex">
                 <Link href="/admin/responsaveis">
                   <Users className="mr-2 h-4 w-4" /> Responsaveis
                 </Link>
               </Button>
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="icon" asChild className="sm:hidden">
+                <Link href="/admin/responsaveis">
+                  <Users className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild className="hidden sm:flex">
                 <Link href="/admin/mensagens">
                   <MessageSquare className="mr-2 h-4 w-4" /> Mensagens
+                </Link>
+              </Button>
+              <Button variant="outline" size="icon" asChild className="sm:hidden">
+                <Link href="/admin/mensagens">
+                  <MessageSquare className="h-4 w-4" />
                 </Link>
               </Button>
             </div>

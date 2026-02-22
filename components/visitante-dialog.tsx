@@ -360,9 +360,10 @@ export default function VisitanteDialog({
               </div>
             </div>
 
-            <Separator />
+            {!semWhatsapp && <Separator />}
 
-            {/* Dynamic message categories */}
+            {/* Dynamic message categories - hidden if sem whatsapp */}
+            {!semWhatsapp && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Mensagens</Label>
@@ -412,22 +413,7 @@ export default function VisitanteDialog({
                           )}
                         </div>
                         <div className="shrink-0">
-                          {semWhatsapp ? (
-                            !enviada ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-xs h-8 whitespace-nowrap"
-                                onClick={() => handleMarcarEnviada(cat.id)}
-                              >
-                                Marcar
-                              </Button>
-                            ) : (
-                              <span className="text-xs text-primary">
-                                Feito
-                              </span>
-                            )
-                          ) : !enviada ? (
+                          {!enviada ? (
                             <Button
                               variant="outline"
                               size="sm"
@@ -452,12 +438,7 @@ export default function VisitanteDialog({
                 </div>
               )}
 
-              {semWhatsapp && categorias.length > 0 && (
-                <p className="text-xs text-muted-foreground text-center">
-                  Visitante sem WhatsApp - marque manualmente como feito
-                </p>
-              )}
-            </div>
+            )}
           </div>
 
           <DialogFooter className="flex-col sm:flex-row gap-2">
