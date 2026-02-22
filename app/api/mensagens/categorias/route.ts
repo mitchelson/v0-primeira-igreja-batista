@@ -30,16 +30,16 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { nome, descricao, ordem } = await request.json()
-    if (!nome) {
-      return NextResponse.json({ error: "Nome obrigatorio" }, { status: 400 })
+    const { nome, descricao, ordem, dia } = await request.json()
+    if (!nome || !dia) {
+      return NextResponse.json({ error: "Nome e dia obrigatorios" }, { status: 400 })
     }
 
     const maxOrdem = ordem ?? (await sql`SELECT COALESCE(MAX(ordem), 0) + 1 as next FROM mensagem_categorias`)[0].next
 
     const result = await sql`
-      INSERT INTO mensagem_categorias (nome, descricao, ordem)
-      VALUES (${nome}, ${descricao || null}, ${maxOrdem})
+      INSERT INTO mensagem_categorias (nome, dia, descricao, ordem)
+      VALUES (${nome}, ${dia}, ${descricao || null}, ${maxOrdem})
       RETURNING *
     `
     return NextResponse.json(result[0], { status: 201 })

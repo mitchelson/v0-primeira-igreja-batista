@@ -53,6 +53,7 @@ export default function MensagensPage() {
   const [editingCat, setEditingCat] = useState<MensagemCategoria | null>(null)
   const [catNome, setCatNome] = useState("")
   const [catDescricao, setCatDescricao] = useState("")
+  const [catDia, setCatDia] = useState("")
   const [catSaving, setCatSaving] = useState(false)
 
   // Model dialogs
@@ -125,6 +126,7 @@ export default function MensagensPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             nome: catNome.trim(),
+            dia: catDia.trim(),
             descricao: catDescricao.trim() || null,
           }),
         })
@@ -133,6 +135,7 @@ export default function MensagensPage() {
       setCatDialogOpen(false)
       setEditingCat(null)
       setCatNome("")
+      setCatDia("")
       setCatDescricao("")
     } catch (err) {
       console.error("Erro ao salvar categoria:", err)
@@ -212,6 +215,7 @@ export default function MensagensPage() {
   const openEditCat = (cat: MensagemCategoria) => {
     setEditingCat(cat)
     setCatNome(cat.nome)
+    setCatDia(cat.dia)
     setCatDescricao(cat.descricao ?? "")
     setCatDialogOpen(true)
   }
@@ -220,6 +224,7 @@ export default function MensagensPage() {
   const openNewCat = () => {
     setEditingCat(null)
     setCatNome("")
+    setCatDia("")
     setCatDescricao("")
     setCatDialogOpen(true)
   }
@@ -426,9 +431,18 @@ export default function MensagensPage() {
               <Label htmlFor="cat-nome">Nome</Label>
               <Input
                 id="cat-nome"
-                placeholder="Ex: Mensagem de Agradecimento (Segunda-feira)"
+                placeholder="Ex: Mensagem de Agradecimento"
                 value={catNome}
                 onChange={(e) => setCatNome(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cat-dia">Dia/Evento</Label>
+              <Input
+                id="cat-dia"
+                placeholder="Ex: Segunda-feira"
+                value={catDia}
+                onChange={(e) => setCatDia(e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -450,7 +464,7 @@ export default function MensagensPage() {
             </Button>
             <Button
               onClick={saveCategoria}
-              disabled={!catNome.trim() || catSaving}
+              disabled={!catNome.trim() || !catDia.trim() || catSaving}
             >
               {catSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {editingCat ? "Salvar" : "Criar"}

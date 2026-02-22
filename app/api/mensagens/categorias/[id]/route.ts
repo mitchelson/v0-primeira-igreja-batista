@@ -36,13 +36,13 @@ export async function PUT(
     // Build dynamic update - handle booleans properly
     let result
     if (sets.length === 1 && sets[0] === "ativa") {
-      result = await sql`UPDATE mensagem_categorias SET ativa = ${body.ativa}, updated_at = NOW() WHERE id = ${id} RETURNING *`
+      result = await sql`UPDATE mensagem_categorias SET ativa = ${body.ativa} WHERE id = ${id} RETURNING *`
     } else if (sets.length === 1 && sets[0] === "nome") {
-      result = await sql`UPDATE mensagem_categorias SET nome = ${body.nome}, updated_at = NOW() WHERE id = ${id} RETURNING *`
+      result = await sql`UPDATE mensagem_categorias SET nome = ${body.nome} WHERE id = ${id} RETURNING *`
     } else if (sets.length === 1 && sets[0] === "descricao") {
-      result = await sql`UPDATE mensagem_categorias SET descricao = ${body.descricao}, updated_at = NOW() WHERE id = ${id} RETURNING *`
+      result = await sql`UPDATE mensagem_categorias SET descricao = ${body.descricao} WHERE id = ${id} RETURNING *`
     } else if (sets.length === 1 && sets[0] === "ordem") {
-      result = await sql`UPDATE mensagem_categorias SET ordem = ${body.ordem}, updated_at = NOW() WHERE id = ${id} RETURNING *`
+      result = await sql`UPDATE mensagem_categorias SET ordem = ${body.ordem} WHERE id = ${id} RETURNING *`
     } else {
       // Multiple fields - handle each explicitly to avoid COALESCE issues with booleans
       result = await sql`
@@ -50,8 +50,7 @@ export async function PUT(
         SET nome = CASE WHEN ${body.nome !== undefined} THEN ${body.nome} ELSE nome END,
             descricao = CASE WHEN ${body.descricao !== undefined} THEN ${body.descricao} ELSE descricao END,
             ordem = CASE WHEN ${body.ordem !== undefined} THEN ${body.ordem} ELSE ordem END,
-            ativa = CASE WHEN ${body.ativa !== undefined} THEN ${body.ativa} ELSE ativa END,
-            updated_at = NOW()
+            ativa = CASE WHEN ${body.ativa !== undefined} THEN ${body.ativa} ELSE ativa END
         WHERE id = ${id}
         RETURNING *
       `

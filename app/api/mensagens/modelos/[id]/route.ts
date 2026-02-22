@@ -12,8 +12,7 @@ export async function PUT(
     const result = await sql`
       UPDATE mensagem_modelos
       SET titulo = COALESCE(${titulo ?? null}, titulo),
-          corpo = COALESCE(${corpo ?? null}, corpo),
-          updated_at = NOW()
+          corpo = COALESCE(${corpo ?? null}, corpo)
       WHERE id = ${id}
       RETURNING *
     `

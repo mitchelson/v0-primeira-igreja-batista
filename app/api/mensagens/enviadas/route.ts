@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     const enviadas = await sql`
       SELECT * FROM visitante_mensagens_enviadas
       WHERE visitante_id = ${visitanteId}
-      ORDER BY enviada_em DESC
+      ORDER BY enviado_em DESC
     `
     return NextResponse.json(enviadas)
   } catch (error) {

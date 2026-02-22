@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -12,7 +13,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
-import { Trash2 } from "lucide-react"
+import { Trash2, ArrowLeft } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,7 @@ import {
 import type { Responsavel } from "@/types/supabase"
 
 export default function ResponsaveisPage() {
+  const router = useRouter()
   const [responsaveis, setResponsaveis] = useState<Responsavel[]>([])
   const [novoResponsavel, setNovoResponsavel] = useState("")
   const [carregando, setCarregando] = useState(true)
@@ -124,9 +126,14 @@ export default function ResponsaveisPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
+      <div className="mb-6 flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={() => router.push("/admin")}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-2xl font-bold">Gerenciar Responsaveis</h1>
+      </div>
       <Card>
         <CardHeader>
-          <CardTitle>Gerenciar Responsaveis</CardTitle>
           <CardDescription>
             Adicione ou remova responsaveis pelo envio de mensagens aos
             visitantes
