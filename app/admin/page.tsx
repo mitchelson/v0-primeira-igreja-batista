@@ -54,18 +54,35 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!isLoading) {
+      console.log("[v0] Visitantes carregados:", visitantes)
       setVisitantesFiltrados(visitantes)
       agruparPorData(visitantes)
     }
   }, [visitantes, isLoading])
 
   const agruparPorData = (lista: VisitanteComResponsavel[]) => {
-    const grupos: Record<string, VisitanteComResponsavel[]> = {}
-    lista.forEach((visitante) => {
-      const dataFormatada = formatarData(visitante.data_cadastro)
-      if (!grupos[dataFormatada]) {
-        grupos[dataFormatada] = []
+    const agrupado: Record<string, VisitanteComResponsavel[]> = {}
+    const datas: string[] = []
+
+    lista.forEach((v) => {
+      const data = formatarData(v.data_cadastro)
+      if (!agrupado[data]) {
+        agrupado[data] = []
+        datas.push(data)
       }
+      agrupado[data].push(v)
+    })
+
+    datas.sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+    setDatasAgrupadas(datas)
+    setVisitantesPorData(agrupado)
+    
+    // Set dataSelecionada to the first date
+    if (datas.length > 0 && !dataSelecionada) {
+      setDataSelecionada(datas[0])
+      console.log("[v0] dataSelecionada set to:", datas[0])
+    }
+  }
       grupos[dataFormatada].push(visitante)
     })
 
@@ -215,6 +232,7 @@ export default function AdminPage() {
               )}
 
               <div className="space-y-3">
+                {console.log("[v0] dataSelecionada:", dataSelecionada, "visitantesPorData keys:", Object.keys(visitantesPorData))}
                 {dataSelecionada &&
                   visitantesPorData[dataSelecionada]?.map((visitante) => (
                     <button
