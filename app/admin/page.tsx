@@ -24,7 +24,10 @@ import {
   User,
   AlertCircle,
   FileText,
+  Users,
+  MessageSquare,
 } from "lucide-react"
+import Link from "next/link"
 import VisitanteDialog from "@/components/visitante-dialog"
 import NovoVisitanteDialog from "@/components/novo-visitante-dialog"
 import RelatorioMensalDialog from "@/components/relatorio-mensal-dialog"
@@ -163,22 +166,32 @@ export default function AdminPage() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <CardTitle>Administracao de Visitantes</CardTitle>
-              <CardDescription>
-                Gerencie os visitantes cadastrados
-              </CardDescription>
-            </div>
-            <div className="flex gap-2">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Administracao de Visitantes</CardTitle>
+                <CardDescription>
+                  Gerencie os visitantes cadastrados
+                </CardDescription>
+              </div>
               <Button
                 onClick={() => setRelatorioDialogAberto(true)}
                 variant="outline"
+                size="sm"
               >
                 <FileText className="mr-2 h-4 w-4" /> Relatorio
               </Button>
-              <Button onClick={() => setNovoVisitanteDialogAberto(true)}>
-                <Plus className="mr-2 h-4 w-4" /> Novo
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/responsaveis">
+                  <Users className="mr-2 h-4 w-4" /> Responsaveis
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/mensagens">
+                  <MessageSquare className="mr-2 h-4 w-4" /> Mensagens
+                </Link>
               </Button>
             </div>
           </div>
@@ -287,6 +300,15 @@ export default function AdminPage() {
         onClose={() => setRelatorioDialogAberto(false)}
         visitantes={visitantes}
       />
+
+      {/* FAB - Novo Visitante */}
+      <button
+        onClick={() => setNovoVisitanteDialogAberto(true)}
+        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
+        aria-label="Novo Visitante"
+      >
+        <Plus className="h-6 w-6" />
+      </button>
     </div>
   )
 }
