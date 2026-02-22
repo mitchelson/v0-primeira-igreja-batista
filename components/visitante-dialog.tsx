@@ -84,6 +84,9 @@ export default function VisitanteDialog({
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [categoriaSelecionada, setCategoriaSelecionada] =
     useState<MensagemCategoria | null>(null)
+  const [confirmarEnvioOpen, setConfirmarEnvioOpen] = useState(false)
+  const [categoriaConfirmacao, setCategoriConfirmacao] =
+    useState<MensagemCategoria | null>(null)
 
   const fetchCategorias = useCallback(async () => {
     try {
@@ -195,29 +198,13 @@ export default function VisitanteDialog({
     const link = gerarLinkWhatsApp(visitante.celular, mensagemProcessada)
     window.open(link, "_blank")
 
-    // Mark as sent
-    try {
-      const res = await fetch("/api/mensagens/enviadas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          visitante_id: visitante.id,
-          categoria_id: cat.id,
-        }),
-      })
-      if (res.ok) {
-        const novaEnviada = await res.json()
-        setEnviadas((prev) => {
-          const filtered = prev.filter((e) => e.categoria_id !== cat.id)
-          return [...filtered, novaEnviada]
-        })
-      }
-    } catch (err) {
-      console.error("Erro ao registrar envio:", err)
-    }
-
+    // Close model selection drawer
     setDrawerOpen(false)
     setCategoriaSelecionada(null)
+    
+    // Open confirmation dialog for user to mark as sent after sending manually
+    setCategoriConfirmacao(cat)
+    setConfirmarEnvioOpen(true)
   }
 
   const handleMarcarEnviada = async (categoriaId: string) => {
@@ -236,9 +223,26 @@ export default function VisitanteDialog({
           const filtered = prev.filter((e) => e.categoria_id !== categoriaId)
           return [...filtered, novaEnviada]
         })
+        toast({
+          title: "Sucesso",
+          description: "Mensagem marcada como enviada",
+        })
       }
     } catch (err) {
       console.error("Erro ao marcar como enviada:", err)
+      toast({
+        title: "Erro",
+        description: "Falha ao marcar como enviada",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleConfirmarEnvio = async () => {
+    if (categoriaConfirmacao) {
+      await handleMarcarEnviada(categoriaConfirmacao.id)
+      setConfirmarEnvioOpen(false)
+      setCategoriConfirmacao(null)
     }
   }
 
@@ -412,24 +416,29 @@ export default function VisitanteDialog({
                             </p>
                           )}
                         </div>
-                        <div className="shrink-0">
+                        <div className="shrink-0 flex items-center gap-1.5">
                           {!enviada ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-xs h-8 gap-1.5"
-                              onClick={() => handleAbrirModelos(cat)}
-                              disabled={
-                                !visitante.celular || cat.modelos.length === 0
-                              }
-                            >
-                              <MessageSquare className="h-3.5 w-3.5" />
-                              Enviar
-                            </Button>
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-8 gap-1.5"
+                                onClick={() => handleAbrirModelos(cat)}
+                                disabled={
+                                  !visitante.celular || cat.modelos.length === 0
+                                }
+                              >
+                                <MessageSquare className="h-3.5 w-3.5" />
+                                Enviar
+                              </Button>
+                            </>
                           ) : (
-                            <span className="text-xs text-primary">
-                              Enviada
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                              <span className="text-xs text-primary whitespace-nowrap">
+                                Enviada
+                              </span>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -502,6 +511,43 @@ export default function VisitanteDialog({
                 </button>
               )
             })}
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Drawer for confirming message sent */}
+      <Drawer open={confirmarEnvioOpen} onOpenChange={setConfirmarEnvioOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Confirmar envio da mensagem</DrawerTitle>
+            <DrawerDescription>
+              Você conseguiu enviar a mensagem para {visitante.nome}?
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4 pb-6 space-y-4">
+            <div className="rounded-lg bg-muted/50 p-4">
+              <p className="text-sm font-medium mb-2">
+                Categoria: {categoriaConfirmacao?.nome}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {categoriaConfirmacao?.descricao}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setConfirmarEnvioOpen(false)}
+                className="flex-1"
+              >
+                Nao foi agora
+              </Button>
+              <Button
+                onClick={handleConfirmarEnvio}
+                className="flex-1"
+              >
+                Sim, foi enviada!
+              </Button>
+            </div>
           </div>
         </DrawerContent>
       </Drawer>
