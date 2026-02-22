@@ -364,7 +364,7 @@ export default function VisitanteDialog({
 
             {/* Dynamic message categories - hidden if sem whatsapp */}
             {!semWhatsapp && (
-            <div className="space-y-2">
+              <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Mensagens</Label>
                 {totalCategorias > 0 && (
@@ -437,7 +437,7 @@ export default function VisitanteDialog({
                   })}
                 </div>
               )}
-
+            </div>
             )}
           </div>
 
