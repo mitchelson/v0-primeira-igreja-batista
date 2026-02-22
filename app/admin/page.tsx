@@ -21,12 +21,9 @@ import { formatarData } from "@/lib/utils"
 import {
   Search,
   Plus,
-  Check,
   User,
   AlertCircle,
-  MessageSquare,
   FileText,
-  CheckCheck,
 } from "lucide-react"
 import VisitanteDialog from "@/components/visitante-dialog"
 import NovoVisitanteDialog from "@/components/novo-visitante-dialog"
@@ -149,42 +146,13 @@ export default function AdminPage() {
   const renderMensagemStatus = (visitante: VisitanteComResponsavel) => {
     if (visitante.sem_whatsapp) {
       return (
-        <div className="flex items-center text-slate-500">
+        <div className="flex items-center text-muted-foreground">
           <AlertCircle className="h-4 w-4 mr-1" />
           <span className="text-xs">Sem WhatsApp</span>
         </div>
       )
     }
-
-    const ambas = visitante.msg_segunda && visitante.msg_sabado
-    const alguma = visitante.msg_segunda || visitante.msg_sabado
-
-    if (ambas) {
-      return (
-        <div className="flex items-center text-green-600">
-          <CheckCheck className="h-4 w-4 mr-1" />
-          <span className="text-xs">Ambas enviadas</span>
-        </div>
-      )
-    }
-
-    if (alguma) {
-      return (
-        <div className="flex items-center text-blue-600">
-          <Check className="h-4 w-4 mr-1" />
-          <span className="text-xs">
-            {visitante.msg_segunda ? "Seg" : "Sab"} enviada
-          </span>
-        </div>
-      )
-    }
-
-    return (
-      <div className="flex items-center text-amber-600">
-        <MessageSquare className="h-4 w-4 mr-1" />
-        <span className="text-xs">Pendente</span>
-      </div>
-    )
+    return null
   }
 
   if (!isAuthenticated) {
@@ -286,9 +254,11 @@ export default function AdminPage() {
                           )}
                         </div>
                       </div>
-                      <div className="flex-shrink-0">
-                        {renderMensagemStatus(visitante)}
-                      </div>
+                      {renderMensagemStatus(visitante) && (
+                        <div className="flex-shrink-0">
+                          {renderMensagemStatus(visitante)}
+                        </div>
+                      )}
                     </button>
                   ))}
               </div>

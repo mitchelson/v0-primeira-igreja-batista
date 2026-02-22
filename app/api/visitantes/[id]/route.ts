@@ -52,8 +52,6 @@ export async function PUT(
       civil_status,
       membro_igreja,
       quer_visita,
-      msg_segunda,
-      msg_sabado,
       sem_whatsapp,
       responsavel_id,
     } = body
@@ -70,8 +68,6 @@ export async function PUT(
         civil_status = ${civil_status ?? null},
         membro_igreja = COALESCE(${membro_igreja ?? null}, membro_igreja),
         quer_visita = COALESCE(${quer_visita ?? null}, quer_visita),
-        msg_segunda = COALESCE(${msg_segunda ?? null}, msg_segunda),
-        msg_sabado = COALESCE(${msg_sabado ?? null}, msg_sabado),
         sem_whatsapp = COALESCE(${sem_whatsapp ?? null}, sem_whatsapp),
         responsavel_id = ${responsavel_id ?? null}
       WHERE id = ${id}

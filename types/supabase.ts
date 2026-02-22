@@ -13,8 +13,6 @@ export interface Visitante {
   membro_igreja: boolean
   quer_visita: boolean
   data_cadastro: string
-  msg_segunda: boolean
-  msg_sabado: boolean
   sem_whatsapp: boolean
   responsavel_id: string | null
 }
@@ -45,8 +43,6 @@ export interface VisitanteUpdate {
   civil_status?: string | null
   membro_igreja?: boolean
   quer_visita?: boolean
-  msg_segunda?: boolean
-  msg_sabado?: boolean
   sem_whatsapp?: boolean
   responsavel_id?: string | null
 }
@@ -59,6 +55,36 @@ export interface Responsavel {
 
 export type VisitanteComResponsavel = Visitante & {
   responsavel_nome?: string | null
+}
+
+// --- Message system types ---
+
+export interface MensagemCategoria {
+  id: string
+  nome: string
+  descricao: string | null
+  ordem: number
+  ativa: boolean
+  created_at: string
+  updated_at: string
+  modelos: MensagemModelo[]
+}
+
+export interface MensagemModelo {
+  id: string
+  categoria_id: string
+  titulo: string
+  corpo: string
+  ordem: number
+  created_at: string
+  updated_at: string
+}
+
+export interface VisitanteMensagemEnviada {
+  id: string
+  visitante_id: string
+  categoria_id: string
+  enviada_em: string
 }
 
 // Enums para campos do formulario

@@ -40,8 +40,10 @@ export function useRelatorios() {
       visitantes: readonly VisitanteComResponsavel[],
     ): EstatisticasRelatorio => {
       const totalVisitantes = visitantes.length
+      // Now tracked via visitante_mensagens_enviadas table
+      // For report purposes, count sem_whatsapp as "complete"
       const mensagensEnviadas = visitantes.filter(
-        (v) => v.msg_segunda && v.msg_sabado,
+        (v) => v.sem_whatsapp,
       ).length
       const taxaEnvioMensagens =
         totalVisitantes > 0

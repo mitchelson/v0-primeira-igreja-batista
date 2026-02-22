@@ -121,68 +121,12 @@ export function useVisitantes() {
     }
   }, [])
 
-  const marcarMsgSegunda = useCallback(
-    async (id: string): Promise<boolean> => {
-      setLoading(true)
-      setError(null)
-
-      try {
-        const res = await fetch(`/api/visitantes/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ msg_segunda: true }),
-        })
-        if (!res.ok) throw new Error("Erro ao marcar mensagem de segunda")
-        return true
-      } catch (err) {
-        const errorMsg =
-          err instanceof Error
-            ? err.message
-            : "Erro ao marcar mensagem de segunda"
-        setError(errorMsg)
-        return false
-      } finally {
-        setLoading(false)
-      }
-    },
-    [],
-  )
-
-  const marcarMsgSabado = useCallback(
-    async (id: string): Promise<boolean> => {
-      setLoading(true)
-      setError(null)
-
-      try {
-        const res = await fetch(`/api/visitantes/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ msg_sabado: true }),
-        })
-        if (!res.ok) throw new Error("Erro ao marcar mensagem de sabado")
-        return true
-      } catch (err) {
-        const errorMsg =
-          err instanceof Error
-            ? err.message
-            : "Erro ao marcar mensagem de sabado"
-        setError(errorMsg)
-        return false
-      } finally {
-        setLoading(false)
-      }
-    },
-    [],
-  )
-
   return {
     buscarTodos,
     buscarPorId,
     criar,
     atualizar,
     deletar,
-    marcarMsgSegunda,
-    marcarMsgSabado,
     loading,
     error,
     clearError: () => setError(null),

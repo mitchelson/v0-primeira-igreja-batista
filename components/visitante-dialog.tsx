@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -11,6 +11,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer"
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -20,10 +27,27 @@ import {
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
-import { formatarData, gerarMensagemSegunda, gerarMensagemSabado } from "@/lib/utils"
+import {
+  formatarData,
+  processarTemplateMensagem,
+  gerarLinkWhatsApp,
+} from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"
-import { MessageSquare, Edit, Phone } from "lucide-react"
-import type { Visitante, Responsavel } from "@/types/supabase"
+import {
+  Edit,
+  Phone,
+  CheckCircle2,
+  Circle,
+  MessageSquare,
+  Loader2,
+  ExternalLink,
+} from "lucide-react"
+import type {
+  Visitante,
+  Responsavel,
+  MensagemCategoria,
+  VisitanteMensagemEnviada,
+} from "@/types/supabase"
 import NovoVisitanteDialog from "./novo-visitante-dialog"
 
 interface VisitanteDialogProps {
@@ -44,12 +68,6 @@ export default function VisitanteDialog({
   const [nomeResponsavel, setNomeResponsavel] = useState<string>(
     visitante.responsavel_nome || "",
   )
-  const [msgSegunda, setMsgSegunda] = useState<boolean>(
-    visitante.msg_segunda,
-  )
-  const [msgSabado, setMsgSabado] = useState<boolean>(
-    visitante.msg_sabado,
-  )
   const [semWhatsapp, setSemWhatsapp] = useState<boolean>(
     visitante.sem_whatsapp || false,
   )
@@ -57,14 +75,45 @@ export default function VisitanteDialog({
   const [carregandoResponsaveis, setCarregandoResponsaveis] = useState(true)
   const [editandoCadastro, setEditandoCadastro] = useState(false)
 
+  // Dynamic message categories
+  const [categorias, setCategorias] = useState<MensagemCategoria[]>([])
+  const [enviadas, setEnviadas] = useState<VisitanteMensagemEnviada[]>([])
+  const [loadingCategorias, setLoadingCategorias] = useState(true)
+
+  // Drawer state for model selection
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [categoriaSelecionada, setCategoriaSelecionada] =
+    useState<MensagemCategoria | null>(null)
+
+  const fetchCategorias = useCallback(async () => {
+    try {
+      setLoadingCategorias(true)
+      const [catRes, envRes] = await Promise.all([
+        fetch("/api/mensagens/categorias"),
+        fetch(`/api/mensagens/enviadas?visitante_id=${visitante.id}`),
+      ])
+      if (catRes.ok) {
+        const data = await catRes.json()
+        // Only show active categories
+        setCategorias(data.filter((c: MensagemCategoria) => c.ativa))
+      }
+      if (envRes.ok) {
+        setEnviadas(await envRes.json())
+      }
+    } catch (err) {
+      console.error("Erro ao buscar categorias:", err)
+    } finally {
+      setLoadingCategorias(false)
+    }
+  }, [visitante.id])
+
   useEffect(() => {
     const carregarResponsaveis = async () => {
       setCarregandoResponsaveis(true)
       try {
         const res = await fetch("/api/responsaveis")
         if (!res.ok) throw new Error("Erro ao carregar responsaveis")
-        const data = await res.json()
-        setResponsaveis(data)
+        setResponsaveis(await res.json())
       } catch (error) {
         console.error("Erro ao carregar responsaveis:", error)
       } finally {
@@ -73,25 +122,21 @@ export default function VisitanteDialog({
     }
 
     carregarResponsaveis()
-  }, [])
+    fetchCategorias()
+  }, [fetchCategorias])
 
   useEffect(() => {
     if (responsavelSelecionado) {
       const resp = responsaveis.find((r) => r.id === responsavelSelecionado)
-      if (resp) {
-        setNomeResponsavel(resp.nome)
-      }
+      if (resp) setNomeResponsavel(resp.nome)
     } else {
       setNomeResponsavel("")
     }
   }, [responsavelSelecionado, responsaveis])
 
-  useEffect(() => {
-    if (semWhatsapp) {
-      setMsgSegunda(true)
-      setMsgSabado(true)
-    }
-  }, [semWhatsapp])
+  const isCategoriaEnviada = (categoriaId: string) => {
+    return enviadas.some((e) => e.categoria_id === categoriaId)
+  }
 
   const handleSalvar = async () => {
     setSalvando(true)
@@ -101,8 +146,6 @@ export default function VisitanteDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           responsavel_id: responsavelSelecionado,
-          msg_segunda: msgSegunda || semWhatsapp,
-          msg_sabado: msgSabado || semWhatsapp,
           sem_whatsapp: semWhatsapp,
         }),
       })
@@ -112,8 +155,6 @@ export default function VisitanteDialog({
       const visitanteAtualizado: Visitante = {
         ...visitante,
         responsavel_id: responsavelSelecionado,
-        msg_segunda: msgSegunda || semWhatsapp,
-        msg_sabado: msgSabado || semWhatsapp,
         sem_whatsapp: semWhatsapp,
       }
 
@@ -134,16 +175,71 @@ export default function VisitanteDialog({
     }
   }
 
-  const handleEnviarSegunda = () => {
-    const mensagem = gerarMensagemSegunda(visitante, nomeResponsavel)
-    const telefone = visitante.celular.replace(/\D/g, "")
-    window.open(`https://wa.me/55${telefone}?text=${mensagem}`, "_blank")
+  const handleAbrirModelos = (cat: MensagemCategoria) => {
+    setCategoriaSelecionada(cat)
+    setDrawerOpen(true)
   }
 
-  const handleEnviarSabado = () => {
-    const mensagem = gerarMensagemSabado(visitante, nomeResponsavel)
-    const telefone = visitante.celular.replace(/\D/g, "")
-    window.open(`https://wa.me/55${telefone}?text=${mensagem}`, "_blank")
+  const handleEnviarModelo = async (
+    cat: MensagemCategoria,
+    modeloCorpo: string,
+  ) => {
+    // Process template with visitor data
+    const mensagemProcessada = processarTemplateMensagem(
+      modeloCorpo,
+      visitante,
+      nomeResponsavel || undefined,
+    )
+
+    // Open WhatsApp link
+    const link = gerarLinkWhatsApp(visitante.celular, mensagemProcessada)
+    window.open(link, "_blank")
+
+    // Mark as sent
+    try {
+      const res = await fetch("/api/mensagens/enviadas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          visitante_id: visitante.id,
+          categoria_id: cat.id,
+        }),
+      })
+      if (res.ok) {
+        const novaEnviada = await res.json()
+        setEnviadas((prev) => {
+          const filtered = prev.filter((e) => e.categoria_id !== cat.id)
+          return [...filtered, novaEnviada]
+        })
+      }
+    } catch (err) {
+      console.error("Erro ao registrar envio:", err)
+    }
+
+    setDrawerOpen(false)
+    setCategoriaSelecionada(null)
+  }
+
+  const handleMarcarEnviada = async (categoriaId: string) => {
+    try {
+      const res = await fetch("/api/mensagens/enviadas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          visitante_id: visitante.id,
+          categoria_id: categoriaId,
+        }),
+      })
+      if (res.ok) {
+        const novaEnviada = await res.json()
+        setEnviadas((prev) => {
+          const filtered = prev.filter((e) => e.categoria_id !== categoriaId)
+          return [...filtered, novaEnviada]
+        })
+      }
+    } catch (err) {
+      console.error("Erro ao marcar como enviada:", err)
+    }
   }
 
   const handleEdicaoCadastro = (visitanteAtualizado: Visitante) => {
@@ -176,199 +272,256 @@ export default function VisitanteDialog({
     .filter(Boolean)
     .join(", ")
 
+  const totalCategorias = categorias.length
+  const totalEnviadas = categorias.filter((c) =>
+    isCategoriaEnviada(c.id),
+  ).length
+
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            Detalhes do Visitante
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setEditandoCadastro(true)}
-              className="h-8 w-8 p-0"
-            >
-              <Edit className="h-4 w-4" />
-              <span className="sr-only">Editar visitante</span>
-            </Button>
-          </DialogTitle>
-          <DialogDescription>
-            Cadastrado em {formatarData(visitante.data_cadastro)}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          {/* Resumo compacto */}
-          <div className="rounded-lg bg-muted/50 p-3">
-            <p className="text-sm leading-relaxed">
-              {resumo}
-              {"."}
-            </p>
-            <div className="flex items-center gap-1.5 mt-2 text-sm font-medium">
-              <Phone className="h-3.5 w-3.5 text-muted-foreground" />
-              <span>{visitante.celular}</span>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Responsavel */}
-          <div className="space-y-2">
-            <Label htmlFor="responsavel">Responsavel</Label>
-            {carregandoResponsaveis ? (
-              <div className="flex items-center gap-2">
-                <div className="animate-spin h-4 w-4 border-b-2 border-primary rounded-full" />
-                <span className="text-sm text-muted-foreground">
-                  Carregando...
-                </span>
-              </div>
-            ) : (
-              <Select
-                value={responsavelSelecionado || "none"}
-                onValueChange={(value) =>
-                  setResponsavelSelecionado(value === "none" ? null : value)
-                }
+    <>
+      <Dialog open onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              Detalhes do Visitante
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setEditandoCadastro(true)}
+                className="h-8 w-8 p-0"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um responsavel" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum</SelectItem>
-                  {responsaveis.length > 0 ? (
-                    responsaveis.map((r) => (
+                <Edit className="h-4 w-4" />
+                <span className="sr-only">Editar visitante</span>
+              </Button>
+            </DialogTitle>
+            <DialogDescription>
+              Cadastrado em {formatarData(visitante.data_cadastro)}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Resumo compacto */}
+            <div className="rounded-lg bg-muted/50 p-3">
+              <p className="text-sm leading-relaxed">{resumo}.</p>
+              <div className="flex items-center gap-1.5 mt-2 text-sm font-medium">
+                <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>{visitante.celular}</span>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Responsavel */}
+            <div className="space-y-2">
+              <Label htmlFor="responsavel">Responsavel</Label>
+              {carregandoResponsaveis ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span className="text-sm text-muted-foreground">
+                    Carregando...
+                  </span>
+                </div>
+              ) : (
+                <Select
+                  value={responsavelSelecionado || "none"}
+                  onValueChange={(value) =>
+                    setResponsavelSelecionado(
+                      value === "none" ? null : value,
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um responsavel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    {responsaveis.map((r) => (
                       <SelectItem key={r.id} value={r.id}>
                         {r.nome}
                       </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="no-options" disabled>
-                      Nenhum responsavel cadastrado
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-
-          {/* Sem WhatsApp */}
-          <div className="flex items-center justify-between">
-            <Label htmlFor="sem-whatsapp">Sem WhatsApp</Label>
-            <div className="flex items-center gap-2">
-              <Switch
-                id="sem-whatsapp"
-                checked={semWhatsapp}
-                onCheckedChange={(checked) => {
-                  setSemWhatsapp(checked)
-                  if (checked) {
-                    setMsgSegunda(true)
-                    setMsgSabado(true)
-                  }
-                }}
-              />
-              <span className="text-sm text-muted-foreground w-8">
-                {semWhatsapp ? "Sim" : "Nao"}
-              </span>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
-          </div>
 
-          <Separator />
-
-          {/* Mensagem de Segunda */}
-          <div className="space-y-3">
+            {/* Sem WhatsApp */}
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Msg Segunda (agradecimento)</p>
-                <p className="text-xs text-muted-foreground">
-                  Enviada na segunda para agradecer a visita
-                </p>
-              </div>
+              <Label htmlFor="sem-whatsapp">Sem WhatsApp</Label>
               <div className="flex items-center gap-2">
                 <Switch
-                  id="msg-segunda"
-                  checked={msgSegunda}
-                  onCheckedChange={setMsgSegunda}
-                  disabled={semWhatsapp}
+                  id="sem-whatsapp"
+                  checked={semWhatsapp}
+                  onCheckedChange={setSemWhatsapp}
                 />
                 <span className="text-sm text-muted-foreground w-8">
-                  {msgSegunda ? "Sim" : "Nao"}
+                  {semWhatsapp ? "Sim" : "Nao"}
                 </span>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleEnviarSegunda}
-              className="w-full"
-              disabled={!visitante.celular || semWhatsapp}
-            >
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Enviar agradecimento (segunda)
-            </Button>
-          </div>
 
-          <Separator />
+            <Separator />
 
-          {/* Mensagem de Sabado */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Msg Sabado (convite)</p>
-                <p className="text-xs text-muted-foreground">
-                  Enviada no sabado convidando para o culto
+            {/* Dynamic message categories */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Mensagens</Label>
+                {totalCategorias > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    {totalEnviadas}/{totalCategorias} enviadas
+                  </span>
+                )}
+              </div>
+
+              {loadingCategorias ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                </div>
+              ) : categorias.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-3">
+                  Nenhuma categoria de mensagem ativa
                 </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="msg-sabado"
-                  checked={msgSabado}
-                  onCheckedChange={setMsgSabado}
-                  disabled={semWhatsapp}
-                />
-                <span className="text-sm text-muted-foreground w-8">
-                  {msgSabado ? "Sim" : "Nao"}
-                </span>
-              </div>
+              ) : (
+                <div className="space-y-2">
+                  {categorias.map((cat) => {
+                    const enviada = isCategoriaEnviada(cat.id)
+                    return (
+                      <div
+                        key={cat.id}
+                        className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
+                          enviada
+                            ? "bg-primary/5 border-primary/20"
+                            : "bg-card"
+                        }`}
+                      >
+                        {enviada ? (
+                          <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                        ) : (
+                          <Circle className="h-5 w-5 text-muted-foreground/40 shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className={`text-sm font-medium ${enviada ? "text-primary" : "text-foreground"}`}
+                          >
+                            {cat.nome}
+                          </p>
+                          {cat.descricao && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {cat.descricao}
+                            </p>
+                          )}
+                        </div>
+                        {semWhatsapp ? (
+                          !enviada ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="shrink-0 text-xs h-8"
+                              onClick={() => handleMarcarEnviada(cat.id)}
+                            >
+                              Marcar
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-primary shrink-0">
+                              Feito
+                            </span>
+                          )
+                        ) : !enviada ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0 text-xs h-8 gap-1.5"
+                            onClick={() => handleAbrirModelos(cat)}
+                            disabled={
+                              !visitante.celular || cat.modelos.length === 0
+                            }
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            Enviar
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-primary shrink-0">
+                            Enviada
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {semWhatsapp && categorias.length > 0 && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Visitante sem WhatsApp - marque manualmente como feito
+                </p>
+              )}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleEnviarSabado}
-              className="w-full"
-              disabled={!visitante.celular || semWhatsapp}
-            >
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Enviar convite (sabado)
-            </Button>
           </div>
 
-          {semWhatsapp && (
-            <p className="text-xs text-muted-foreground text-center">
-              Mensagens marcadas automaticamente para visitantes sem WhatsApp
-            </p>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={onClose} className="flex-1">
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSalvar}
+              disabled={salvando}
+              className="flex-1"
+            >
+              {salvando ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+
+          {editandoCadastro && (
+            <NovoVisitanteDialog
+              visitanteParaEdicao={visitante}
+              onClose={() => setEditandoCadastro(false)}
+              onSave={handleEdicaoCadastro}
+            />
           )}
-        </div>
+        </DialogContent>
+      </Dialog>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={onClose} className="flex-1">
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSalvar}
-            disabled={salvando}
-            className="flex-1"
-          >
-            {salvando ? "Salvando..." : "Salvar"}
-          </Button>
-        </DialogFooter>
-
-        {editandoCadastro && (
-          <NovoVisitanteDialog
-            visitanteParaEdicao={visitante}
-            onClose={() => setEditandoCadastro(false)}
-            onSave={handleEdicaoCadastro}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+      {/* Drawer for model selection */}
+      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>
+              {categoriaSelecionada?.nome ?? "Escolher modelo"}
+            </DrawerTitle>
+            <DrawerDescription>
+              Escolha um modelo de mensagem para enviar via WhatsApp
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4 pb-6 space-y-3 max-h-[60vh] overflow-y-auto">
+            {categoriaSelecionada?.modelos.map((modelo) => {
+              const preview = processarTemplateMensagem(
+                modelo.corpo,
+                visitante,
+                nomeResponsavel || undefined,
+              )
+              return (
+                <button
+                  key={modelo.id}
+                  onClick={() =>
+                    handleEnviarModelo(categoriaSelecionada, modelo.corpo)
+                  }
+                  className="w-full text-left rounded-lg border bg-card p-4 hover:border-primary/50 hover:bg-primary/5 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-foreground">
+                      {modelo.titulo}
+                    </span>
+                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                  </div>
+                  <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed line-clamp-6">
+                    {preview}
+                  </p>
+                </button>
+              )
+            })}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    </>
   )
 }

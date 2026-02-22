@@ -1,6 +1,5 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import type { SexoType } from "@/types/supabase"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -37,60 +36,54 @@ export function formatarData(data: string): string {
   }
 }
 
-// Interface para os dados do visitante na geracao de mensagem
+// Dynamic message template processor
+// Replaces placeholders like [Nome], [Seu Nome], [Nome da Igreja], [horario], [data]
 interface VisitanteParaMensagem {
   readonly nome: string
   readonly data_cadastro: string
-  readonly sexo?: SexoType | null
+  readonly sexo?: string | null
   readonly membro_igreja?: boolean
   readonly quer_visita?: boolean
 }
 
-function obterPronome(sexo: SexoType | null | undefined): "o" | "a" {
-  return sexo === "Feminino" ? "a" : "o"
-}
-
-// Mensagem de segunda-feira (agradecimento pela visita)
-export function gerarMensagemSegunda(
+export function processarTemplateMensagem(
+  template: string,
   visitante: VisitanteParaMensagem,
   nomeResponsavel?: string,
 ): string {
-  const pronome = obterPronome(visitante.sexo)
-  const nomeResp = nomeResponsavel ?? "um responsavel"
+  const pronome = visitante.sexo === "Feminino" ? "a" : "o"
+  const pronomeMaiusculo = visitante.sexo === "Feminino" ? "A" : "O"
 
-  const mensagem = `Graca e Paz, ${visitante.nome}, tudo bem?
-Sou ${nomeResp} da Primeira Igreja Batista de Roraima.
-Ficamos muito felizes e honrados em ter voce compartilhando no culto conosco, sinta-se abracad${pronome} e seja sempre bem-vind${pronome}!!
-Tenha uma semana abencoada e cheia da presenca de Jesus!
-Grande abraco!`
+  let resultado = template
+    .replace(/\[Nome\]/g, visitante.nome)
+    .replace(/\[nome\]/g, visitante.nome)
+    .replace(/\[Seu Nome\]/g, nomeResponsavel ?? "um responsavel")
+    .replace(/\[seu nome\]/g, nomeResponsavel ?? "um responsavel")
+    .replace(/\[Nome da Igreja\]/g, "Primeira Igreja Batista de Roraima")
+    .replace(/\[nome da igreja\]/g, "Primeira Igreja Batista de Roraima")
+    .replace(/\[horario\]/g, "19h")
+    .replace(/\[Horario\]/g, "19h")
+    .replace(/\[data\]/g, formatarData(visitante.data_cadastro))
+    .replace(/\[Data\]/g, formatarData(visitante.data_cadastro))
+    .replace(/\[pronome\]/g, pronome)
+    .replace(/\[Pronome\]/g, pronomeMaiusculo)
+    .replace(/\[bem-vindo\]/g, `bem-vind${pronome}`)
+    .replace(/\[Bem-vindo\]/g, `Bem-vind${pronome}`)
+    .replace(/\[abracado\]/g, `abracad${pronome}`)
+    .replace(/\[Abracado\]/g, `Abracad${pronome}`)
+    .replace(/\[convidado\]/g, `convidad${pronome}`)
+    .replace(/\[Convidado\]/g, `Convidad${pronome}`)
 
-  return encodeURIComponent(mensagem)
+  return resultado
 }
 
-// Mensagem de sabado (convite para o culto)
-export function gerarMensagemSabado(
-  visitante: VisitanteParaMensagem,
-  nomeResponsavel?: string,
+export function gerarLinkWhatsApp(
+  celular: string,
+  mensagemProcessada: string,
 ): string {
-  const pronome = obterPronome(visitante.sexo)
-  const nomeResp = nomeResponsavel ?? "um responsavel"
-
-  const mensagem = `Graca e Paz, ${visitante.nome}!
-Sou ${nomeResp} da Primeira Igreja Batista de Roraima.
-Gostaríamos de convidar voce para o nosso culto de domingo!
-Sera uma bencao ter voce conosco novamente.
-Esperamos por voce, sera muito bem-vind${pronome}!
-Grande abraco!`
-
-  return encodeURIComponent(mensagem)
-}
-
-// Alias para compatibilidade
-export function gerarMensagemWhatsApp(
-  visitante: VisitanteParaMensagem,
-  nomeResponsavel?: string,
-): string {
-  return gerarMensagemSegunda(visitante, nomeResponsavel)
+  const numeros = celular.replace(TELEFONE_REGEX, "")
+  const numeroComCodigo = numeros.startsWith("55") ? numeros : `55${numeros}`
+  return `https://wa.me/${numeroComCodigo}?text=${encodeURIComponent(mensagemProcessada)}`
 }
 
 export function validarTelefone(telefone: string): boolean {
