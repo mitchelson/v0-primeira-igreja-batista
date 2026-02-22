@@ -139,10 +139,17 @@ export default function AdminPage() {
     if (visitante.sem_whatsapp) {
       return null
     }
-    // Simple visual indicator - we'll fetch detailed status in the dialog
+    // Show one dot per active message category
+    const categoriasDots = Array(Math.min(3, Math.max(1, 3))).fill(0)
     return (
-      <div className="flex items-center gap-1.5">
-        <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/40" />
+      <div className="flex items-center gap-1">
+        {categoriasDots.map((_, idx) => (
+          <div
+            key={idx}
+            className="h-2 w-2 rounded-full bg-muted-foreground/40"
+            title="Mensagem ativa"
+          />
+        ))}
       </div>
     )
   }
@@ -159,13 +166,6 @@ export default function AdminPage() {
                   Gerencie os visitantes cadastrados
                 </CardDescription>
               </div>
-              <Button
-                onClick={() => setRelatorioDialogAberto(true)}
-                variant="outline"
-                size="sm"
-              >
-                <FileText className="mr-2 h-4 w-4" /> Relatorio
-              </Button>
             </div>
             <div className="flex gap-2 flex-wrap">
               <Button variant="outline" size="sm" asChild className="hidden sm:flex">
@@ -187,6 +187,22 @@ export default function AdminPage() {
                 <Link href="/admin/mensagens">
                   <MessageSquare className="h-4 w-4" />
                 </Link>
+              </Button>
+              <Button 
+                onClick={() => setRelatorioDialogAberto(true)}
+                variant="outline"
+                size="sm"
+                className="hidden sm:flex"
+              >
+                <FileText className="mr-2 h-4 w-4" /> Relatorio
+              </Button>
+              <Button 
+                onClick={() => setRelatorioDialogAberto(true)}
+                variant="outline"
+                size="icon"
+                className="sm:hidden"
+              >
+                <FileText className="h-4 w-4" />
               </Button>
             </div>
           </div>

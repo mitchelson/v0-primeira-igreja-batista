@@ -441,14 +441,14 @@ export default function VisitanteDialog({
             )}
           </div>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={onClose} className="flex-1">
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2 pt-2">
+            <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
               Cancelar
             </Button>
             <Button
               onClick={handleSalvar}
               disabled={salvando}
-              className="flex-1"
+              className="w-full sm:w-auto"
             >
               {salvando ? "Salvando..." : "Salvar"}
             </Button>
