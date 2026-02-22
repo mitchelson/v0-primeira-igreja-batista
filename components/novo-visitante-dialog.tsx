@@ -1,12 +1,11 @@
-"use client";
+"use client"
 
-import type React from "react";
-
-import { useEffect, useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
+import type React from "react"
+import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -14,7 +13,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 import {
   Form,
   FormControl,
@@ -22,97 +21,48 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase";
-import { formatarTelefone } from "@/lib/utils";
-import type {
-  Visitante,
-  VisitanteInsert,
-  IntencaoType,
-  SexoType,
-  CivilStatusType,
-} from "@/types/supabase";
-import { IntencaoEnum, SexoEnum, CivilStatusEnum } from "@/types/supabase";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { toast } from "@/components/ui/use-toast"
+import { formatarTelefone } from "@/lib/utils"
+import type { Visitante, VisitanteInsert } from "@/types/supabase"
 import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "./ui/select";
+  SexoEnum,
+  CivilStatusEnum,
+  FaixaEtariaEnum,
+  CidadeEnum,
+} from "@/types/supabase"
 
-// Constantes para validação e reutilização
-const INTENCAO_OPTIONS = Object.values(IntencaoEnum) as [
-  IntencaoType,
-  ...IntencaoType[]
-];
-const SEXO_OPTIONS = Object.values(SexoEnum) as [SexoType, ...SexoType[]];
-const CIVIL_STATUS_OPTIONS = Object.values(CivilStatusEnum) as [
-  CivilStatusType,
-  ...CivilStatusType[]
-];
-
-// Schema melhorado com validações mais específicas
 const formSchema = z.object({
   nome: z
     .string()
     .min(3, { message: "Nome deve ter pelo menos 3 caracteres" })
-    .max(100, { message: "Nome deve ter no máximo 100 caracteres" })
-    .regex(/^[a-zA-ZÀ-ÿ\s]+$/, {
-      message: "Nome deve conter apenas letras e espaços",
-    }),
+    .max(100, { message: "Nome deve ter no maximo 100 caracteres" }),
   celular: z
     .string()
-    .min(14, { message: "Celular inválido" })
-    .max(15, { message: "Celular inválido" })
-    .regex(/^\(\d{2}\) \d{4,5}-\d{4}$/, {
-      message: "Formato de celular inválido",
-    }),
-  civil_status: z.enum(CIVIL_STATUS_OPTIONS, {
-    required_error: "Por favor selecione uma opção",
+    .min(14, { message: "Celular invalido" })
+    .max(15, { message: "Celular invalido" }),
+  sexo: z.enum(["Masculino", "Feminino"], {
+    required_error: "Por favor selecione uma opcao",
   }),
-  cidade: z
-    .string()
-    .max(50, { message: "Cidade deve ter no máximo 50 caracteres" })
-    .optional(),
-  bairro: z
-    .string()
-    .max(50, { message: "Bairro deve ter no máximo 50 caracteres" })
-    .optional(),
-  idade: z
-    .string()
-    .optional()
-    .refine((val) => !val || (parseInt(val) >= 0 && parseInt(val) <= 120), {
-      message: "Idade deve estar entre 0 e 120 anos",
-    }),
-  pedidos_oracao: z
-    .string()
-    .max(500, {
-      message: "Pedidos de oração devem ter no máximo 500 caracteres",
-    })
-    .optional(),
-  intencao: z.enum(INTENCAO_OPTIONS, {
-    required_error: "Por favor selecione uma opção",
-  }),
-  sexo: z.enum(SEXO_OPTIONS, {
-    required_error: "Por favor selecione uma opção",
-  }),
-});
+  cidade: z.string().optional(),
+  cidade_outra: z.string().max(50).optional(),
+  bairro: z.string().max(50).optional(),
+  faixa_etaria: z.string().optional(),
+  civil_status: z.string().optional(),
+  membro_igreja: z.boolean().default(false),
+  quer_visita: z.boolean().default(false),
+})
 
-// Tipo inferido do schema
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof formSchema>
 
-// Props do componente com tipagem mais específica
 interface NovoVisitanteDialogProps {
-  readonly onClose: () => void;
-  readonly onSave: (visitante: Visitante) => void;
+  readonly onClose: () => void
+  readonly onSave: (visitante: Visitante) => void
   readonly visitanteParaEdicao?: Visitante & {
-    responsavel_nome?: string | null;
-  };
+    responsavel_nome?: string | null
+  }
 }
 
 export default function NovoVisitanteDialog({
@@ -120,262 +70,154 @@ export default function NovoVisitanteDialog({
   onSave,
   visitanteParaEdicao,
 }: NovoVisitanteDialogProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const isEditing = !!visitanteParaEdicao;
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const isEditing = !!visitanteParaEdicao
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       nome: visitanteParaEdicao?.nome ?? "",
       celular: visitanteParaEdicao?.celular ?? "",
-      civil_status:
-        (visitanteParaEdicao?.civil_status as CivilStatusType) ??
-        CivilStatusEnum.SOLTEIRO,
+      sexo:
+        (visitanteParaEdicao?.sexo as "Masculino" | "Feminino") ??
+        "Masculino",
       cidade: visitanteParaEdicao?.cidade ?? "",
+      cidade_outra: visitanteParaEdicao?.cidade_outra ?? "",
       bairro: visitanteParaEdicao?.bairro ?? "",
-      idade: visitanteParaEdicao?.idade
-        ? String(visitanteParaEdicao.idade)
-        : "",
-      pedidos_oracao: visitanteParaEdicao?.pedidos_oracao ?? "",
-      intencao:
-        (visitanteParaEdicao?.intencao as IntencaoType) ??
-        IntencaoEnum.CONHECER_MELHOR,
-      sexo: (visitanteParaEdicao?.sexo as SexoType) ?? SexoEnum.MASCULINO,
+      faixa_etaria: visitanteParaEdicao?.faixa_etaria ?? "",
+      civil_status: visitanteParaEdicao?.civil_status ?? "",
+      membro_igreja: visitanteParaEdicao?.membro_igreja ?? false,
+      quer_visita: visitanteParaEdicao?.quer_visita ?? false,
     },
-  });
+  })
 
-  // Funções auxiliares para reduzir complexidade
-  const prepareVisitanteData = (values: FormValues): VisitanteInsert => ({
-    nome: values.nome,
-    celular: values.celular,
-    cidade: values.cidade ?? null,
-    bairro: values.bairro ?? null,
-    civil_status: values.civil_status,
-    idade: values.idade ? Number(values.idade) : null,
-    pedidos_oracao: values.pedidos_oracao ?? null,
-    intencao: values.intencao,
-    mensagem_enviada: false,
-    sexo: values.sexo,
-  });
-
-  const prepareUpdateData = (values: FormValues) => ({
-    nome: values.nome,
-    celular: values.celular,
-    cidade: values.cidade ?? null,
-    bairro: values.bairro ?? null,
-    idade: values.idade ? Number(values.idade) : null,
-    civil_status: values.civil_status,
-    pedidos_oracao: values.pedidos_oracao ?? null,
-    intencao: values.intencao,
-    sexo: values.sexo,
-  });
-
-  const handleSuccess = (data: Visitante[], isEditing: boolean) => {
-    const visitante = data?.[0];
-    if (visitante) {
-      onSave(visitante);
-      toast({
-        title: isEditing ? "Visitante atualizado" : "Visitante cadastrado",
-        description: `O visitante foi ${
-          isEditing ? "atualizado" : "cadastrado"
-        } com sucesso.`,
-      });
-    }
-  };
-
-  const handleError = (error: unknown, isEditing: boolean) => {
-    console.error(`Erro ao ${isEditing ? "atualizar" : "cadastrar"}:`, error);
-    toast({
-      variant: "destructive",
-      title: `Erro ao ${isEditing ? "atualizar" : "cadastrar"}`,
-      description: "Ocorreu um erro ao salvar o visitante.",
-    });
-  };
-
-  async function updateVisitante(values: FormValues) {
-    if (!visitanteParaEdicao) return;
-
-    const { data, error } = await supabase
-      .from("visitantes")
-      .update(prepareUpdateData(values))
-      .eq("id", visitanteParaEdicao.id)
-      .select();
-
-    if (error) throw error;
-    return data;
-  }
-
-  async function createVisitante(values: FormValues) {
-    const visitanteData = prepareVisitanteData(values);
-    console.log("visitanteData: ", visitanteData);
-    const { data, error } = await supabase
-      .from("visitantes")
-      .insert(visitanteData)
-      .select();
-
-    if (error) throw error;
-    return data;
-  }
+  const cidadeValue = form.watch("cidade")
 
   async function onSubmit(values: FormValues) {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      const data = isEditing
-        ? await updateVisitante(values)
-        : await createVisitante(values);
-
-      if (data) {
-        handleSuccess(data, isEditing);
+      const payload: VisitanteInsert & { id?: string } = {
+        nome: values.nome,
+        celular: values.celular,
+        sexo: values.sexo,
+        cidade: values.cidade || null,
+        cidade_outra:
+          values.cidade === CidadeEnum.OUTRA
+            ? values.cidade_outra || null
+            : null,
+        bairro: values.bairro || null,
+        faixa_etaria: values.faixa_etaria || null,
+        civil_status: values.civil_status || null,
+        membro_igreja: values.membro_igreja,
+        quer_visita: values.quer_visita,
+        sem_whatsapp: visitanteParaEdicao?.sem_whatsapp ?? false,
+        responsavel_id: visitanteParaEdicao?.responsavel_id ?? null,
       }
+
+      let res: Response
+      if (isEditing && visitanteParaEdicao) {
+        res = await fetch(`/api/visitantes/${visitanteParaEdicao.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+      } else {
+        res = await fetch("/api/visitantes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+      }
+
+      if (!res.ok) throw new Error("Erro ao salvar visitante")
+
+      const data = await res.json()
+      onSave(data as Visitante)
+      toast({
+        title: isEditing ? "Visitante atualizado" : "Visitante cadastrado",
+        description: `O visitante foi ${isEditing ? "atualizado" : "cadastrado"} com sucesso.`,
+      })
     } catch (error) {
-      handleError(error, isEditing);
+      console.error("Erro ao salvar:", error)
+      toast({
+        variant: "destructive",
+        title: `Erro ao ${isEditing ? "atualizar" : "cadastrar"}`,
+        description: "Ocorreu um erro ao salvar o visitante.",
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
   }
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formattedValue = formatarTelefone(e.target.value);
-    form.setValue("celular", formattedValue);
-  };
-
-  useEffect(() => {
-    console.log("CivilStatusEnum: ", form.getValues("civil_status"));
-  }, [form.watch("civil_status")]);
+    const formattedValue = formatarTelefone(e.target.value)
+    form.setValue("celular", formattedValue)
+  }
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[100vh] md:max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Editar Visitante" : "Novo Visitante"}
           </DialogTitle>
           <DialogDescription>
             {isEditing
-              ? "Edite as informações do visitante."
+              ? "Edite as informacoes do visitante."
               : "Cadastre um novo visitante manualmente."}
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Nome */}
             <FormField
               control={form.control}
               name="nome"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome completo*</FormLabel>
+                  <FormLabel>Nome*</FormLabel>
                   <FormControl>
-                    <Input placeholder="Digite o nome completo" {...field} />
+                    <Input placeholder="Nome completo" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="sexo"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>Sexo*</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        className="flex space-x-4"
-                      >
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="Masculino" />
-                          </FormControl>
-                          <FormLabel className="font-normal">
-                            Masculino
-                          </FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="Feminino" />
-                          </FormControl>
-                          <FormLabel className="font-normal">
-                            Feminino
-                          </FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="idade"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Idade</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Idade" type="number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="celular"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Celular*</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="(99) 99999-9999"
-                        {...field}
-                        onChange={handlePhoneChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="civil_status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Estado Civil*</FormLabel>
-                    <FormControl>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Selecione o estado civil" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={CivilStatusEnum.SOLTEIRO}>
-                            Solteiro(a)
-                          </SelectItem>
-                          <SelectItem value={CivilStatusEnum.CASADO}>
-                            Casado(a)
-                          </SelectItem>
-                          <SelectItem value={CivilStatusEnum.DIVORCIADO}>
-                            Divorciado(a)
-                          </SelectItem>
-                          <SelectItem value={CivilStatusEnum.VIUVO}>
-                            Viúvo(a)
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* Sexo */}
+            <FormField
+              control={form.control}
+              name="sexo"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Sexo*</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex gap-4"
+                    >
+                      <FormItem className="flex items-center gap-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value={SexoEnum.FEMININO} />
+                        </FormControl>
+                        <FormLabel className="font-normal">F</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center gap-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value={SexoEnum.MASCULINO} />
+                        </FormControl>
+                        <FormLabel className="font-normal">M</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
+            {/* Cidade */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -384,39 +226,140 @@ export default function NovoVisitanteDialog({
                   <FormItem>
                     <FormLabel>Cidade</FormLabel>
                     <FormControl>
-                      <Input placeholder="Cidade" {...field} />
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="flex gap-4"
+                      >
+                        <FormItem className="flex items-center gap-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value={CidadeEnum.BV} />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            BV - moro
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center gap-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value={CidadeEnum.OUTRA} />
+                          </FormControl>
+                          <FormLabel className="font-normal">Outra</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="bairro"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Bairro</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Bairro" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {cidadeValue === CidadeEnum.OUTRA && (
+                <FormField
+                  control={form.control}
+                  name="cidade_outra"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Qual cidade?</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nome da cidade" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
+            {/* Bairro */}
             <FormField
               control={form.control}
-              name="pedidos_oracao"
+              name="bairro"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Pedidos de oração</FormLabel>
+                  <FormLabel>Bairro</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Pedidos de oração"
-                      className="min-h-[80px]"
+                    <Input placeholder="Bairro" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Faixa Etaria */}
+            <FormField
+              control={form.control}
+              name="faixa_etaria"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Faixa Etaria</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex flex-wrap gap-4"
+                    >
+                      {Object.values(FaixaEtariaEnum).map((faixa) => (
+                        <FormItem
+                          key={faixa}
+                          className="flex items-center gap-2 space-y-0"
+                        >
+                          <FormControl>
+                            <RadioGroupItem value={faixa} />
+                          </FormControl>
+                          <FormLabel className="font-normal">{faixa}</FormLabel>
+                        </FormItem>
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Estado Civil */}
+            <FormField
+              control={form.control}
+              name="civil_status"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Estado Civil</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex flex-wrap gap-4"
+                    >
+                      {Object.values(CivilStatusEnum).map((status) => (
+                        <FormItem
+                          key={status}
+                          className="flex items-center gap-2 space-y-0"
+                        >
+                          <FormControl>
+                            <RadioGroupItem value={status} />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            {status === "Viuvo" ? "Viuvo(a)" : `${status}(a)`}
+                          </FormLabel>
+                        </FormItem>
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Celular */}
+            <FormField
+              control={form.control}
+              name="celular"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Celular*</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="(99) 99999-9999"
                       {...field}
+                      onChange={handlePhoneChange}
                     />
                   </FormControl>
                   <FormMessage />
@@ -424,41 +367,64 @@ export default function NovoVisitanteDialog({
               )}
             />
 
+            {/* Membro de igreja */}
             <FormField
               control={form.control}
-              name="intencao"
+              name="membro_igreja"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel>Intenção*</FormLabel>
+                  <FormLabel>
+                    Frequenta ou e membro de alguma igreja?
+                  </FormLabel>
                   <FormControl>
                     <RadioGroup
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      className="flex flex-col space-y-1"
+                      onValueChange={(val) => field.onChange(val === "sim")}
+                      value={field.value ? "sim" : "nao"}
+                      className="flex gap-4"
                     >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormItem className="flex items-center gap-2 space-y-0">
                         <FormControl>
-                          <RadioGroupItem value="Sou membro de outra igreja" />
+                          <RadioGroupItem value="sim" />
                         </FormControl>
-                        <FormLabel className="font-normal">
-                          Sou membro de outra igreja
-                        </FormLabel>
+                        <FormLabel className="font-normal">SIM</FormLabel>
                       </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormItem className="flex items-center gap-2 space-y-0">
                         <FormControl>
-                          <RadioGroupItem value="Gostaria de conhecer melhor" />
+                          <RadioGroupItem value="nao" />
                         </FormControl>
-                        <FormLabel className="font-normal">
-                          Gostaria de conhecer melhor
-                        </FormLabel>
+                        <FormLabel className="font-normal">NAO</FormLabel>
                       </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Quer receber visita */}
+            <FormField
+              control={form.control}
+              name="quer_visita"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Quer receber uma visita?</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={(val) => field.onChange(val === "sim")}
+                      value={field.value ? "sim" : "nao"}
+                      className="flex gap-4"
+                    >
+                      <FormItem className="flex items-center gap-2 space-y-0">
                         <FormControl>
-                          <RadioGroupItem value="Quero ser membro" />
+                          <RadioGroupItem value="sim" />
                         </FormControl>
-                        <FormLabel className="font-normal">
-                          Quero ser membro
-                        </FormLabel>
+                        <FormLabel className="font-normal">SIM</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center gap-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="nao" />
+                        </FormControl>
+                        <FormLabel className="font-normal">NAO</FormLabel>
                       </FormItem>
                     </RadioGroup>
                   </FormControl>
@@ -472,16 +438,16 @@ export default function NovoVisitanteDialog({
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {(() => {
-                  if (isSubmitting) return "Salvando...";
-                  if (isEditing) return "Atualizar";
-                  return "Salvar";
-                })()}
+                {isSubmitting
+                  ? "Salvando..."
+                  : isEditing
+                    ? "Atualizar"
+                    : "Salvar"}
               </Button>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

@@ -22,10 +22,7 @@ export default function Header() {
             Cadastro
           </Link>
           <Link href="/admin" className="hover:underline">
-            Administração
-          </Link>
-          <Link href="/responsaveis" className="hover:underline">
-            Gerentes
+            Administracao
           </Link>
           {isAuthenticated && (
             <Button variant="ghost" size="sm" onClick={logout} className="flex items-center gap-1">
@@ -49,10 +46,7 @@ export default function Header() {
                 Cadastro
               </Link>
               <Link href="/admin" className="px-2 py-1 hover:underline">
-                Administração
-              </Link>
-              <Link href="/responsaveis" className="px-2 py-1 hover:underline">
-                Gerentes
+                Administracao
               </Link>
               {isAuthenticated && (
                 <Button

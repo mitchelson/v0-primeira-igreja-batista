@@ -1,18 +1,18 @@
-import type { VisitanteComResponsavel, IntencaoType, SexoType } from './supabase'
+import type { VisitanteComResponsavel, SexoType, FaixaEtariaType } from "./supabase"
 
-// Tipos para seleção de período
+// Tipos para selecao de periodo
 export interface PeriodoRelatorio {
   readonly mes: number // 1-12
   readonly ano: number
 }
 
-// Estatísticas do relatório
+// Estatisticas do relatorio
 export interface EstatisticasRelatorio {
   readonly totalVisitantes: number
   readonly mensagensEnviadas: number
   readonly taxaEnvioMensagens: number
-  readonly distribuicaoPorIntencao: Record<IntencaoType, number>
-  readonly distribuicaoPorSexo: Record<SexoType, number>
+  readonly distribuicaoPorFaixaEtaria: Record<string, number>
+  readonly distribuicaoPorSexo: Record<string, number>
   readonly cidadesMaisComuns: Array<{
     cidade: string
     quantidade: number
@@ -23,7 +23,7 @@ export interface EstatisticasRelatorio {
   }>
 }
 
-// Dados completos do relatório
+// Dados completos do relatorio
 export interface DadosRelatorio {
   readonly periodo: PeriodoRelatorio
   readonly visitantes: readonly VisitanteComResponsavel[]
@@ -31,35 +31,29 @@ export interface DadosRelatorio {
   readonly dataGeracao: Date
 }
 
-// Configurações do PDF
+// Configuracoes do PDF
 export interface ConfiguracoesPDF {
   readonly incluirGraficos: boolean
   readonly incluirDetalhesCompletos: boolean
-  readonly orientacao: 'portrait' | 'landscape'
+  readonly orientacao: "portrait" | "landscape"
   readonly tamanhoFonte: number
 }
 
-// Props do modal de relatório
+// Props do modal de relatorio
 export interface RelatorioMensalDialogProps {
   readonly isOpen: boolean
   readonly onClose: () => void
   readonly visitantes: readonly VisitanteComResponsavel[]
 }
 
-// Filtros para busca de visitantes por período
-export interface FiltrosPeriodo {
-  readonly dataInicio: Date
-  readonly dataFim: Date
-}
-
-// Estado do hook de relatórios
+// Estado do hook de relatorios
 export interface UseRelatoriosState {
   readonly loading: boolean
   readonly error: string | null
   readonly dadosRelatorio: DadosRelatorio | null
 }
 
-// Resultado da geração de relatório
+// Resultado da geracao de relatorio
 export interface ResultadoRelatorio {
   readonly sucesso: boolean
   readonly nomeArquivo?: string

@@ -1,248 +1,239 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState, useCallback } from "react"
+import { useVisitantes } from "@/hooks/use-visitantes"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { supabase } from "@/lib/supabase";
-import { formatarData } from "@/lib/utils";
+} from "@/components/ui/select"
+import { formatarData } from "@/lib/utils"
 import {
   Search,
   Plus,
-  Check,
   User,
   AlertCircle,
-  MessageSquare,
   FileText,
-} from "lucide-react";
-import VisitanteDialog from "@/components/visitante-dialog";
-import NovoVisitanteDialog from "@/components/novo-visitante-dialog";
-import RelatorioMensalDialog from "@/components/relatorio-mensal-dialog";
-import { useAuth } from "@/contexts/auth-context";
-import LoginForm from "@/components/login-form";
-import type { Visitante } from "@/types/supabase";
-
-// Interface estendida para incluir o nome do responsável
-interface VisitanteComResponsavel extends Visitante {
-  responsavel_nome?: string | null;
-}
+  Users,
+  MessageSquare,
+} from "lucide-react"
+import Link from "next/link"
+import VisitanteDialog from "@/components/visitante-dialog"
+import NovoVisitanteDialog from "@/components/novo-visitante-dialog"
+import RelatorioMensalDialog from "@/components/relatorio-mensal-dialog"
+import type { Visitante, VisitanteComResponsavel } from "@/types/supabase"
 
 export default function AdminPage() {
-  const { isAuthenticated } = useAuth();
-  const [visitantes, setVisitantes] = useState<VisitanteComResponsavel[]>([]);
+  const { visitantes, isLoading, criar, atualizar, deletar, mutate } =
+    useVisitantes()
   const [visitantesFiltrados, setVisitantesFiltrados] = useState<
     VisitanteComResponsavel[]
-  >([]);
-  const [termoBusca, setTermoBusca] = useState("");
+  >([])
+  const [termoBusca, setTermoBusca] = useState("")
   const [visitanteSelecionado, setVisitanteSelecionado] =
-    useState<VisitanteComResponsavel | null>(null);
+    useState<VisitanteComResponsavel | null>(null)
   const [novoVisitanteDialogAberto, setNovoVisitanteDialogAberto] =
-    useState(false);
-  const [relatorioDialogAberto, setRelatorioDialogAberto] = useState(false);
-  const [dataSelecionada, setDataSelecionada] = useState<string>("");
-  const [carregando, setCarregando] = useState(true);
-  const [datasAgrupadas, setDatasAgrupadas] = useState<string[]>([]);
+    useState(false)
+  const [relatorioDialogAberto, setRelatorioDialogAberto] = useState(false)
+  const [dataSelecionada, setDataSelecionada] = useState<string>("")
+  const [datasAgrupadas, setDatasAgrupadas] = useState<string[]>([])
   const [visitantesPorData, setVisitantesPorData] = useState<
     Record<string, VisitanteComResponsavel[]>
-  >({});
-
-  // Carregar visitantes apenas se estiver autenticado
-  useEffect(() => {
-    if (isAuthenticated) {
-      carregarVisitantes();
-    }
-  }, [isAuthenticated]);
+  >({})
+  const [mensagensEnviadas, setMensagensEnviadas] = useState<
+    Record<string, Set<string>>
+  >({})
 
   useEffect(() => {
-    if (datasAgrupadas.length > 0 && !dataSelecionada) {
-      setDataSelecionada(datasAgrupadas[0]);
+    if (!isLoading && visitantes.length > 0) {
+      setVisitantesFiltrados(visitantes)
+      agruparPorData(visitantes)
+      carregarMensagensEnviadas()
     }
-  }, [datasAgrupadas, dataSelecionada]);
+  }, [visitantes, isLoading])
 
-  const carregarVisitantes = async () => {
-    setCarregando(true);
+  const carregarMensagensEnviadas = async () => {
     try {
-      // Consulta com join para obter o nome do responsável
-      const { data, error } = await supabase
-        .from("visitantes")
-        .select(
-          `
-          *,
-          responsaveis (
-            nome
-          )
-        `
-        )
-        .order("data_cadastro", { ascending: false });
-
-      if (error) throw error;
-
-      if (data) {
-        // Transformar os dados para incluir o nome do responsável diretamente no objeto visitante
-        const visitantesComResponsavel: VisitanteComResponsavel[] = data.map(
-          (item: any) => ({
-            ...item,
-            responsavel_nome: item.responsaveis ? item.responsaveis.nome : null,
-          })
-        );
-
-        setVisitantes(visitantesComResponsavel);
-        setVisitantesFiltrados(visitantesComResponsavel);
-
-        // Agrupar por data
-        const grupos: Record<string, VisitanteComResponsavel[]> = {};
-        visitantesComResponsavel.forEach((visitante) => {
-          const dataFormatada = formatarData(visitante.data_cadastro);
-          if (!grupos[dataFormatada]) {
-            grupos[dataFormatada] = [];
-          }
-          grupos[dataFormatada].push(visitante);
-        });
-
-        setVisitantesPorData(grupos);
-        setDatasAgrupadas(
-          Object.keys(grupos).sort((a, b) => {
-            const [diaA, mesA, anoA] = a.split("/").map(Number);
-            const [diaB, mesB, anoB] = b.split("/").map(Number);
-            if (anoA && anoB && mesA && mesB && diaA && diaB)
-              return (
-                new Date(anoB, mesB - 1, diaB).getTime() -
-                new Date(anoA, mesA - 1, diaA).getTime()
-              );
-            return 0;
-          })
-        );
+      const res = await fetch("/api/visitantes/mensagens-status")
+      if (res.ok) {
+        const dados: Record<string, string[]> = await res.json()
+        // Convert arrays to Sets for easier lookup
+        const mapa: Record<string, Set<string>> = {}
+        for (const [visitanteId, categorias] of Object.entries(dados)) {
+          mapa[visitanteId] = new Set(categorias)
+        }
+        setMensagensEnviadas(mapa)
       }
     } catch (error) {
-      console.error("Erro ao carregar visitantes:", error);
-    } finally {
-      setCarregando(false);
+      console.error("Erro ao carregar mensagens enviadas:", error)
     }
-  };
+  }
 
-  // Filtrar visitantes quando o termo de busca mudar
+  const agruparPorData = useCallback((lista: VisitanteComResponsavel[]) => {
+    const grupos: Record<string, VisitanteComResponsavel[]> = {}
+
+    lista.forEach((visitante) => {
+      const dataFormatada = formatarData(visitante.data_cadastro)
+      if (!grupos[dataFormatada]) {
+        grupos[dataFormatada] = []
+      }
+      grupos[dataFormatada].push(visitante)
+    })
+
+    setVisitantesPorData(grupos)
+    setDatasAgrupadas(
+      Object.keys(grupos).sort((a, b) => {
+        const [diaA, mesA, anoA] = a.split("/").map(Number)
+        const [diaB, mesB, anoB] = b.split("/").map(Number)
+        if (anoA && anoB && mesA && mesB && diaA && diaB)
+          return (
+            new Date(anoB, mesB - 1, diaB).getTime() -
+            new Date(anoA, mesA - 1, diaA).getTime()
+          )
+        return 0
+      }),
+    )
+
+    // Set dataSelecionada to the first date
+    const primeiradata = Object.keys(grupos).sort((a, b) => {
+      const [diaA, mesA, anoA] = a.split("/").map(Number)
+      const [diaB, mesB, anoB] = b.split("/").map(Number)
+      if (anoA && anoB && mesA && mesB && diaA && diaB)
+        return (
+          new Date(anoB, mesB - 1, diaB).getTime() -
+          new Date(anoA, mesA - 1, diaA).getTime()
+        )
+      return 0
+    })[0]
+    if (primeiradata && !dataSelecionada) {
+      setDataSelecionada(primeiradata)
+    }
+  }, [dataSelecionada])
+
+  const carregarVisitantes = async () => {
+    try {
+      await mutate()
+    } catch (error) {
+      console.error("Erro ao carregar visitantes:", error)
+    }
+  }
+
   useEffect(() => {
     if (termoBusca.trim() === "") {
-      setVisitantesFiltrados(visitantes);
-
-      // Reagrupar todos os visitantes
-      const grupos: Record<string, VisitanteComResponsavel[]> = {};
-      visitantes.forEach((visitante) => {
-        const dataFormatada = formatarData(visitante.data_cadastro);
-        if (!grupos[dataFormatada]) {
-          grupos[dataFormatada] = [];
-        }
-        grupos[dataFormatada].push(visitante);
-      });
-
-      setVisitantesPorData(grupos);
-      setDatasAgrupadas(
-        Object.keys(grupos).sort((a, b) => {
-          const [diaA, mesA, anoA] = a.split("/").map(Number);
-          const [diaB, mesB, anoB] = b.split("/").map(Number);
-          if (anoA && anoB && mesA && mesB && diaA && diaB)
-            return (
-              new Date(anoB, mesB - 1, diaB).getTime() -
-              new Date(anoA, mesA - 1, diaA).getTime()
-            );
-          return 0; // Se não puder comparar, retorna 0
-        })
-      );
+      setVisitantesFiltrados(visitantes)
+      agruparPorData(visitantes)
     } else {
-      const termo = termoBusca.toLowerCase();
+      const termo = termoBusca.toLowerCase()
       const filtrados = visitantes.filter(
         (v) =>
           v.nome.toLowerCase().includes(termo) ||
           v.celular.includes(termo) ||
-          v.responsavel_nome?.toLowerCase().includes(termo)
-      );
-      setVisitantesFiltrados(filtrados);
-
-      // Reagrupar visitantes filtrados
-      const grupos: Record<string, VisitanteComResponsavel[]> = {};
-      filtrados.forEach((visitante) => {
-        const dataFormatada = formatarData(visitante.data_cadastro);
-        if (!grupos[dataFormatada]) {
-          grupos[dataFormatada] = [];
-        }
-        grupos[dataFormatada].push(visitante);
-      });
-
-      setVisitantesPorData(grupos);
-      setDatasAgrupadas(
-        Object.keys(grupos).sort((a, b) => {
-          const [diaA, mesA, anoA] = a.split("/").map(Number);
-          const [diaB, mesB, anoB] = b.split("/").map(Number);
-          if (anoA && anoB && mesA && mesB && diaA && diaB)
-            return (
-              new Date(anoB, mesB - 1, diaB).getTime() -
-              new Date(anoA, mesA - 1, diaA).getTime()
-            );
-          return 0; // Se não puder comparar, retorna 0
-        })
-      );
+          v.responsavel_nome?.toLowerCase().includes(termo),
+      )
+      setVisitantesFiltrados(filtrados)
+      agruparPorData(filtrados)
     }
-  }, [termoBusca, visitantes]);
+  }, [termoBusca, visitantes])
 
   const handleVisitanteAtualizado = (visitanteAtualizado: Visitante) => {
-    setVisitantes((prev) =>
-      prev.map((v) =>
-        v.id === visitanteAtualizado.id
-          ? {
-              ...visitanteAtualizado,
-              responsavel_nome:
-                v.responsavel_nome !== undefined ? v.responsavel_nome : null,
+    carregarMensagensEnviadas()
+    setVisitanteSelecionado(null)
+  }
+
+  const handleNovoVisitante = () => {
+    carregarVisitantes()
+    setNovoVisitanteDialogAberto(false)
+  }
+
+  const renderMensagemStatus = (visitante: VisitanteComResponsavel) => {
+    if (visitante.sem_whatsapp) {
+      return null
+    }
+    // Show dots for each category - green if sent, gray if not
+    const categoriasEnviadas = mensagensEnviadas[visitante.id] || new Set()
+    // Assuming 3 categories - adjust based on actual number
+    const categoriasDots = Array(3).fill(0)
+    return (
+      <div className="flex items-center gap-1">
+        {categoriasDots.map((_, idx) => (
+          <div
+            key={idx}
+            className={`h-2 w-2 rounded-full ${
+              idx < categoriasEnviadas.size
+                ? "bg-green-500"
+                : "bg-muted-foreground/40"
+            }`}
+            title={
+              idx < categoriasEnviadas.size
+                ? "Mensagem enviada"
+                : "Mensagem não enviada"
             }
-          : v
-      )
-    );
-    setVisitanteSelecionado(null);
-    carregarVisitantes(); // Recarregar para garantir dados atualizados
-  };
-
-  const handleNovoVisitante = (novoVisitante: Visitante) => {
-    carregarVisitantes(); // Recarregar para incluir o novo visitante
-    setNovoVisitanteDialogAberto(false);
-  };
-
-  // Se não estiver autenticado, exibe o formulário de login
-  if (!isAuthenticated) {
-    return <LoginForm />;
+          />
+        ))}
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <CardTitle>Administração de Visitantes</CardTitle>
-              <CardDescription>
-                Gerencie os visitantes cadastrados
-              </CardDescription>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Administracao de Visitantes</CardTitle>
+                <CardDescription>
+                  Gerencie os visitantes cadastrados
+                </CardDescription>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" size="sm" asChild className="hidden sm:flex">
+                <Link href="/admin/responsaveis">
+                  <Users className="mr-2 h-4 w-4" /> Responsaveis
+                </Link>
+              </Button>
+              <Button variant="outline" size="icon" asChild className="sm:hidden">
+                <Link href="/admin/responsaveis">
+                  <Users className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild className="hidden sm:flex">
+                <Link href="/admin/mensagens">
+                  <MessageSquare className="mr-2 h-4 w-4" /> Mensagens
+                </Link>
+              </Button>
+              <Button variant="outline" size="icon" asChild className="sm:hidden">
+                <Link href="/admin/mensagens">
+                  <MessageSquare className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button 
                 onClick={() => setRelatorioDialogAberto(true)}
                 variant="outline"
+                size="sm"
+                className="hidden sm:flex"
               >
-                <FileText className="mr-2 h-4 w-4" /> Relatório Mensal
+                <FileText className="mr-2 h-4 w-4" /> Relatorio
               </Button>
-              <Button onClick={() => setNovoVisitanteDialogAberto(true)}>
-                <Plus className="mr-2 h-4 w-4" /> Novo Visitante
+              <Button 
+                onClick={() => setRelatorioDialogAberto(true)}
+                variant="outline"
+                size="icon"
+                className="sm:hidden"
+              >
+                <FileText className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -251,14 +242,18 @@ export default function AdminPage() {
           <div className="relative mb-6">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome, telefone ou responsável"
+              placeholder="Buscar por nome, telefone ou responsavel"
               className="pl-8"
               value={termoBusca}
               onChange={(e) => setTermoBusca(e.target.value)}
             />
           </div>
 
-          {visitantesFiltrados.length === 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : visitantesFiltrados.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {termoBusca
                 ? "Nenhum visitante encontrado para esta busca."
@@ -266,7 +261,6 @@ export default function AdminPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Select para escolher a data */}
               {datasAgrupadas.length > 1 && (
                 <div className="flex items-center gap-2">
                   <label
@@ -293,47 +287,33 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* Lista de visitantes da data selecionada */}
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {dataSelecionada &&
                   visitantesPorData[dataSelecionada]?.map((visitante) => (
                     <button
                       key={visitante.id}
-                      className="flex flex-row w-full items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer"
+                      className="flex flex-row w-full items-center justify-between p-3 border rounded-lg hover:bg-accent cursor-pointer gap-3"
                       onClick={() => setVisitanteSelecionado(visitante)}
                     >
-                      <div className="flex flex-col text-left align-start justify-start">
-                        <h3 className="font-medium text-left">
+                      <div className="flex flex-col text-left min-w-0">
+                        <h3 className="font-medium text-sm truncate">
                           {visitante.nome}
                         </h3>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-sm text-muted-foreground">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2 text-xs text-muted-foreground">
                           <span>{visitante.celular}</span>
                           {visitante.responsavel_nome && (
                             <div className="flex items-center text-emerald-600">
-                              <User className="h-3 w-3 mr-1" />
-                              <span>Resp: {visitante.responsavel_nome}</span>
+                              <User className="h-3 w-3 mr-0.5" />
+                              <span>{visitante.responsavel_nome}</span>
                             </div>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center">
-                        {visitante.sem_whatsapp ? (
-                          <div className="flex items-center text-slate-500">
-                            <AlertCircle className="h-4 w-4 mr-1" />
-                            <span className="text-sm">Sem WhatsApp</span>
-                          </div>
-                        ) : visitante.mensagem_enviada ? (
-                          <div className="flex items-center text-green-600">
-                            <Check className="h-4 w-4 mr-1" />
-                            <span className="text-sm">Mensagem enviada</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center text-amber-600">
-                            <MessageSquare className="h-4 w-4 mr-1" />
-                            <span className="text-sm">Pendente</span>
-                          </div>
-                        )}
-                      </div>
+                      {renderMensagemStatus(visitante) && (
+                        <div className="flex-shrink-0">
+                          {renderMensagemStatus(visitante)}
+                        </div>
+                      )}
                     </button>
                   ))}
               </div>
@@ -362,6 +342,15 @@ export default function AdminPage() {
         onClose={() => setRelatorioDialogAberto(false)}
         visitantes={visitantes}
       />
+
+      {/* FAB - Novo Visitante */}
+      <button
+        onClick={() => setNovoVisitanteDialogAberto(true)}
+        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
+        aria-label="Novo Visitante"
+      >
+        <Plus className="h-6 w-6" />
+      </button>
     </div>
-  );
+  )
 }

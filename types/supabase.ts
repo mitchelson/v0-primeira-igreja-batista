@@ -1,121 +1,134 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+// Tipos do banco de dados (Neon PostgreSQL)
 
-export interface Database {
-  public: {
-    Tables: {
-      visitantes: {
-        Row: {
-          id: string
-          nome: string
-          celular: string
-          cidade: string | null
-          civil_status: string | null
-          bairro: string | null
-          idade: number | null
-          pedidos_oracao: string | null
-          intencao: string
-          data_cadastro: string
-          mensagem_enviada: boolean
-          responsavel_id: string | null
-          sexo: string | null
-          sem_whatsapp: boolean
-        }
-        Insert: {
-          id?: string
-          nome: string
-          celular: string
-          cidade?: string | null
-          civil_status?: string | null
-          bairro?: string | null
-          idade?: number | null
-          pedidos_oracao?: string | null
-          intencao: string
-          data_cadastro?: string
-          mensagem_enviada?: boolean
-          responsavel_id?: string | null
-          sexo?: string | null
-          sem_whatsapp?: boolean
-        }
-        Update: {
-          id?: string
-          nome?: string
-          celular?: string
-          cidade?: string | null
-          civil_status?: string | null
-          bairro?: string | null
-          idade?: number | null
-          pedidos_oracao?: string | null
-          intencao?: string
-          data_cadastro?: string
-          mensagem_enviada?: boolean
-          responsavel_id?: string | null
-          sexo?: string | null
-          sem_whatsapp?: boolean
-        }
-      }
-      responsaveis: {
-        Row: {
-          id: string
-          nome: string
-          criado_em: string
-        }
-        Insert: {
-          id?: string
-          nome: string
-          criado_em?: string
-        }
-        Update: {
-          id?: string
-          nome?: string
-          criado_em?: string
-        }
-      }
-    }
-  }
+export interface Visitante {
+  id: string
+  nome: string
+  celular: string
+  sexo: string | null
+  cidade: string | null
+  cidade_outra: string | null
+  bairro: string | null
+  faixa_etaria: string | null
+  civil_status: string | null
+  membro_igreja: boolean
+  quer_visita: boolean
+  data_cadastro: string
+  sem_whatsapp: boolean
+  responsavel_id: string | null
 }
 
-export type Visitante = Database["public"]["Tables"]["visitantes"]["Row"]
-export type VisitanteInsert = Database["public"]["Tables"]["visitantes"]["Insert"]
-export type VisitanteUpdate = Database["public"]["Tables"]["visitantes"]["Update"]
+export interface VisitanteInsert {
+  nome: string
+  celular: string
+  sexo?: string | null
+  cidade?: string | null
+  cidade_outra?: string | null
+  bairro?: string | null
+  faixa_etaria?: string | null
+  civil_status?: string | null
+  membro_igreja?: boolean
+  quer_visita?: boolean
+  sem_whatsapp?: boolean
+  responsavel_id?: string | null
+}
 
-export type Responsavel = Database["public"]["Tables"]["responsaveis"]["Row"]
-export type ResponsavelInsert = Database["public"]["Tables"]["responsaveis"]["Insert"]
-export type ResponsavelUpdate = Database["public"]["Tables"]["responsaveis"]["Update"]
+export interface VisitanteUpdate {
+  nome?: string
+  celular?: string
+  sexo?: string | null
+  cidade?: string | null
+  cidade_outra?: string | null
+  bairro?: string | null
+  faixa_etaria?: string | null
+  civil_status?: string | null
+  membro_igreja?: boolean
+  quer_visita?: boolean
+  sem_whatsapp?: boolean
+  responsavel_id?: string | null
+}
 
-// Tipos derivados mais específicos
+export interface Responsavel {
+  id: string
+  nome: string
+  criado_em: string
+}
+
 export type VisitanteComResponsavel = Visitante & {
   responsavel_nome?: string | null
 }
 
-// Enum para campos específicos
-export const IntencaoEnum = {
-  MEMBRO_OUTRA_IGREJA: "Sou membro de outra igreja",
-  CONHECER_MELHOR: "Gostaria de conhecer melhor",
-  QUERO_SER_MEMBRO: "Quero ser membro"
+// --- Message system types ---
+
+export interface MensagemCategoria {
+  id: string
+  nome: string
+  descricao: string | null
+  ordem: number
+  ativa: boolean
+  created_at: string
+  updated_at: string
+  modelos: MensagemModelo[]
+}
+
+export interface MensagemModelo {
+  id: string
+  categoria_id: string
+  titulo: string
+  corpo: string
+  ordem: number
+  created_at: string
+  updated_at: string
+}
+
+export interface VisitanteMensagemEnviada {
+  id: string
+  visitante_id: string
+  categoria_id: string
+  enviada_em: string
+}
+
+// Enums para campos do formulario
+
+export const FaixaEtariaEnum = {
+  ADOLESCENTE: "Adolescente",
+  JOVEM: "Jovem",
+  ADULTO: "Adulto",
+  IDOSO: "Idoso",
 } as const
 
-export type IntencaoType = typeof IntencaoEnum[keyof typeof IntencaoEnum]
+export type FaixaEtariaType = (typeof FaixaEtariaEnum)[keyof typeof FaixaEtariaEnum]
 
 export const SexoEnum = {
   MASCULINO: "Masculino",
-  FEMININO: "Feminino"
+  FEMININO: "Feminino",
 } as const
+
+export type SexoType = (typeof SexoEnum)[keyof typeof SexoEnum]
 
 export const CivilStatusEnum = {
-  SOLTEIRO: "solteiro",
-  CASADO: "casado",
-  DIVORCIADO: "divorciado",
-  VIUVO: "viúvo"
+  SOLTEIRO: "Solteiro",
+  CASADO: "Casado",
+  DIVORCIADO: "Divorciado",
+  VIUVO: "Viuvo",
 } as const
 
-export type SexoType = typeof SexoEnum[keyof typeof SexoEnum]
-export type CivilStatusType = typeof CivilStatusEnum[keyof typeof CivilStatusEnum]
+export type CivilStatusType = (typeof CivilStatusEnum)[keyof typeof CivilStatusEnum]
 
-// Hook personalizado para validação de tipos
-export function isValidIntencao(intencao: string): intencao is IntencaoType {
-  return Object.values(IntencaoEnum).includes(intencao as IntencaoType)
-}
+export const CidadeEnum = {
+  BV: "BV - moro",
+  OUTRA: "Outra",
+} as const
+
+export type CidadeType = (typeof CidadeEnum)[keyof typeof CidadeEnum]
 
 export function isValidSexo(sexo: string): sexo is SexoType {
   return Object.values(SexoEnum).includes(sexo as SexoType)
+}
+
+export function isValidFaixaEtaria(faixa: string): faixa is FaixaEtariaType {
+  return Object.values(FaixaEtariaEnum).includes(faixa as FaixaEtariaType)
+}
+
+export function isValidCivilStatus(status: string): status is CivilStatusType {
+  return Object.values(CivilStatusEnum).includes(status as CivilStatusType)
 }
