@@ -27,6 +27,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   formatarData,
   processarTemplateMensagem,
@@ -79,6 +80,9 @@ export default function VisitanteDialog({
   const [categorias, setCategorias] = useState<MensagemCategoria[]>([])
   const [enviadas, setEnviadas] = useState<VisitanteMensagemEnviada[]>([])
   const [loadingCategorias, setLoadingCategorias] = useState(true)
+  const [mensagensParaMarcar, setMensagensParaMarcar] = useState<Set<string>>(
+    new Set(),
+  )
 
   // Drawer state for model selection
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -141,6 +145,26 @@ export default function VisitanteDialog({
   const handleSalvar = async () => {
     setSalvando(true)
     try {
+      // First, mark checked messages as sent
+      for (const categoriaId of mensagensParaMarcar) {
+        if (!isCategoriaEnviada(categoriaId)) {
+          const res = await fetch("/api/mensagens/enviadas", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              visitante_id: visitante.id,
+              categoria_id: categoriaId,
+            }),
+          })
+          if (res.ok) {
+            const novaEnviada = await res.json()
+            setEnviadas((prev) => [...prev, novaEnviada])
+          }
+        }
+      }
+      setMensagensParaMarcar(new Set())
+
+      // Then update visitor info
       const res = await fetch(`/api/visitantes/${visitante.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -198,37 +222,6 @@ export default function VisitanteDialog({
     // Close drawer
     setDrawerOpen(false)
     setCategoriaSelecionada(null)
-  }
-
-  const handleMarcarEnviada = async (categoriaId: string) => {
-    try {
-      const res = await fetch("/api/mensagens/enviadas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          visitante_id: visitante.id,
-          categoria_id: categoriaId,
-        }),
-      })
-      if (res.ok) {
-        const novaEnviada = await res.json()
-        setEnviadas((prev) => {
-          const filtered = prev.filter((e) => e.categoria_id !== categoriaId)
-          return [...filtered, novaEnviada]
-        })
-        toast({
-          title: "Sucesso",
-          description: "Mensagem marcada como enviada",
-        })
-      }
-    } catch (err) {
-      console.error("Erro ao marcar como enviada:", err)
-      toast({
-        title: "Erro",
-        description: "Falha ao marcar como enviada",
-        variant: "destructive",
-      })
-    }
   }
 
   const handleEdicaoCadastro = (visitanteAtualizado: Visitante) => {
@@ -375,69 +368,57 @@ export default function VisitanteDialog({
                 <div className="space-y-2 max-h-[35vh] overflow-y-auto pr-2">
                   {categorias.map((cat) => {
                     const enviada = isCategoriaEnviada(cat.id)
+                    const marcada = mensagensParaMarcar.has(cat.id)
                     return (
                       <div
                         key={cat.id}
-                        className={`flex items-start gap-3 rounded-lg border p-3 transition-all ${
-                          enviada
+                        className={`flex items-center gap-3 rounded-lg border p-3 transition-all ${
+                          enviada || marcada
                             ? "bg-primary/5 border-primary/20 opacity-60"
                             : "bg-card"
                         }`}
                       >
-                        {enviada ? (
-                          <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                        ) : (
-                          <Circle className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
-                        )}
+                        <Checkbox
+                          checked={enviada || marcada}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setMensagensParaMarcar((prev) => {
+                                const novo = new Set(prev)
+                                novo.add(cat.id)
+                                return novo
+                              })
+                            } else {
+                              setMensagensParaMarcar((prev) => {
+                                const novo = new Set(prev)
+                                novo.delete(cat.id)
+                                return novo
+                              })
+                            }
+                          }}
+                          disabled={enviada}
+                        />
                         <div className="flex-1 min-w-0">
-                          <p
-                            className={`text-sm font-medium ${enviada ? "text-primary" : "text-foreground"}`}
-                          >
-                            {cat.nome}
-                          </p>
+                          <p className="text-sm font-medium">{cat.nome}</p>
                           {cat.descricao && (
-                            <p className="text-xs text-muted-foreground line-clamp-2">
+                            <p className="text-xs text-muted-foreground line-clamp-1">
                               {cat.descricao}
                             </p>
                           )}
                         </div>
-                        <div className="shrink-0 flex items-center gap-2">
-                          {!enviada ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-xs h-8 gap-1.5 whitespace-nowrap"
-                              onClick={() => handleAbrirModelos(cat)}
-                              disabled={
-                                !visitante.celular || cat.modelos.length === 0
-                              }
-                            >
-                              <MessageSquare className="h-3.5 w-3.5" />
-                              Enviar
-                            </Button>
-                          ) : null}
-                          <Select
-                            value={enviada ? "enviada" : "nao-enviada"}
-                            onValueChange={(value) => {
-                              if (value === "enviada" && !enviada) {
-                                handleMarcarEnviada(cat.id)
-                              }
-                            }}
-                            disabled={enviada}
+                        {!enviada && !marcada && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs h-8 gap-1.5 whitespace-nowrap shrink-0"
+                            onClick={() => handleAbrirModelos(cat)}
+                            disabled={
+                              !visitante.celular || cat.modelos.length === 0
+                            }
                           >
-                            <SelectTrigger className="w-[120px] h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="nao-enviada">
-                                Nao enviada
-                              </SelectItem>
-                              <SelectItem value="enviada">
-                                Enviada
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            Enviar
+                          </Button>
+                        )}
                       </div>
                     )
                   })}
