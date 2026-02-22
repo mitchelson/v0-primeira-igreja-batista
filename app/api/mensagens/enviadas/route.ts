@@ -42,10 +42,10 @@ export async function POST(request: Request) {
 
     // Upsert - if already exists, update the timestamp
     const result = await sql`
-      INSERT INTO visitante_mensagens_enviadas (visitante_id, categoria_id)
-      VALUES (${visitante_id}, ${categoria_id})
+      INSERT INTO visitante_mensagens_enviadas (visitante_id, categoria_id, enviado_em)
+      VALUES (${visitante_id}, ${categoria_id}, NOW())
       ON CONFLICT (visitante_id, categoria_id)
-      DO UPDATE SET enviada_em = NOW()
+      DO UPDATE SET enviado_em = NOW()
       RETURNING *
     `
 
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Erro ao registrar mensagem enviada:", error)
     return NextResponse.json(
-      { error: "Erro ao registrar mensagem enviada" },
+      { error: "Erro ao registrar mensagem enviada", detail: error instanceof Error ? error.message : String(error) },
       { status: 500 },
     )
   }
