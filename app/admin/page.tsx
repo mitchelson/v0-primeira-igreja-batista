@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useVisitantes } from "@/hooks/use-visitantes"
 import { Button } from "@/components/ui/button"
 import {
@@ -53,14 +53,13 @@ export default function AdminPage() {
   >({})
 
   useEffect(() => {
-    if (!isLoading) {
-      console.log("[v0] Visitantes carregados:", visitantes)
+    if (!isLoading && visitantes.length > 0) {
       setVisitantesFiltrados(visitantes)
       agruparPorData(visitantes)
     }
-  }, [visitantes, isLoading])
+  }, [visitantes, isLoading]) // Remove agruparPorData from deps
 
-  const agruparPorData = (lista: VisitanteComResponsavel[]) => {
+  const agruparPorData = useCallback((lista: VisitanteComResponsavel[]) => {
     const grupos: Record<string, VisitanteComResponsavel[]> = {}
 
     lista.forEach((visitante) => {
@@ -96,10 +95,10 @@ export default function AdminPage() {
         )
       return 0
     })[0]
-    if (primeiradata) {
+    if (primeiradata && !dataSelecionada) {
       setDataSelecionada(primeiradata)
     }
-  }
+  }, [dataSelecionada])
 
   const carregarVisitantes = async () => {
     try {
