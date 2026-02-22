@@ -51,13 +51,34 @@ export default function AdminPage() {
   const [visitantesPorData, setVisitantesPorData] = useState<
     Record<string, VisitanteComResponsavel[]>
   >({})
+  const [mensagensEnviadas, setMensagensEnviadas] = useState<
+    Record<string, Set<string>>
+  >({})
 
   useEffect(() => {
     if (!isLoading && visitantes.length > 0) {
       setVisitantesFiltrados(visitantes)
       agruparPorData(visitantes)
+      carregarMensagensEnviadas()
     }
-  }, [visitantes, isLoading]) // Remove agruparPorData from deps
+  }, [visitantes, isLoading])
+
+  const carregarMensagensEnviadas = async () => {
+    try {
+      const res = await fetch("/api/visitantes/mensagens-status")
+      if (res.ok) {
+        const dados: Record<string, string[]> = await res.json()
+        // Convert arrays to Sets for easier lookup
+        const mapa: Record<string, Set<string>> = {}
+        for (const [visitanteId, categorias] of Object.entries(dados)) {
+          mapa[visitanteId] = new Set(categorias)
+        }
+        setMensagensEnviadas(mapa)
+      }
+    } catch (error) {
+      console.error("Erro ao carregar mensagens enviadas:", error)
+    }
+  }
 
   const agruparPorData = useCallback((lista: VisitanteComResponsavel[]) => {
     const grupos: Record<string, VisitanteComResponsavel[]> = {}
@@ -126,7 +147,7 @@ export default function AdminPage() {
   }, [termoBusca, visitantes])
 
   const handleVisitanteAtualizado = (visitanteAtualizado: Visitante) => {
-    carregarVisitantes()
+    carregarMensagensEnviadas()
     setVisitanteSelecionado(null)
   }
 
@@ -139,15 +160,25 @@ export default function AdminPage() {
     if (visitante.sem_whatsapp) {
       return null
     }
-    // Show one dot per active message category
-    const categoriasDots = Array(Math.min(3, Math.max(1, 3))).fill(0)
+    // Show dots for each category - green if sent, gray if not
+    const categoriasEnviadas = mensagensEnviadas[visitante.id] || new Set()
+    // Assuming 3 categories - adjust based on actual number
+    const categoriasDots = Array(3).fill(0)
     return (
       <div className="flex items-center gap-1">
         {categoriasDots.map((_, idx) => (
           <div
             key={idx}
-            className="h-2 w-2 rounded-full bg-muted-foreground/40"
-            title="Mensagem ativa"
+            className={`h-2 w-2 rounded-full ${
+              idx < categoriasEnviadas.size
+                ? "bg-green-500"
+                : "bg-muted-foreground/40"
+            }`}
+            title={
+              idx < categoriasEnviadas.size
+                ? "Mensagem enviada"
+                : "Mensagem não enviada"
+            }
           />
         ))}
       </div>
