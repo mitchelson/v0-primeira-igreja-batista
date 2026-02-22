@@ -121,7 +121,7 @@ export function useVisitantes() {
     }
   }, [])
 
-  const marcarMensagemEnviada = useCallback(
+  const marcarMsgSegunda = useCallback(
     async (id: string): Promise<boolean> => {
       setLoading(true)
       setError(null)
@@ -130,15 +130,42 @@ export function useVisitantes() {
         const res = await fetch(`/api/visitantes/${id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mensagem_enviada: true }),
+          body: JSON.stringify({ msg_segunda: true }),
         })
-        if (!res.ok) throw new Error("Erro ao marcar mensagem como enviada")
+        if (!res.ok) throw new Error("Erro ao marcar mensagem de segunda")
         return true
       } catch (err) {
         const errorMsg =
           err instanceof Error
             ? err.message
-            : "Erro ao marcar mensagem como enviada"
+            : "Erro ao marcar mensagem de segunda"
+        setError(errorMsg)
+        return false
+      } finally {
+        setLoading(false)
+      }
+    },
+    [],
+  )
+
+  const marcarMsgSabado = useCallback(
+    async (id: string): Promise<boolean> => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const res = await fetch(`/api/visitantes/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ msg_sabado: true }),
+        })
+        if (!res.ok) throw new Error("Erro ao marcar mensagem de sabado")
+        return true
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error
+            ? err.message
+            : "Erro ao marcar mensagem de sabado"
         setError(errorMsg)
         return false
       } finally {
@@ -154,7 +181,8 @@ export function useVisitantes() {
     criar,
     atualizar,
     deletar,
-    marcarMensagemEnviada,
+    marcarMsgSegunda,
+    marcarMsgSabado,
     loading,
     error,
     clearError: () => setError(null),

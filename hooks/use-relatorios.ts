@@ -41,7 +41,7 @@ export function useRelatorios() {
     ): EstatisticasRelatorio => {
       const totalVisitantes = visitantes.length
       const mensagensEnviadas = visitantes.filter(
-        (v) => v.mensagem_enviada,
+        (v) => v.msg_segunda && v.msg_sabado,
       ).length
       const taxaEnvioMensagens =
         totalVisitantes > 0

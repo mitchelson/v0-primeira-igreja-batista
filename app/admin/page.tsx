@@ -26,6 +26,7 @@ import {
   AlertCircle,
   MessageSquare,
   FileText,
+  CheckCheck,
 } from "lucide-react"
 import VisitanteDialog from "@/components/visitante-dialog"
 import NovoVisitanteDialog from "@/components/novo-visitante-dialog"
@@ -145,6 +146,47 @@ export default function AdminPage() {
     setNovoVisitanteDialogAberto(false)
   }
 
+  const renderMensagemStatus = (visitante: VisitanteComResponsavel) => {
+    if (visitante.sem_whatsapp) {
+      return (
+        <div className="flex items-center text-slate-500">
+          <AlertCircle className="h-4 w-4 mr-1" />
+          <span className="text-xs">Sem WhatsApp</span>
+        </div>
+      )
+    }
+
+    const ambas = visitante.msg_segunda && visitante.msg_sabado
+    const alguma = visitante.msg_segunda || visitante.msg_sabado
+
+    if (ambas) {
+      return (
+        <div className="flex items-center text-green-600">
+          <CheckCheck className="h-4 w-4 mr-1" />
+          <span className="text-xs">Ambas enviadas</span>
+        </div>
+      )
+    }
+
+    if (alguma) {
+      return (
+        <div className="flex items-center text-blue-600">
+          <Check className="h-4 w-4 mr-1" />
+          <span className="text-xs">
+            {visitante.msg_segunda ? "Seg" : "Sab"} enviada
+          </span>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex items-center text-amber-600">
+        <MessageSquare className="h-4 w-4 mr-1" />
+        <span className="text-xs">Pendente</span>
+      </div>
+    )
+  }
+
   if (!isAuthenticated) {
     return <LoginForm />
   }
@@ -165,10 +207,10 @@ export default function AdminPage() {
                 onClick={() => setRelatorioDialogAberto(true)}
                 variant="outline"
               >
-                <FileText className="mr-2 h-4 w-4" /> Relatorio Mensal
+                <FileText className="mr-2 h-4 w-4" /> Relatorio
               </Button>
               <Button onClick={() => setNovoVisitanteDialogAberto(true)}>
-                <Plus className="mr-2 h-4 w-4" /> Novo Visitante
+                <Plus className="mr-2 h-4 w-4" /> Novo
               </Button>
             </div>
           </div>
@@ -222,47 +264,30 @@ export default function AdminPage() {
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {dataSelecionada &&
                   visitantesPorData[dataSelecionada]?.map((visitante) => (
                     <button
                       key={visitante.id}
-                      className="flex flex-row w-full items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer"
+                      className="flex flex-row w-full items-center justify-between p-3 border rounded-lg hover:bg-accent cursor-pointer gap-3"
                       onClick={() => setVisitanteSelecionado(visitante)}
                     >
-                      <div className="flex flex-col text-left">
-                        <h3 className="font-medium text-left">
+                      <div className="flex flex-col text-left min-w-0">
+                        <h3 className="font-medium text-sm truncate">
                           {visitante.nome}
                         </h3>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-sm text-muted-foreground">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2 text-xs text-muted-foreground">
                           <span>{visitante.celular}</span>
                           {visitante.responsavel_nome && (
                             <div className="flex items-center text-emerald-600">
-                              <User className="h-3 w-3 mr-1" />
-                              <span>
-                                Resp: {visitante.responsavel_nome}
-                              </span>
+                              <User className="h-3 w-3 mr-0.5" />
+                              <span>{visitante.responsavel_nome}</span>
                             </div>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center">
-                        {visitante.sem_whatsapp ? (
-                          <div className="flex items-center text-slate-500">
-                            <AlertCircle className="h-4 w-4 mr-1" />
-                            <span className="text-sm">Sem WhatsApp</span>
-                          </div>
-                        ) : visitante.mensagem_enviada ? (
-                          <div className="flex items-center text-green-600">
-                            <Check className="h-4 w-4 mr-1" />
-                            <span className="text-sm">Mensagem enviada</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center text-amber-600">
-                            <MessageSquare className="h-4 w-4 mr-1" />
-                            <span className="text-sm">Pendente</span>
-                          </div>
-                        )}
+                      <div className="flex-shrink-0">
+                        {renderMensagemStatus(visitante)}
                       </div>
                     </button>
                   ))}

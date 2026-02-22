@@ -19,9 +19,10 @@ import {
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { formatarData, gerarMensagemWhatsApp } from "@/lib/utils"
+import { Separator } from "@/components/ui/separator"
+import { formatarData, gerarMensagemSegunda, gerarMensagemSabado } from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"
-import { MessageSquare, Edit } from "lucide-react"
+import { MessageSquare, Edit, Phone } from "lucide-react"
 import type { Visitante, Responsavel } from "@/types/supabase"
 import NovoVisitanteDialog from "./novo-visitante-dialog"
 
@@ -43,8 +44,11 @@ export default function VisitanteDialog({
   const [nomeResponsavel, setNomeResponsavel] = useState<string>(
     visitante.responsavel_nome || "",
   )
-  const [mensagemEnviada, setMensagemEnviada] = useState<boolean>(
-    visitante.mensagem_enviada,
+  const [msgSegunda, setMsgSegunda] = useState<boolean>(
+    visitante.msg_segunda,
+  )
+  const [msgSabado, setMsgSabado] = useState<boolean>(
+    visitante.msg_sabado,
   )
   const [semWhatsapp, setSemWhatsapp] = useState<boolean>(
     visitante.sem_whatsapp || false,
@@ -84,7 +88,8 @@ export default function VisitanteDialog({
 
   useEffect(() => {
     if (semWhatsapp) {
-      setMensagemEnviada(true)
+      setMsgSegunda(true)
+      setMsgSabado(true)
     }
   }, [semWhatsapp])
 
@@ -96,7 +101,8 @@ export default function VisitanteDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           responsavel_id: responsavelSelecionado,
-          mensagem_enviada: mensagemEnviada || semWhatsapp,
+          msg_segunda: msgSegunda || semWhatsapp,
+          msg_sabado: msgSabado || semWhatsapp,
           sem_whatsapp: semWhatsapp,
         }),
       })
@@ -106,7 +112,8 @@ export default function VisitanteDialog({
       const visitanteAtualizado: Visitante = {
         ...visitante,
         responsavel_id: responsavelSelecionado,
-        mensagem_enviada: mensagemEnviada || semWhatsapp,
+        msg_segunda: msgSegunda || semWhatsapp,
+        msg_sabado: msgSabado || semWhatsapp,
         sem_whatsapp: semWhatsapp,
       }
 
@@ -127,8 +134,14 @@ export default function VisitanteDialog({
     }
   }
 
-  const handleEnviarWhatsApp = () => {
-    const mensagem = gerarMensagemWhatsApp(visitante, nomeResponsavel)
+  const handleEnviarSegunda = () => {
+    const mensagem = gerarMensagemSegunda(visitante, nomeResponsavel)
+    const telefone = visitante.celular.replace(/\D/g, "")
+    window.open(`https://wa.me/55${telefone}?text=${mensagem}`, "_blank")
+  }
+
+  const handleEnviarSabado = () => {
+    const mensagem = gerarMensagemSabado(visitante, nomeResponsavel)
     const telefone = visitante.celular.replace(/\D/g, "")
     window.open(`https://wa.me/55${telefone}?text=${mensagem}`, "_blank")
   }
@@ -138,14 +151,34 @@ export default function VisitanteDialog({
     setEditandoCadastro(false)
   }
 
+  // Build summary text
   const cidadeDisplay =
     visitante.cidade === "Outra" && visitante.cidade_outra
       ? visitante.cidade_outra
-      : visitante.cidade || "Nao informado"
+      : visitante.cidade || "cidade nao informada"
+
+  const membroText = visitante.membro_igreja
+    ? "e membro de igreja"
+    : "nao e membro de igreja"
+
+  const visitaText = visitante.quer_visita
+    ? "deseja receber visita"
+    : "nao deseja receber visita"
+
+  const resumo = [
+    visitante.nome,
+    visitante.faixa_etaria,
+    visitante.civil_status ? `${visitante.civil_status}(a)` : null,
+    `mora em ${cidadeDisplay}`,
+    membroText,
+    visitaText,
+  ]
+    .filter(Boolean)
+    .join(", ")
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[100vh] md:max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             Detalhes do Visitante
@@ -164,169 +197,168 @@ export default function VisitanteDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Nome</Label>
-            <div className="col-span-3 font-medium">{visitante.nome}</div>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Sexo</Label>
-            <div className="col-span-3">
-              {visitante.sexo || "Nao informado"}
-            </div>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Celular</Label>
-            <div className="col-span-3">{visitante.celular}</div>
-          </div>
-          {visitante.telefone && (
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Telefone</Label>
-              <div className="col-span-3">{visitante.telefone}</div>
-            </div>
-          )}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Cidade</Label>
-            <div className="col-span-3">{cidadeDisplay}</div>
-          </div>
-          {visitante.bairro && (
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Bairro</Label>
-              <div className="col-span-3">{visitante.bairro}</div>
-            </div>
-          )}
-          {visitante.faixa_etaria && (
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Faixa Etaria</Label>
-              <div className="col-span-3">{visitante.faixa_etaria}</div>
-            </div>
-          )}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Estado Civil</Label>
-            <div className="col-span-3">
-              {visitante.civil_status || "Nao informado"}
-            </div>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Membro</Label>
-            <div className="col-span-3">
-              {visitante.membro_igreja ? "Sim" : "Nao"}
-            </div>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Quer visita</Label>
-            <div className="col-span-3">
-              {visitante.quer_visita ? "Sim" : "Nao"}
+        <div className="space-y-4">
+          {/* Resumo compacto */}
+          <div className="rounded-lg bg-muted/50 p-3">
+            <p className="text-sm leading-relaxed">
+              {resumo}
+              {"."}
+            </p>
+            <div className="flex items-center gap-1.5 mt-2 text-sm font-medium">
+              <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>{visitante.celular}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="responsavel" className="text-right">
-              Responsavel
-            </Label>
-            <div className="col-span-3">
-              {carregandoResponsaveis ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin h-4 w-4 border-b-2 border-primary rounded-full" />
-                  <span className="text-sm text-muted-foreground">
-                    Carregando responsaveis...
-                  </span>
-                </div>
-              ) : (
-                <Select
-                  value={responsavelSelecionado || "none"}
-                  onValueChange={(value) =>
-                    setResponsavelSelecionado(value === "none" ? null : value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um responsavel" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Nenhum</SelectItem>
-                    {responsaveis.length > 0 ? (
-                      responsaveis.map((r) => (
-                        <SelectItem key={r.id} value={r.id}>
-                          {r.nome}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="no-options" disabled>
-                        Nenhum responsavel cadastrado
+          <Separator />
+
+          {/* Responsavel */}
+          <div className="space-y-2">
+            <Label htmlFor="responsavel">Responsavel</Label>
+            {carregandoResponsaveis ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin h-4 w-4 border-b-2 border-primary rounded-full" />
+                <span className="text-sm text-muted-foreground">
+                  Carregando...
+                </span>
+              </div>
+            ) : (
+              <Select
+                value={responsavelSelecionado || "none"}
+                onValueChange={(value) =>
+                  setResponsavelSelecionado(value === "none" ? null : value)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um responsavel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  {responsaveis.length > 0 ? (
+                    responsaveis.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.nome}
                       </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
+                    ))
+                  ) : (
+                    <SelectItem value="no-options" disabled>
+                      Nenhum responsavel cadastrado
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="sem-whatsapp" className="text-right">
-              Sem WhatsApp
-            </Label>
-            <div className="flex items-center gap-2 col-span-3">
+          {/* Sem WhatsApp */}
+          <div className="flex items-center justify-between">
+            <Label htmlFor="sem-whatsapp">Sem WhatsApp</Label>
+            <div className="flex items-center gap-2">
               <Switch
                 id="sem-whatsapp"
                 checked={semWhatsapp}
                 onCheckedChange={(checked) => {
                   setSemWhatsapp(checked)
                   if (checked) {
-                    setMensagemEnviada(true)
+                    setMsgSegunda(true)
+                    setMsgSabado(true)
                   }
                 }}
               />
-              <Label htmlFor="sem-whatsapp">
+              <span className="text-sm text-muted-foreground w-8">
                 {semWhatsapp ? "Sim" : "Nao"}
-              </Label>
+              </span>
             </div>
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="mensagem-enviada" className="text-right">
-              Mensagem enviada
-            </Label>
-            <div className="flex items-center gap-2 col-span-3">
-              <Switch
-                id="mensagem-enviada"
-                checked={mensagemEnviada}
-                onCheckedChange={setMensagemEnviada}
-                disabled={semWhatsapp}
-              />
-              <Label htmlFor="mensagem-enviada">
-                {mensagemEnviada ? "Sim" : "Nao"}
-              </Label>
-              {semWhatsapp && (
-                <span className="text-xs text-muted-foreground">
-                  (Automatico para visitantes sem WhatsApp)
+          <Separator />
+
+          {/* Mensagem de Segunda */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Msg Segunda (agradecimento)</p>
+                <p className="text-xs text-muted-foreground">
+                  Enviada na segunda para agradecer a visita
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="msg-segunda"
+                  checked={msgSegunda}
+                  onCheckedChange={setMsgSegunda}
+                  disabled={semWhatsapp}
+                />
+                <span className="text-sm text-muted-foreground w-8">
+                  {msgSegunda ? "Sim" : "Nao"}
                 </span>
-              )}
+              </div>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleEnviarSegunda}
+              className="w-full"
+              disabled={!visitante.celular || semWhatsapp}
+            >
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Enviar agradecimento (segunda)
+            </Button>
           </div>
+
+          <Separator />
+
+          {/* Mensagem de Sabado */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Msg Sabado (convite)</p>
+                <p className="text-xs text-muted-foreground">
+                  Enviada no sabado convidando para o culto
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="msg-sabado"
+                  checked={msgSabado}
+                  onCheckedChange={setMsgSabado}
+                  disabled={semWhatsapp}
+                />
+                <span className="text-sm text-muted-foreground w-8">
+                  {msgSabado ? "Sim" : "Nao"}
+                </span>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleEnviarSabado}
+              className="w-full"
+              disabled={!visitante.celular || semWhatsapp}
+            >
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Enviar convite (sabado)
+            </Button>
+          </div>
+
+          {semWhatsapp && (
+            <p className="text-xs text-muted-foreground text-center">
+              Mensagens marcadas automaticamente para visitantes sem WhatsApp
+            </p>
+          )}
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button
-            variant="outline"
-            onClick={handleEnviarWhatsApp}
-            className="w-full sm:w-auto"
-            disabled={!visitante.celular || semWhatsapp}
-          >
-            <MessageSquare className="mr-2 h-4 w-4" />
-            Enviar WhatsApp
+          <Button variant="outline" onClick={onClose} className="flex-1">
+            Cancelar
           </Button>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <Button variant="outline" onClick={onClose} className="flex-1">
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSalvar}
-              disabled={salvando}
-              className="flex-1"
-            >
-              {salvando ? "Salvando..." : "Salvar"}
-            </Button>
-          </div>
+          <Button
+            onClick={handleSalvar}
+            disabled={salvando}
+            className="flex-1"
+          >
+            {salvando ? "Salvando..." : "Salvar"}
+          </Button>
         </DialogFooter>
 
         {editandoCadastro && (

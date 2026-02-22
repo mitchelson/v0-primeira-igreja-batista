@@ -50,7 +50,8 @@ function obterPronome(sexo: SexoType | null | undefined): "o" | "a" {
   return sexo === "Feminino" ? "a" : "o"
 }
 
-export function gerarMensagemWhatsApp(
+// Mensagem de segunda-feira (agradecimento pela visita)
+export function gerarMensagemSegunda(
   visitante: VisitanteParaMensagem,
   nomeResponsavel?: string,
 ): string {
@@ -64,6 +65,32 @@ Tenha uma semana abencoada e cheia da presenca de Jesus!
 Grande abraco!`
 
   return encodeURIComponent(mensagem)
+}
+
+// Mensagem de sabado (convite para o culto)
+export function gerarMensagemSabado(
+  visitante: VisitanteParaMensagem,
+  nomeResponsavel?: string,
+): string {
+  const pronome = obterPronome(visitante.sexo)
+  const nomeResp = nomeResponsavel ?? "um responsavel"
+
+  const mensagem = `Graca e Paz, ${visitante.nome}!
+Sou ${nomeResp} da Primeira Igreja Batista de Roraima.
+Gostaríamos de convidar voce para o nosso culto de domingo!
+Sera uma bencao ter voce conosco novamente.
+Esperamos por voce, sera muito bem-vind${pronome}!
+Grande abraco!`
+
+  return encodeURIComponent(mensagem)
+}
+
+// Alias para compatibilidade
+export function gerarMensagemWhatsApp(
+  visitante: VisitanteParaMensagem,
+  nomeResponsavel?: string,
+): string {
+  return gerarMensagemSegunda(visitante, nomeResponsavel)
 }
 
 export function validarTelefone(telefone: string): boolean {

@@ -33,13 +33,6 @@ import {
   FaixaEtariaEnum,
   CidadeEnum,
 } from "@/types/supabase"
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "./ui/select"
 
 const formSchema = z.object({
   nome: z
@@ -58,7 +51,6 @@ const formSchema = z.object({
   bairro: z.string().max(50).optional(),
   faixa_etaria: z.string().optional(),
   civil_status: z.string().optional(),
-  telefone: z.string().max(15).optional(),
   membro_igreja: z.boolean().default(false),
   quer_visita: z.boolean().default(false),
 })
@@ -94,7 +86,6 @@ export default function NovoVisitanteDialog({
       bairro: visitanteParaEdicao?.bairro ?? "",
       faixa_etaria: visitanteParaEdicao?.faixa_etaria ?? "",
       civil_status: visitanteParaEdicao?.civil_status ?? "",
-      telefone: visitanteParaEdicao?.telefone ?? "",
       membro_igreja: visitanteParaEdicao?.membro_igreja ?? false,
       quer_visita: visitanteParaEdicao?.quer_visita ?? false,
     },
@@ -117,7 +108,6 @@ export default function NovoVisitanteDialog({
         bairro: values.bairro || null,
         faixa_etaria: values.faixa_etaria || null,
         civil_status: values.civil_status || null,
-        telefone: values.telefone || null,
         membro_igreja: values.membro_igreja,
         quer_visita: values.quer_visita,
         sem_whatsapp: visitanteParaEdicao?.sem_whatsapp ?? false,
@@ -159,16 +149,14 @@ export default function NovoVisitanteDialog({
     }
   }
 
-  const handlePhoneChange =
-    (fieldName: "celular" | "telefone") =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const formattedValue = formatarTelefone(e.target.value)
-      form.setValue(fieldName, formattedValue)
-    }
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedValue = formatarTelefone(e.target.value)
+    form.setValue("celular", formattedValue)
+  }
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[550px] max-h-[100vh] md:max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Editar Visitante" : "Novo Visitante"}
@@ -360,43 +348,24 @@ export default function NovoVisitanteDialog({
               )}
             />
 
-            {/* Celular e Telefone */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="celular"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Celular*</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="(99) 99999-9999"
-                        {...field}
-                        onChange={handlePhoneChange("celular")}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="telefone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Telefone</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="(99) 9999-9999"
-                        {...field}
-                        onChange={handlePhoneChange("telefone")}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* Celular */}
+            <FormField
+              control={form.control}
+              name="celular"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Celular*</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="(99) 99999-9999"
+                      {...field}
+                      onChange={handlePhoneChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {/* Membro de igreja */}
             <FormField

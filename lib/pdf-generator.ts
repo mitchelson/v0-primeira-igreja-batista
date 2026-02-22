@@ -157,7 +157,8 @@ export class PDFGenerator {
           "Celular",
           "Cidade",
           "Faixa Etaria",
-          "Msg Enviada",
+          "Seg",
+          "Sab",
         ],
       ],
       body: visitantes.map((visitante) => [
@@ -170,7 +171,8 @@ export class PDFGenerator {
           ? visitante.cidade_outra
           : (visitante.cidade ?? "-"),
         visitante.faixa_etaria ?? "-",
-        visitante.mensagem_enviada ? "Sim" : "Nao",
+        visitante.msg_segunda ? "Sim" : "Nao",
+        visitante.msg_sabado ? "Sim" : "Nao",
       ]),
       styles: {
         fontSize: 8,
@@ -185,12 +187,13 @@ export class PDFGenerator {
         fillColor: [245, 245, 245],
       },
       columnStyles: {
-        0: { cellWidth: 40 },
-        1: { cellWidth: 20 },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 25 },
-        5: { cellWidth: 20 },
+        0: { cellWidth: 35 },
+        1: { cellWidth: 18 },
+        2: { cellWidth: 28 },
+        3: { cellWidth: 22 },
+        4: { cellWidth: 22 },
+        5: { cellWidth: 12 },
+        6: { cellWidth: 12 },
       },
     })
   }

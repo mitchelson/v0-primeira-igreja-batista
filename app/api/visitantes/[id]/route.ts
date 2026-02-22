@@ -18,7 +18,7 @@ export async function GET(
 
     if (rows.length === 0) {
       return NextResponse.json(
-        { error: "Visitante não encontrado" },
+        { error: "Visitante nao encontrado" },
         { status: 404 }
       )
     }
@@ -50,10 +50,10 @@ export async function PUT(
       bairro,
       faixa_etaria,
       civil_status,
-      telefone,
       membro_igreja,
       quer_visita,
-      mensagem_enviada,
+      msg_segunda,
+      msg_sabado,
       sem_whatsapp,
       responsavel_id,
     } = body
@@ -68,10 +68,10 @@ export async function PUT(
         bairro = ${bairro ?? null},
         faixa_etaria = ${faixa_etaria ?? null},
         civil_status = ${civil_status ?? null},
-        telefone = ${telefone ?? null},
         membro_igreja = COALESCE(${membro_igreja ?? null}, membro_igreja),
         quer_visita = COALESCE(${quer_visita ?? null}, quer_visita),
-        mensagem_enviada = COALESCE(${mensagem_enviada ?? null}, mensagem_enviada),
+        msg_segunda = COALESCE(${msg_segunda ?? null}, msg_segunda),
+        msg_sabado = COALESCE(${msg_sabado ?? null}, msg_sabado),
         sem_whatsapp = COALESCE(${sem_whatsapp ?? null}, sem_whatsapp),
         responsavel_id = ${responsavel_id ?? null}
       WHERE id = ${id}
@@ -80,7 +80,7 @@ export async function PUT(
 
     if (rows.length === 0) {
       return NextResponse.json(
-        { error: "Visitante não encontrado" },
+        { error: "Visitante nao encontrado" },
         { status: 404 }
       )
     }
@@ -107,7 +107,7 @@ export async function DELETE(
 
     if (rows.length === 0) {
       return NextResponse.json(
-        { error: "Visitante não encontrado" },
+        { error: "Visitante nao encontrado" },
         { status: 404 }
       )
     }

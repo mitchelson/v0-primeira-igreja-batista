@@ -10,11 +10,11 @@ export interface Visitante {
   bairro: string | null
   faixa_etaria: string | null
   civil_status: string | null
-  telefone: string | null
   membro_igreja: boolean
   quer_visita: boolean
   data_cadastro: string
-  mensagem_enviada: boolean
+  msg_segunda: boolean
+  msg_sabado: boolean
   sem_whatsapp: boolean
   responsavel_id: string | null
 }
@@ -28,7 +28,6 @@ export interface VisitanteInsert {
   bairro?: string | null
   faixa_etaria?: string | null
   civil_status?: string | null
-  telefone?: string | null
   membro_igreja?: boolean
   quer_visita?: boolean
   sem_whatsapp?: boolean
@@ -44,10 +43,10 @@ export interface VisitanteUpdate {
   bairro?: string | null
   faixa_etaria?: string | null
   civil_status?: string | null
-  telefone?: string | null
   membro_igreja?: boolean
   quer_visita?: boolean
-  mensagem_enviada?: boolean
+  msg_segunda?: boolean
+  msg_sabado?: boolean
   sem_whatsapp?: boolean
   responsavel_id?: string | null
 }

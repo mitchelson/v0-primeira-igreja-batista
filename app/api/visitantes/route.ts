@@ -33,7 +33,6 @@ export async function POST(request: NextRequest) {
       bairro,
       faixa_etaria,
       civil_status,
-      telefone,
       membro_igreja,
       quer_visita,
       sem_whatsapp,
@@ -42,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     if (!nome || !celular) {
       return NextResponse.json(
-        { error: "Nome e celular são obrigatórios" },
+        { error: "Nome e celular sao obrigatorios" },
         { status: 400 }
       )
     }
@@ -50,12 +49,12 @@ export async function POST(request: NextRequest) {
     const rows = await sql`
       INSERT INTO visitantes (
         nome, celular, sexo, cidade, cidade_outra, bairro,
-        faixa_etaria, civil_status, telefone, membro_igreja,
+        faixa_etaria, civil_status, membro_igreja,
         quer_visita, sem_whatsapp, responsavel_id
       ) VALUES (
         ${nome}, ${celular}, ${sexo || null}, ${cidade || null},
         ${cidade_outra || null}, ${bairro || null}, ${faixa_etaria || null},
-        ${civil_status || null}, ${telefone || null},
+        ${civil_status || null},
         ${membro_igreja ?? false}, ${quer_visita ?? false},
         ${sem_whatsapp ?? false}, ${responsavel_id || null}
       )
