@@ -33,7 +33,7 @@ export async function PUT(
       return NextResponse.json({ error: "Nenhum campo para atualizar" }, { status: 400 })
     }
 
-    // Build dynamic update using tagged template
+    // Build dynamic update - handle booleans properly
     let result
     if (sets.length === 1 && sets[0] === "ativa") {
       result = await sql`UPDATE mensagem_categorias SET ativa = ${body.ativa}, updated_at = NOW() WHERE id = ${id} RETURNING *`
@@ -41,13 +41,16 @@ export async function PUT(
       result = await sql`UPDATE mensagem_categorias SET nome = ${body.nome}, updated_at = NOW() WHERE id = ${id} RETURNING *`
     } else if (sets.length === 1 && sets[0] === "descricao") {
       result = await sql`UPDATE mensagem_categorias SET descricao = ${body.descricao}, updated_at = NOW() WHERE id = ${id} RETURNING *`
+    } else if (sets.length === 1 && sets[0] === "ordem") {
+      result = await sql`UPDATE mensagem_categorias SET ordem = ${body.ordem}, updated_at = NOW() WHERE id = ${id} RETURNING *`
     } else {
+      // Multiple fields - handle each explicitly to avoid COALESCE issues with booleans
       result = await sql`
         UPDATE mensagem_categorias
-        SET nome = COALESCE(${body.nome ?? null}, nome),
-            descricao = COALESCE(${body.descricao ?? null}, descricao),
-            ordem = COALESCE(${body.ordem ?? null}, ordem),
-            ativa = COALESCE(${body.ativa ?? null}, ativa),
+        SET nome = CASE WHEN ${body.nome !== undefined} THEN ${body.nome} ELSE nome END,
+            descricao = CASE WHEN ${body.descricao !== undefined} THEN ${body.descricao} ELSE descricao END,
+            ordem = CASE WHEN ${body.ordem !== undefined} THEN ${body.ordem} ELSE ordem END,
+            ativa = CASE WHEN ${body.ativa !== undefined} THEN ${body.ativa} ELSE ativa END,
             updated_at = NOW()
         WHERE id = ${id}
         RETURNING *
@@ -59,9 +62,13 @@ export async function PUT(
     }
 
     return NextResponse.json(result[0])
-  } catch (error) {
-    console.error("Erro ao atualizar categoria:", error)
-    return NextResponse.json({ error: "Erro ao atualizar categoria" }, { status: 500 })
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error("Erro ao atualizar categoria:", msg, error)
+    return NextResponse.json(
+      { error: "Erro ao atualizar categoria", detail: msg },
+      { status: 500 },
+    )
   }
 }
 

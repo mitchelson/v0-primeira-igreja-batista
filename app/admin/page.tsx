@@ -110,19 +110,8 @@ export default function AdminPage() {
   }, [termoBusca, visitantes])
 
   const handleVisitanteAtualizado = (visitanteAtualizado: Visitante) => {
-    setVisitantes((prev) =>
-      prev.map((v) =>
-        v.id === visitanteAtualizado.id
-          ? {
-              ...visitanteAtualizado,
-              responsavel_nome:
-                v.responsavel_nome !== undefined ? v.responsavel_nome : null,
-            }
-          : v,
-      ),
-    )
-    setVisitanteSelecionado(null)
     carregarVisitantes()
+    setVisitanteSelecionado(null)
   }
 
   const handleNovoVisitante = () => {

@@ -280,7 +280,7 @@ export default function VisitanteDialog({
   return (
     <>
       <Dialog open onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               Detalhes do Visitante
@@ -302,10 +302,10 @@ export default function VisitanteDialog({
           <div className="space-y-4">
             {/* Resumo compacto */}
             <div className="rounded-lg bg-muted/50 p-3">
-              <p className="text-sm leading-relaxed">{resumo}.</p>
+              <p className="text-sm leading-relaxed line-clamp-3">{resumo}.</p>
               <div className="flex items-center gap-1.5 mt-2 text-sm font-medium">
-                <Phone className="h-3.5 w-3.5 text-muted-foreground" />
-                <span>{visitante.celular}</span>
+                <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <span className="truncate">{visitante.celular}</span>
               </div>
             </div>
 
@@ -382,22 +382,22 @@ export default function VisitanteDialog({
                   Nenhuma categoria de mensagem ativa
                 </p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-[35vh] overflow-y-auto pr-2">
                   {categorias.map((cat) => {
                     const enviada = isCategoriaEnviada(cat.id)
                     return (
                       <div
                         key={cat.id}
-                        className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
+                        className={`flex items-start gap-3 rounded-lg border p-3 transition-colors ${
                           enviada
                             ? "bg-primary/5 border-primary/20"
                             : "bg-card"
                         }`}
                       >
                         {enviada ? (
-                          <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                          <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                         ) : (
-                          <Circle className="h-5 w-5 text-muted-foreground/40 shrink-0" />
+                          <Circle className="h-5 w-5 text-muted-foreground/40 shrink-0 mt-0.5" />
                         )}
                         <div className="flex-1 min-w-0">
                           <p
@@ -406,44 +406,46 @@ export default function VisitanteDialog({
                             {cat.nome}
                           </p>
                           {cat.descricao && (
-                            <p className="text-xs text-muted-foreground truncate">
+                            <p className="text-xs text-muted-foreground line-clamp-2">
                               {cat.descricao}
                             </p>
                           )}
                         </div>
-                        {semWhatsapp ? (
-                          !enviada ? (
+                        <div className="shrink-0">
+                          {semWhatsapp ? (
+                            !enviada ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-8 whitespace-nowrap"
+                                onClick={() => handleMarcarEnviada(cat.id)}
+                              >
+                                Marcar
+                              </Button>
+                            ) : (
+                              <span className="text-xs text-primary">
+                                Feito
+                              </span>
+                            )
+                          ) : !enviada ? (
                             <Button
                               variant="outline"
                               size="sm"
-                              className="shrink-0 text-xs h-8"
-                              onClick={() => handleMarcarEnviada(cat.id)}
+                              className="text-xs h-8 gap-1.5"
+                              onClick={() => handleAbrirModelos(cat)}
+                              disabled={
+                                !visitante.celular || cat.modelos.length === 0
+                              }
                             >
-                              Marcar
+                              <MessageSquare className="h-3.5 w-3.5" />
+                              Enviar
                             </Button>
                           ) : (
-                            <span className="text-xs text-primary shrink-0">
-                              Feito
+                            <span className="text-xs text-primary">
+                              Enviada
                             </span>
-                          )
-                        ) : !enviada ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="shrink-0 text-xs h-8 gap-1.5"
-                            onClick={() => handleAbrirModelos(cat)}
-                            disabled={
-                              !visitante.celular || cat.modelos.length === 0
-                            }
-                          >
-                            <MessageSquare className="h-3.5 w-3.5" />
-                            Enviar
-                          </Button>
-                        ) : (
-                          <span className="text-xs text-primary shrink-0">
-                            Enviada
-                          </span>
-                        )}
+                          )}
+                        </div>
                       </div>
                     )
                   })}
