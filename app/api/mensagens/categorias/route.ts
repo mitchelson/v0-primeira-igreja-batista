@@ -18,10 +18,11 @@ export async function GET() {
       ORDER BY c.ordem
     `
     return NextResponse.json(categorias)
-  } catch (error) {
-    console.error("Erro ao buscar categorias:", error)
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error("Erro ao buscar categorias:", msg)
     return NextResponse.json(
-      { error: "Erro ao buscar categorias" },
+      { error: "Erro ao buscar categorias", detail: msg },
       { status: 500 },
     )
   }
@@ -42,10 +43,11 @@ export async function POST(request: Request) {
       RETURNING *
     `
     return NextResponse.json(result[0], { status: 201 })
-  } catch (error) {
-    console.error("Erro ao criar categoria:", error)
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error("Erro ao criar categoria:", msg)
     return NextResponse.json(
-      { error: "Erro ao criar categoria" },
+      { error: "Erro ao criar categoria", detail: msg },
       { status: 500 },
     )
   }
