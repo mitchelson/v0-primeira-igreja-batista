@@ -84,9 +84,6 @@ export default function VisitanteDialog({
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [categoriaSelecionada, setCategoriaSelecionada] =
     useState<MensagemCategoria | null>(null)
-  const [confirmarEnvioOpen, setConfirmarEnvioOpen] = useState(false)
-  const [categoriaConfirmacao, setCategoriConfirmacao] =
-    useState<MensagemCategoria | null>(null)
 
   const fetchCategorias = useCallback(async () => {
     try {
@@ -198,13 +195,9 @@ export default function VisitanteDialog({
     const link = gerarLinkWhatsApp(visitante.celular, mensagemProcessada)
     window.open(link, "_blank")
 
-    // Close model selection drawer
+    // Close drawer
     setDrawerOpen(false)
     setCategoriaSelecionada(null)
-    
-    // Open confirmation dialog for user to mark as sent after sending manually
-    setCategoriConfirmacao(cat)
-    setConfirmarEnvioOpen(true)
   }
 
   const handleMarcarEnviada = async (categoriaId: string) => {
@@ -244,6 +237,7 @@ export default function VisitanteDialog({
       setConfirmarEnvioOpen(false)
       setCategoriConfirmacao(null)
     }
+  }
   }
 
   const handleEdicaoCadastro = (visitanteAtualizado: Visitante) => {
@@ -393,9 +387,9 @@ export default function VisitanteDialog({
                     return (
                       <div
                         key={cat.id}
-                        className={`flex items-start gap-3 rounded-lg border p-3 transition-colors ${
+                        className={`flex items-start gap-3 rounded-lg border p-3 transition-all ${
                           enviada
-                            ? "bg-primary/5 border-primary/20"
+                            ? "bg-primary/5 border-primary/20 opacity-60"
                             : "bg-card"
                         }`}
                       >
@@ -416,30 +410,42 @@ export default function VisitanteDialog({
                             </p>
                           )}
                         </div>
-                        <div className="shrink-0 flex items-center gap-1.5">
+                        <div className="shrink-0 flex items-center gap-2">
                           {!enviada ? (
-                            <>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-xs h-8 gap-1.5"
-                                onClick={() => handleAbrirModelos(cat)}
-                                disabled={
-                                  !visitante.celular || cat.modelos.length === 0
-                                }
-                              >
-                                <MessageSquare className="h-3.5 w-3.5" />
-                                Enviar
-                              </Button>
-                            </>
-                          ) : (
-                            <div className="flex items-center gap-1.5">
-                              <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                              <span className="text-xs text-primary whitespace-nowrap">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs h-8 gap-1.5 whitespace-nowrap"
+                              onClick={() => handleAbrirModelos(cat)}
+                              disabled={
+                                !visitante.celular || cat.modelos.length === 0
+                              }
+                            >
+                              <MessageSquare className="h-3.5 w-3.5" />
+                              Enviar
+                            </Button>
+                          ) : null}
+                          <Select
+                            value={enviada ? "enviada" : "nao-enviada"}
+                            onValueChange={(value) => {
+                              if (value === "enviada" && !enviada) {
+                                handleMarcarEnviada(cat.id)
+                              }
+                            }}
+                            disabled={enviada}
+                          >
+                            <SelectTrigger className="w-[120px] h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="nao-enviada">
+                                Nao enviada
+                              </SelectItem>
+                              <SelectItem value="enviada">
                                 Enviada
-                              </span>
-                            </div>
-                          )}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                     )
@@ -511,43 +517,6 @@ export default function VisitanteDialog({
                 </button>
               )
             })}
-          </div>
-        </DrawerContent>
-      </Drawer>
-
-      {/* Drawer for confirming message sent */}
-      <Drawer open={confirmarEnvioOpen} onOpenChange={setConfirmarEnvioOpen}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Confirmar envio da mensagem</DrawerTitle>
-            <DrawerDescription>
-              Você conseguiu enviar a mensagem para {visitante.nome}?
-            </DrawerDescription>
-          </DrawerHeader>
-          <div className="px-4 pb-6 space-y-4">
-            <div className="rounded-lg bg-muted/50 p-4">
-              <p className="text-sm font-medium mb-2">
-                Categoria: {categoriaConfirmacao?.nome}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {categoriaConfirmacao?.descricao}
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setConfirmarEnvioOpen(false)}
-                className="flex-1"
-              >
-                Nao foi agora
-              </Button>
-              <Button
-                onClick={handleConfirmarEnvio}
-                className="flex-1"
-              >
-                Sim, foi enviada!
-              </Button>
-            </div>
           </div>
         </DrawerContent>
       </Drawer>
