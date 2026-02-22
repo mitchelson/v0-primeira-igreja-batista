@@ -231,15 +231,6 @@ export default function VisitanteDialog({
     }
   }
 
-  const handleConfirmarEnvio = async () => {
-    if (categoriaConfirmacao) {
-      await handleMarcarEnviada(categoriaConfirmacao.id)
-      setConfirmarEnvioOpen(false)
-      setCategoriConfirmacao(null)
-    }
-  }
-  }
-
   const handleEdicaoCadastro = (visitanteAtualizado: Visitante) => {
     onUpdate(visitanteAtualizado)
     setEditandoCadastro(false)
