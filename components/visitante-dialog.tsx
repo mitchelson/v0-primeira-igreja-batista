@@ -11,6 +11,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
   Drawer,
   DrawerContent,
   DrawerHeader,
@@ -88,6 +98,11 @@ export default function VisitanteDialog({
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [categoriaSelecionada, setCategoriaSelecionada] =
     useState<MensagemCategoria | null>(null)
+
+  // State for unmark confirmation modal
+  const [categoriaParaDesmarcar, setCategoriaParaDesmarcar] =
+    useState<MensagemCategoria | null>(null)
+  const [desmarcando, setDesmarcando] = useState(false)
 
   const fetchCategorias = useCallback(async () => {
     try {
@@ -227,6 +242,39 @@ export default function VisitanteDialog({
   const handleEdicaoCadastro = (visitanteAtualizado: Visitante) => {
     onUpdate(visitanteAtualizado)
     setEditandoCadastro(false)
+  }
+
+  const handleDesmarcarMensagem = async () => {
+    if (!categoriaParaDesmarcar) return
+
+    setDesmarcando(true)
+    try {
+      const res = await fetch(
+        `/api/mensagens/enviadas?visitante_id=${visitante.id}&categoria_id=${categoriaParaDesmarcar.id}`,
+        { method: "DELETE" }
+      )
+
+      if (!res.ok) throw new Error("Erro ao desmarcar mensagem")
+
+      setEnviadas((prev) =>
+        prev.filter((e) => e.categoria_id !== categoriaParaDesmarcar.id)
+      )
+
+      toast({
+        title: "Mensagem desmarcada",
+        description: `A mensagem "${categoriaParaDesmarcar.nome}" foi desmarcada como enviada.`,
+      })
+    } catch (error) {
+      console.error("Erro ao desmarcar mensagem:", error)
+      toast({
+        variant: "destructive",
+        title: "Erro ao desmarcar",
+        description: "Ocorreu um erro ao desmarcar a mensagem.",
+      })
+    } finally {
+      setDesmarcando(false)
+      setCategoriaParaDesmarcar(null)
+    }
   }
 
   // Build summary text
@@ -381,7 +429,10 @@ export default function VisitanteDialog({
                         <Checkbox
                           checked={enviada || marcada}
                           onCheckedChange={(checked) => {
-                            if (checked) {
+                            if (enviada && !checked) {
+                              // If message was already sent and user unchecks, show confirmation
+                              setCategoriaParaDesmarcar(cat)
+                            } else if (checked) {
                               setMensagensParaMarcar((prev) => {
                                 const novo = new Set(prev)
                                 novo.add(cat.id)
@@ -395,7 +446,6 @@ export default function VisitanteDialog({
                               })
                             }
                           }}
-                          disabled={enviada}
                         />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium">{cat.nome}</p>
@@ -492,6 +542,35 @@ export default function VisitanteDialog({
           </div>
         </DrawerContent>
       </Drawer>
+
+      {/* Confirmation modal for unmarking message */}
+      <AlertDialog
+        open={!!categoriaParaDesmarcar}
+        onOpenChange={(open) => !open && setCategoriaParaDesmarcar(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desmarcar mensagem enviada?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja desmarcar a mensagem{" "}
+              <strong>{categoriaParaDesmarcar?.nome}</strong> como enviada? Isso
+              permitira enviar a mensagem novamente para este visitante.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={desmarcando}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDesmarcarMensagem}
+              disabled={desmarcando}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {desmarcando ? "Desmarcando..." : "Desmarcar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }
