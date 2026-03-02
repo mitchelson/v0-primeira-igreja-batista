@@ -146,7 +146,8 @@ export default function AdminPage() {
     }
   }, [termoBusca, visitantes])
 
-  const handleVisitanteAtualizado = (visitanteAtualizado: Visitante) => {
+  const handleVisitanteAtualizado = async (visitanteAtualizado: Visitante) => {
+    await mutate() // Recarrega a lista de visitantes para atualizar o responsavel
     carregarMensagensEnviadas()
     setVisitanteSelecionado(null)
   }

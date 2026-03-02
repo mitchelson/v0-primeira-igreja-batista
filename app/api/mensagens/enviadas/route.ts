@@ -58,3 +58,33 @@ export async function POST(request: Request) {
     )
   }
 }
+
+// DELETE /api/mensagens/enviadas?visitante_id=xxx&categoria_id=yyy
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const visitanteId = searchParams.get("visitante_id")
+    const categoriaId = searchParams.get("categoria_id")
+
+    if (!visitanteId || !categoriaId) {
+      return NextResponse.json(
+        { error: "visitante_id e categoria_id obrigatorios" },
+        { status: 400 },
+      )
+    }
+
+    await sql`
+      DELETE FROM visitante_mensagens_enviadas
+      WHERE visitante_id = ${visitanteId}
+      AND categoria_id = ${categoriaId}
+    `
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Erro ao remover mensagem enviada:", error)
+    return NextResponse.json(
+      { error: "Erro ao remover mensagem enviada", detail: error instanceof Error ? error.message : String(error) },
+      { status: 500 },
+    )
+  }
+}
