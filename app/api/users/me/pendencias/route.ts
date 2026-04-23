@@ -9,6 +9,12 @@ export async function GET() {
   const userId = session.user.id
 
   // Busca responsavel_id vinculado a este user
+  const colCheck = await sql`
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'responsaveis' AND column_name = 'user_id' LIMIT 1
+  `
+  if (colCheck.length === 0) return NextResponse.json([])
+
   const resp = await sql`SELECT id FROM responsaveis WHERE user_id = ${userId}`
   if (resp.length === 0) return NextResponse.json([])
 
