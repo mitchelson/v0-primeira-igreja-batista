@@ -1,87 +1,150 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import useSWR from "swr"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { AlertCircle, Plus, Trash2, Check, X } from "lucide-react"
-import { toast } from "@/components/ui/use-toast"
+import { useState } from "react";
+import useSWR from "swr";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { AlertCircle, Plus, Trash2, Check, X } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
-const fetcher = (url: string) => fetch(url).then(r => r.json())
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export default function EscalasAdminPage() {
-  const { data: eventos } = useSWR("/api/eventos", fetcher)
-  const { data: ministerios } = useSWR("/api/ministerios", fetcher)
-  const [eventoId, setEventoId] = useState("")
-  const { data: escalas, mutate } = useSWR(eventoId ? `/api/escalas?evento_id=${eventoId}` : null, fetcher)
-  const [addOpen, setAddOpen] = useState(false)
-  const [addMin, setAddMin] = useState("")
-  const [addUser, setAddUser] = useState("")
-  const [addFuncao, setAddFuncao] = useState("")
-  const [conflictDialog, setConflictDialog] = useState<any>(null)
+  const { data: eventos } = useSWR("/api/eventos", fetcher);
+  const { data: ministerios } = useSWR("/api/ministerios", fetcher);
+  const [eventoId, setEventoId] = useState("");
+  const { data: escalas, mutate } = useSWR(
+    eventoId ? `/api/escalas?evento_id=${eventoId}` : null,
+    fetcher,
+  );
+  const [addOpen, setAddOpen] = useState(false);
+  const [addMin, setAddMin] = useState("");
+  const [addUser, setAddUser] = useState("");
+  const [addFuncao, setAddFuncao] = useState("");
+  const [conflictDialog, setConflictDialog] = useState<any>(null);
 
   // Busca membros e funções do ministério selecionado
-  const { data: minDetail } = useSWR(addMin ? `/api/ministerios/${addMin}` : null, fetcher)
-  const { data: minFuncoes } = useSWR(addMin ? `/api/ministerios/${addMin}/funcoes` : null, fetcher)
+  const { data: minDetail } = useSWR(
+    addMin ? `/api/ministerios/${addMin}` : null,
+    fetcher,
+  );
+  const { data: minFuncoes } = useSWR(
+    addMin ? `/api/ministerios/${addMin}/funcoes` : null,
+    fetcher,
+  );
 
-  const futureEventos = eventos?.filter((e: any) => new Date(e.data) >= new Date(new Date().toDateString())).sort((a: any, b: any) => new Date(a.data).getTime() - new Date(b.data).getTime())
+  const futureEventos = eventos
+    ?.filter(
+      (e: any) => new Date(e.data) >= new Date(new Date().toDateString()),
+    )
+    .sort(
+      (a: any, b: any) =>
+        new Date(a.data).getTime() - new Date(b.data).getTime(),
+    );
 
-  const escalasGrouped = ministerios?.reduce((acc: any, m: any) => {
-    acc[m.id] = { nome: m.nome, icone: m.icone, escalas: escalas?.filter((e: any) => e.ministerio_id === m.id) || [] }
-    return acc
-  }, {} as Record<string, any>) || {}
+  const escalasGrouped =
+    ministerios?.reduce(
+      (acc: any, m: any) => {
+        acc[m.id] = {
+          nome: m.nome,
+          icone: m.icone,
+          escalas: escalas?.filter((e: any) => e.ministerio_id === m.id) || [],
+        };
+        return acc;
+      },
+      {} as Record<string, any>,
+    ) || {};
 
-  const activeMinisterios = Object.entries(escalasGrouped).filter(([_, v]: any) => v.escalas.length > 0)
+  const activeMinisterios = Object.entries(escalasGrouped).filter(
+    ([_, v]: any) => v.escalas.length > 0,
+  );
 
   const handleAdd = async () => {
-    if (!eventoId || !addMin || !addUser) return
+    if (!eventoId || !addMin || !addUser) return;
     const res = await fetch("/api/escalas", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ evento_id: eventoId, ministerio_id: addMin, user_id: addUser, funcao: addFuncao || null }),
-    })
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        evento_id: eventoId,
+        ministerio_id: addMin,
+        user_id: addUser,
+        funcao: addFuncao || null,
+      }),
+    });
 
     if (res.status === 409) {
-      const data = await res.json()
-      setConflictDialog(data)
-      return
+      const data = await res.json();
+      setConflictDialog(data);
+      return;
     }
 
     if (res.ok) {
-      const data = await res.json()
-      if (data.warning) toast({ title: "⚠️ Aviso", description: data.warning })
-      else toast({ title: "Membro escalado" })
-      mutate(); setAddOpen(false); setAddUser(""); setAddFuncao("")
+      const data = await res.json();
+      if (data.warning) toast({ title: "⚠️ Aviso", description: data.warning });
+      else toast({ title: "Membro escalado" });
+      mutate();
+      setAddOpen(false);
+      setAddUser("");
+      setAddFuncao("");
     }
-  }
+  };
 
   const handleRemove = async (id: string) => {
-    await fetch(`/api/escalas/${id}`, { method: "DELETE" })
-    toast({ title: "Removido da escala" }); mutate()
-  }
+    await fetch(`/api/escalas/${id}`, { method: "DELETE" });
+    toast({ title: "Removido da escala" });
+    mutate();
+  };
 
   const handleStatus = async (id: string, status: string) => {
-    await fetch(`/api/escalas/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) })
-    toast({ title: `Status: ${status}` }); mutate()
-  }
+    await fetch(`/api/escalas/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    toast({ title: `Status: ${status}` });
+    mutate();
+  };
 
   const statusBadge = (s: string) => {
-    const map: Record<string, string> = { confirmado: "bg-green-100 text-green-700", pendente: "bg-yellow-100 text-yellow-700", recusado: "bg-red-100 text-red-700" }
-    return map[s] || ""
-  }
+    const map: Record<string, string> = {
+      confirmado: "bg-green-100 text-green-700",
+      pendente: "bg-yellow-100 text-yellow-700",
+      recusado: "bg-red-100 text-red-700",
+    };
+    return map[s] || "";
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Escalas</h1>
         {eventoId && (
-          <Button onClick={() => { setAddOpen(true); setAddMin(""); setAddUser("") }}>
-            <Plus className="h-4 w-4 mr-1" />Escalar membro
+          <Button
+            onClick={() => {
+              setAddOpen(true);
+              setAddMin("");
+              setAddUser("");
+            }}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Escalar membro
           </Button>
         )}
       </div>
@@ -89,11 +152,14 @@ export default function EscalasAdminPage() {
       <div>
         <Label>Selecione o evento</Label>
         <Select value={eventoId} onValueChange={setEventoId}>
-          <SelectTrigger><SelectValue placeholder="Escolha um evento" /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue placeholder="Escolha um evento" />
+          </SelectTrigger>
           <SelectContent>
             {futureEventos?.map((ev: any) => (
               <SelectItem key={ev.id} value={ev.id}>
-                {ev.titulo} — {new Date(ev.data).toLocaleDateString("pt-BR")}{ev.horario ? ` ${ev.horario}` : ""}
+                {ev.titulo} — {new Date(ev.data).toLocaleDateString("pt-BR")}
+                {ev.horario ? ` ${ev.horario}` : ""}
               </SelectItem>
             ))}
           </SelectContent>
@@ -103,26 +169,49 @@ export default function EscalasAdminPage() {
       {eventoId && escalas && (
         <>
           {activeMinisterios.length === 0 && escalas.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">Nenhum membro escalado para este evento.</p>
+            <p className="text-center text-muted-foreground py-8">
+              Nenhum membro escalado para este evento.
+            </p>
           ) : (
             <Tabs defaultValue={activeMinisterios[0]?.[0] || "all"}>
               <TabsList className="flex-wrap h-auto">
                 <TabsTrigger value="all">Todos ({escalas.length})</TabsTrigger>
                 {activeMinisterios.map(([id, v]: any) => (
-                  <TabsTrigger key={id} value={id}>{v.icone} {v.nome} ({v.escalas.length})</TabsTrigger>
+                  <TabsTrigger key={id} value={id}>
+                    {v.icone} {v.nome} ({v.escalas.length})
+                  </TabsTrigger>
                 ))}
               </TabsList>
 
-              <TabsContent value="all" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
+              <TabsContent
+                value="all"
+                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4"
+              >
                 {escalas.map((e: any) => (
-                  <EscalaRow key={e.id} e={e} onRemove={handleRemove} onStatus={handleStatus} statusBadge={statusBadge} />
+                  <EscalaRow
+                    key={e.id}
+                    e={e}
+                    onRemove={handleRemove}
+                    onStatus={handleStatus}
+                    statusBadge={statusBadge}
+                  />
                 ))}
               </TabsContent>
 
               {activeMinisterios.map(([id, v]: any) => (
-                <TabsContent key={id} value={id} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
+                <TabsContent
+                  key={id}
+                  value={id}
+                  className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4"
+                >
                   {v.escalas.map((e: any) => (
-                    <EscalaRow key={e.id} e={e} onRemove={handleRemove} onStatus={handleStatus} statusBadge={statusBadge} />
+                    <EscalaRow
+                      key={e.id}
+                      e={e}
+                      onRemove={handleRemove}
+                      onStatus={handleStatus}
+                      statusBadge={statusBadge}
+                    />
                   ))}
                 </TabsContent>
               ))}
@@ -134,14 +223,29 @@ export default function EscalasAdminPage() {
       {/* Dialog adicionar */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Escalar Membro</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Escalar Membro</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4">
             <div>
               <Label>Ministério</Label>
-              <Select value={addMin} onValueChange={v => { setAddMin(v); setAddUser(""); setAddFuncao("") }}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+              <Select
+                value={addMin}
+                onValueChange={(v) => {
+                  setAddMin(v);
+                  setAddUser("");
+                  setAddFuncao("");
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
                 <SelectContent>
-                  {ministerios?.map((m: any) => <SelectItem key={m.id} value={m.id}>{m.icone} {m.nome}</SelectItem>)}
+                  {ministerios?.map((m: any) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.icone} {m.nome}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -149,10 +253,15 @@ export default function EscalasAdminPage() {
               <div>
                 <Label>Membro</Label>
                 <Select value={addUser} onValueChange={setAddUser}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
                   <SelectContent>
                     {minDetail.membros.map((mb: any) => (
-                      <SelectItem key={mb.user_id} value={mb.user_id}>{mb.nome}{mb.is_lider ? " ★" : ""}</SelectItem>
+                      <SelectItem key={mb.user_id} value={mb.user_id}>
+                        {mb.nome}
+                        {mb.is_lider ? " ★" : ""}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -161,37 +270,77 @@ export default function EscalasAdminPage() {
             <div>
               <Label>Função (opcional)</Label>
               <Select value={addFuncao} onValueChange={setAddFuncao}>
-                <SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione (opcional)" />
+                </SelectTrigger>
                 <SelectContent>
                   {minFuncoes?.map((f: any) => (
-                    <SelectItem key={f.id} value={f.nome}>{f.nome}</SelectItem>
+                    <SelectItem key={f.id} value={f.nome}>
+                      {f.nome}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <Button className="w-full" onClick={handleAdd} disabled={!addMin || !addUser}>Escalar</Button>
+            <Button
+              className="w-full"
+              onClick={handleAdd}
+              disabled={!addMin || !addUser}
+            >
+              Escalar
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Dialog conflito */}
-      <Dialog open={!!conflictDialog} onOpenChange={() => setConflictDialog(null)}>
+      <Dialog
+        open={!!conflictDialog}
+        onOpenChange={() => setConflictDialog(null)}
+      >
         <DialogContent>
-          <DialogHeader><DialogTitle className="flex items-center gap-2 text-destructive"><AlertCircle className="h-5 w-5" />Conflito de Escala</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Conflito de Escala
+            </DialogTitle>
+          </DialogHeader>
           <p className="text-sm">{conflictDialog?.message}</p>
-          <p className="text-xs text-muted-foreground">Para escalar mesmo assim, ative &quot;Permite escala múltipla&quot; no perfil do membro em Membros.</p>
-          <Button variant="outline" onClick={() => setConflictDialog(null)}>Entendi</Button>
+          <p className="text-xs text-muted-foreground">
+            Para escalar mesmo assim, ative &quot;Permite escala múltipla&quot;
+            no perfil do membro em Membros.
+          </p>
+          <Button variant="outline" onClick={() => setConflictDialog(null)}>
+            Entendi
+          </Button>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
 
-function EscalaRow({ e, onRemove, onStatus, statusBadge }: { e: any; onRemove: (id: string) => void; onStatus: (id: string, s: string) => void; statusBadge: (s: string) => string }) {
+function EscalaRow({
+  e,
+  onRemove,
+  onStatus,
+  statusBadge,
+}: {
+  e: any;
+  onRemove: (id: string) => void;
+  onStatus: (id: string, s: string) => void;
+  statusBadge: (s: string) => string;
+}) {
   return (
     <Card>
       <CardContent className="p-4 flex flex-col items-center text-center gap-2 relative">
-        <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-7 w-7 text-destructive" onClick={() => onRemove(e.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-1 right-1 h-7 w-7 text-destructive"
+          onClick={() => onRemove(e.id)}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
         <Avatar className="h-14 w-14">
           <AvatarImage src={e.foto_url} />
           <AvatarFallback>{e.user_nome?.[0]}</AvatarFallback>
@@ -199,18 +348,38 @@ function EscalaRow({ e, onRemove, onStatus, statusBadge }: { e: any; onRemove: (
         <div>
           <p className="text-sm font-medium">{e.user_nome}</p>
           <p className="text-xs text-muted-foreground">{e.ministerio_nome}</p>
-          {e.funcao && <p className="text-xs text-muted-foreground">{e.funcao}</p>}
+          {e.funcao && (
+            <p className="text-xs text-muted-foreground">{e.funcao}</p>
+          )}
         </div>
         <div className="flex items-center gap-1">
-          <span className={`text-xs px-1.5 py-0.5 rounded ${statusBadge(e.status)}`}>{e.status}</span>
+          <span
+            className={`text-xs px-1.5 py-0.5 rounded ${statusBadge(e.status)}`}
+          >
+            {e.status}
+          </span>
           {e.status === "pendente" && (
             <>
-              <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600" onClick={() => onStatus(e.id, "confirmado")}><Check className="h-3 w-3" /></Button>
-              <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600" onClick={() => onStatus(e.id, "recusado")}><X className="h-3 w-3" /></Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-green-600"
+                onClick={() => onStatus(e.id, "confirmado")}
+              >
+                <Check className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-red-600"
+                onClick={() => onStatus(e.id, "recusado")}
+              >
+                <X className="h-3 w-3" />
+              </Button>
             </>
           )}
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

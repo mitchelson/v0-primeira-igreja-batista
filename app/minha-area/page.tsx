@@ -37,7 +37,9 @@ export default async function MinhaAreaPage() {
     sql`SELECT criado_em FROM users WHERE id = ${userId}`,
   ]);
 
-  const isNewUser = userInfo[0] && (Date.now() - new Date(userInfo[0].criado_em).getTime()) < 60_000;
+  const isNewUser =
+    userInfo[0] &&
+    Date.now() - new Date(userInfo[0].criado_em).getTime() < 60_000;
 
   const pendentes = escalas.filter((e: any) => e.status === "pendente").length;
 
@@ -48,8 +50,12 @@ export default async function MinhaAreaPage() {
         <div className="mx-auto max-w-lg px-4 py-6 space-y-5">
           {isNewUser && (
             <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-center">
-              <p className="text-lg font-semibold text-green-800">✅ Cadastro efetuado com sucesso!</p>
-              <p className="text-sm text-green-700 mt-1">Bem-vindo(a) à Primeira Igreja Batista de Roraima</p>
+              <p className="text-lg font-semibold text-green-800">
+                ✅ Cadastro efetuado com sucesso!
+              </p>
+              <p className="text-sm text-green-700 mt-1">
+                Bem-vindo(a) à Primeira Igreja Batista de Roraima
+              </p>
             </div>
           )}
           {/* Greeting */}
@@ -115,14 +121,22 @@ export default async function MinhaAreaPage() {
                         <div className="flex items-stretch">
                           {/* Date sidebar */}
                           <div className="flex flex-col items-center justify-center bg-primary/10 text-primary w-16 py-4 shrink-0">
-                            <span className="text-2xl font-bold leading-none">{dia}</span>
-                            <span className="text-[10px] uppercase font-semibold tracking-wide mt-1">{mes}</span>
-                            <span className="text-[10px] text-muted-foreground capitalize mt-0.5">{diaSemana}</span>
+                            <span className="text-2xl font-bold leading-none">
+                              {dia}
+                            </span>
+                            <span className="text-[10px] uppercase font-semibold tracking-wide mt-1">
+                              {mes}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground capitalize mt-0.5">
+                              {diaSemana}
+                            </span>
                           </div>
 
                           {/* Content */}
                           <div className="flex flex-col justify-between flex-1 min-w-0 p-3 gap-2">
-                            <p className="font-semibold text-sm leading-tight">{e.titulo}</p>
+                            <p className="font-semibold text-sm leading-tight">
+                              {e.titulo}
+                            </p>
 
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
@@ -133,11 +147,14 @@ export default async function MinhaAreaPage() {
                                   </span>
                                 )}
                                 <span className="flex items-center gap-1">
-                                  <Music className="h-3 w-3" />
+                                  {e.icon}
                                   {e.ministerio}
                                 </span>
                                 {e.funcao && (
-                                  <Badge variant="secondary" className="text-[11px] font-normal">
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-[11px] font-normal"
+                                  >
                                     {e.funcao}
                                   </Badge>
                                 )}
