@@ -79,29 +79,39 @@ export default function EventosAdminPage() {
         </Dialog>
       </div>
 
-      <div className="space-y-3">
-        {eventos?.map((ev: any) => (
-          <Card key={ev.id}>
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium text-sm">{ev.titulo}</p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{new Date(ev.data).toLocaleDateString("pt-BR")}</span>
-                    {ev.horario && <span>· {ev.horario}</span>}
-                    <span className={`px-1.5 py-0.5 rounded ${tipoColor(ev.tipo)}`}>{ev.tipo}</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {eventos?.map((ev: any) => {
+          const d = new Date(ev.data)
+          const dia = d.toLocaleDateString("pt-BR", { day: "2-digit" })
+          const mes = d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")
+          return (
+            <Card key={ev.id}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-center justify-center rounded-lg bg-primary/10 text-primary min-w-[3rem] py-2 px-2">
+                      <span className="text-lg font-bold leading-none">{dia}</span>
+                      <span className="text-[10px] uppercase font-medium mt-0.5">{mes}</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">{ev.titulo}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                        {ev.horario && <span>{ev.horario}</span>}
+                        <span className={`px-1.5 py-0.5 rounded ${tipoColor(ev.tipo)}`}>{ev.tipo}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(ev)}><Pencil className="h-3.5 w-3.5" /></Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(ev.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        {eventos?.length === 0 && <p className="text-center text-muted-foreground py-8">Nenhum evento cadastrado.</p>}
+                {ev.descricao && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{ev.descricao}</p>}
+                <div className="flex justify-end gap-1">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(ev)}><Pencil className="h-3.5 w-3.5" /></Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(ev.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+        {eventos?.length === 0 && <p className="text-center text-muted-foreground py-8 col-span-full">Nenhum evento cadastrado.</p>}
       </div>
     </div>
   )

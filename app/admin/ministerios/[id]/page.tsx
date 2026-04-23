@@ -93,7 +93,12 @@ export default function MinisterioDetailPage() {
     const data = new Date(selectedEvento.data).toLocaleDateString("pt-BR")
     let text = `📋 *Escala - ${ministerio.nome}*\n📅 ${selectedEvento.titulo} — ${data}${selectedEvento.horario ? ` às ${selectedEvento.horario}` : ""}\n\n`
     minEscalas.forEach((e: any) => { text += `• ${e.user_nome}${e.funcao ? ` (${e.funcao})` : ""}\n` })
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank")
+
+    if (navigator.share) {
+      navigator.share({ text }).catch(() => {})
+    } else {
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank")
+    }
   }
 
   const handleNotifyEscalados = async () => {
@@ -138,36 +143,34 @@ export default function MinisterioDetailPage() {
         </TabsList>
 
         {/* Membros */}
-        <TabsContent value="membros" className="space-y-3 mt-4">
+        <TabsContent value="membros" className="mt-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {lider.map((l: any) => (
             <Card key={l.user_id} className="border-amber-200 bg-amber-50/50">
-              <CardContent className="p-3 flex items-center gap-3">
-                <Avatar className="h-10 w-10">
+              <CardContent className="p-4 flex flex-col items-center text-center gap-2">
+                <Avatar className="h-14 w-14">
                   <AvatarImage src={l.foto_url} />
                   <AvatarFallback>{l.nome?.[0]}</AvatarFallback>
                 </Avatar>
                 <div>
                   <p className="font-medium text-sm">{l.nome}</p>
-                  <p className="text-xs text-muted-foreground">{l.email}</p>
+                  <Badge className="mt-1 bg-amber-100 text-amber-700 gap-1 text-xs"><Crown className="h-3 w-3" />Líder</Badge>
                 </div>
-                <Badge className="ml-auto bg-amber-100 text-amber-700 gap-1"><Crown className="h-3 w-3" />Líder</Badge>
               </CardContent>
             </Card>
           ))}
           {membros.filter((m: any) => !m.is_lider).map((m: any) => (
             <Card key={m.user_id}>
-              <CardContent className="p-3 flex items-center gap-3">
-                <Avatar className="h-8 w-8">
+              <CardContent className="p-4 flex flex-col items-center text-center gap-2">
+                <Avatar className="h-14 w-14">
                   <AvatarImage src={m.foto_url} />
                   <AvatarFallback>{m.nome?.[0]}</AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="text-sm font-medium">{m.nome}</p>
-                  <p className="text-xs text-muted-foreground">{m.email}</p>
-                </div>
+                <p className="text-sm font-medium">{m.nome}</p>
               </CardContent>
             </Card>
           ))}
+          </div>
           {membros.length === 0 && <p className="text-center text-muted-foreground py-4">Nenhum membro neste ministério.</p>}
         </TabsContent>
 
@@ -221,7 +224,7 @@ export default function MinisterioDetailPage() {
           {eventoId && minEscalas.length > 0 && (
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={handleShareWhatsApp}>
-                <Share2 className="h-4 w-4 mr-1" />WhatsApp
+                <Share2 className="h-4 w-4 mr-1" />Compartilhar
               </Button>
               <Button variant="outline" size="sm" onClick={handleNotifyEscalados} disabled={notifying}>
                 {notifying ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Bell className="h-4 w-4 mr-1" />}
@@ -234,32 +237,32 @@ export default function MinisterioDetailPage() {
             <p className="text-center text-muted-foreground py-4">Nenhum membro escalado para este evento.</p>
           )}
 
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {minEscalas.map((e: any) => (
             <Card key={e.id}>
-              <CardContent className="p-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={e.foto_url} />
-                    <AvatarFallback>{e.user_nome?.[0]}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-medium">{e.user_nome}</p>
-                    {e.funcao && <p className="text-xs text-muted-foreground">{e.funcao}</p>}
-                  </div>
+              <CardContent className="p-4 flex flex-col items-center text-center gap-2 relative">
+                <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-7 w-7 text-destructive" onClick={() => handleRemoveEscala(e.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                <Avatar className="h-14 w-14">
+                  <AvatarImage src={e.foto_url} />
+                  <AvatarFallback>{e.user_nome?.[0]}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-medium">{e.user_nome}</p>
+                  {e.funcao && <p className="text-xs text-muted-foreground">{e.funcao}</p>}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <span className={`text-xs px-1.5 py-0.5 rounded ${statusBadge(e.status)}`}>{e.status}</span>
                   {e.status === "pendente" && (
                     <>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-green-600" onClick={() => handleStatus(e.id, "confirmado")}><Check className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-red-600" onClick={() => handleStatus(e.id, "recusado")}><X className="h-3.5 w-3.5" /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600" onClick={() => handleStatus(e.id, "confirmado")}><Check className="h-3 w-3" /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600" onClick={() => handleStatus(e.id, "recusado")}><X className="h-3 w-3" /></Button>
                     </>
                   )}
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleRemoveEscala(e.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                 </div>
               </CardContent>
             </Card>
           ))}
+          </div>
         </TabsContent>
       </Tabs>
 

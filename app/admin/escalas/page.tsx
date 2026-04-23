@@ -113,14 +113,14 @@ export default function EscalasAdminPage() {
                 ))}
               </TabsList>
 
-              <TabsContent value="all" className="space-y-2 mt-4">
+              <TabsContent value="all" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
                 {escalas.map((e: any) => (
                   <EscalaRow key={e.id} e={e} onRemove={handleRemove} onStatus={handleStatus} statusBadge={statusBadge} />
                 ))}
               </TabsContent>
 
               {activeMinisterios.map(([id, v]: any) => (
-                <TabsContent key={id} value={id} className="space-y-2 mt-4">
+                <TabsContent key={id} value={id} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
                   {v.escalas.map((e: any) => (
                     <EscalaRow key={e.id} e={e} onRemove={handleRemove} onStatus={handleStatus} statusBadge={statusBadge} />
                   ))}
@@ -190,29 +190,25 @@ export default function EscalasAdminPage() {
 function EscalaRow({ e, onRemove, onStatus, statusBadge }: { e: any; onRemove: (id: string) => void; onStatus: (id: string, s: string) => void; statusBadge: (s: string) => string }) {
   return (
     <Card>
-      <CardContent className="p-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={e.foto_url} />
-            <AvatarFallback>{e.user_nome?.[0]}</AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="text-sm font-medium">{e.user_nome}</p>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>{e.ministerio_nome}</span>
-              {e.funcao && <span>· {e.funcao}</span>}
-            </div>
-          </div>
+      <CardContent className="p-4 flex flex-col items-center text-center gap-2 relative">
+        <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-7 w-7 text-destructive" onClick={() => onRemove(e.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+        <Avatar className="h-14 w-14">
+          <AvatarImage src={e.foto_url} />
+          <AvatarFallback>{e.user_nome?.[0]}</AvatarFallback>
+        </Avatar>
+        <div>
+          <p className="text-sm font-medium">{e.user_nome}</p>
+          <p className="text-xs text-muted-foreground">{e.ministerio_nome}</p>
+          {e.funcao && <p className="text-xs text-muted-foreground">{e.funcao}</p>}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <span className={`text-xs px-1.5 py-0.5 rounded ${statusBadge(e.status)}`}>{e.status}</span>
           {e.status === "pendente" && (
             <>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-green-600" onClick={() => onStatus(e.id, "confirmado")}><Check className="h-3.5 w-3.5" /></Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-red-600" onClick={() => onStatus(e.id, "recusado")}><X className="h-3.5 w-3.5" /></Button>
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600" onClick={() => onStatus(e.id, "confirmado")}><Check className="h-3 w-3" /></Button>
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600" onClick={() => onStatus(e.id, "recusado")}><X className="h-3 w-3" /></Button>
             </>
           )}
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onRemove(e.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
         </div>
       </CardContent>
     </Card>

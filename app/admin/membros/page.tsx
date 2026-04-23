@@ -20,12 +20,17 @@ export default function MembrosAdminPage() {
   const { data: users, mutate } = useSWR("/api/users", fetcher)
   const { data: ministerios } = useSWR("/api/ministerios", fetcher)
   const [search, setSearch] = useState("")
+  const [filterMin, setFilterMin] = useState("all")
   const [editUser, setEditUser] = useState<any>(null)
   const [addMinId, setAddMinId] = useState("")
 
-  const filtered = users?.filter((u: any) =>
-    u.nome.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = users?.filter((u: any) => {
+    const matchSearch = !search || u.nome.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase())
+    const matchMin = filterMin === "all" ? true
+      : filterMin === "none" ? (!u.ministerios || u.ministerios.length === 0)
+      : u.ministerios?.some((m: any) => m.ministerio_id === filterMin)
+    return matchSearch && matchMin
+  })
 
   const handleUpdate = async (id: string, data: any) => {
     await fetch("/api/users", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, ...data }) })
@@ -56,41 +61,49 @@ export default function MembrosAdminPage() {
         <h1 className="text-2xl font-bold">Membros</h1>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Buscar por nome ou email" className="pl-8" value={search} onChange={e => setSearch(e.target.value)} />
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Buscar por nome ou email" className="pl-8" value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <Select value={filterMin} onValueChange={setFilterMin}>
+          <SelectTrigger className="w-48"><SelectValue placeholder="Ministério" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="none">Sem ministério</SelectItem>
+            {ministerios?.map((m: any) => (
+              <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="space-y-3">
+      {filtered && (
+        <p className="text-sm text-muted-foreground">{filtered.length} membro{filtered.length !== 1 ? "s" : ""}</p>
+      )}
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {filtered?.map((u: any) => (
-          <Card key={u.id}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={u.foto_url} />
-                  <AvatarFallback>{u.nome?.[0]}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-medium text-sm truncate">{u.nome}</p>
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${roleColor(u.role)}`}>{u.role}</span>
-                    {!u.ativo && <Badge variant="destructive" className="text-xs">Inativo</Badge>}
-                  </div>
-                  <p className="text-xs text-muted-foreground truncate">{u.email}</p>
-                  {u.ministerios?.length > 0 && (
-                    <div className="flex gap-1 mt-1 flex-wrap">
-                      {u.ministerios.map((m: any) => (
-                        <Badge key={m.ministerio_id} variant="outline" className="text-xs">
-                          {m.nome}{m.is_lider ? " ★" : ""}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <Button variant="ghost" size="icon" onClick={() => setEditUser(u)}>
-                  <UserCog className="h-4 w-4" />
-                </Button>
+          <Card key={u.id} className="cursor-pointer hover:border-primary/30 transition-colors" onClick={() => setEditUser(u)}>
+            <CardContent className="p-4 flex flex-col items-center text-center gap-2">
+              <Avatar className="h-14 w-14">
+                <AvatarImage src={u.foto_url} />
+                <AvatarFallback>{u.nome?.[0]}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-medium text-sm truncate max-w-[120px]">{u.nome}</p>
+                <span className={`text-xs px-1.5 py-0.5 rounded ${roleColor(u.role)}`}>{u.role}</span>
+                {!u.ativo && <Badge variant="destructive" className="text-xs ml-1">Inativo</Badge>}
               </div>
+              {u.ministerios?.length > 0 && (
+                <div className="flex gap-1 flex-wrap justify-center">
+                  {u.ministerios.map((m: any) => (
+                    <Badge key={m.ministerio_id} variant="outline" className="text-[10px]">
+                      {m.nome}{m.is_lider ? " ★" : ""}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
