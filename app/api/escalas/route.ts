@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       title: "📋 Você foi escalado!",
       body: `${min[0]?.nome} — ${ev[0]?.titulo} (${dataFormatada})`,
       url: "/minha-area",
-    }).catch(() => {})
+    }).catch((err) => console.error("Push error:", err))
   }
 
   return NextResponse.json({ ...rows[0], warning }, { status: 201 })

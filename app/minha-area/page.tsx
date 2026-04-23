@@ -9,6 +9,7 @@ import { Calendar, Music, ClipboardList, Clock, MapPin } from "lucide-react"
 import Header from "@/components/header"
 import { EscalaActions } from "./escala-actions"
 import { PushNotificationRegister } from "@/components/push-notification-register"
+import { PullToRefresh } from "@/components/pull-to-refresh"
 
 export default async function MinhaAreaPage() {
   const session = await auth()
@@ -39,6 +40,7 @@ export default async function MinhaAreaPage() {
   return (
     <div className="min-h-screen bg-muted/30">
       <Header />
+      <PullToRefresh>
       <div className="mx-auto max-w-lg px-4 py-6 space-y-5">
         {/* Greeting */}
         <div>
@@ -79,19 +81,21 @@ export default async function MinhaAreaPage() {
                   return (
                     <div
                       key={e.id}
-                      className="flex items-start gap-3 rounded-xl border bg-card p-4"
+                      className="rounded-xl border bg-card p-4 space-y-3"
                     >
-                      {/* Date badge */}
-                      <div className="flex flex-col items-center justify-center rounded-lg bg-primary/10 text-primary min-w-[3.25rem] py-2 px-2">
-                        <span className="text-lg font-bold leading-none">{dia}</span>
-                        <span className="text-[10px] uppercase font-medium mt-0.5">{mes}</span>
-                        <span className="text-[10px] text-muted-foreground capitalize">{diaSemana}</span>
+                      {/* Row 1: Date badge + Title */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-center justify-center rounded-lg bg-primary/10 text-primary min-w-[3.25rem] py-2 px-2">
+                          <span className="text-lg font-bold leading-none">{dia}</span>
+                          <span className="text-[10px] uppercase font-medium mt-0.5">{mes}</span>
+                          <span className="text-[10px] text-muted-foreground capitalize">{diaSemana}</span>
+                        </div>
+                        <p className="font-semibold text-sm leading-tight truncate flex-1 min-w-0">{e.titulo}</p>
                       </div>
 
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm leading-tight truncate">{e.titulo}</p>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-muted-foreground">
+                      {/* Row 2: Details + Status tag */}
+                      <div className="flex items-end justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                           {e.horario && (
                             <span className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />{e.horario}
@@ -100,15 +104,13 @@ export default async function MinhaAreaPage() {
                           <span className="flex items-center gap-1">
                             <Music className="h-3 w-3" />{e.ministerio}
                           </span>
+                          {e.funcao && (
+                            <Badge variant="secondary" className="text-[11px] font-normal">{e.funcao}</Badge>
+                          )}
                         </div>
-                        {e.funcao && (
-                          <Badge variant="secondary" className="mt-2 text-[11px] font-normal">{e.funcao}</Badge>
-                        )}
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex-shrink-0">
-                        <EscalaActions id={e.id} status={e.status} />
+                        <div className="flex-shrink-0">
+                          <EscalaActions id={e.id} status={e.status} />
+                        </div>
                       </div>
                     </div>
                   )
@@ -154,6 +156,7 @@ export default async function MinhaAreaPage() {
           </CardContent>
         </Card>
       </div>
+      </PullToRefresh>
     </div>
   )
 }
