@@ -4,24 +4,17 @@ import { sql } from "@/lib/neon"
 export async function GET() {
   try {
     const rows = await sql`
-      SELECT r.*, u.nome as user_nome, u.foto_url
-      FROM responsaveis r
-      LEFT JOIN users u ON u.id = r.user_id
-      WHERE r.user_id IS NULL
-         OR r.user_id IN (
-           SELECT mm.user_id FROM ministerio_membros mm
-           JOIN ministerios m ON m.id = mm.ministerio_id
-           WHERE m.nome ILIKE '%integra%'
-         )
-      ORDER BY r.nome ASC
+      SELECT u.id, u.nome, u.foto_url
+      FROM users u
+      JOIN ministerio_membros mm ON mm.user_id = u.id
+      JOIN ministerios m ON m.id = mm.ministerio_id
+      WHERE m.nome ILIKE '%integra%' AND u.ativo = true
+      ORDER BY u.nome ASC
     `
     return NextResponse.json(rows)
   } catch (error) {
     console.error("Erro ao buscar responsáveis:", error)
-    return NextResponse.json(
-      { error: "Erro ao buscar responsáveis" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Erro ao buscar responsáveis" }, { status: 500 })
   }
 }
 

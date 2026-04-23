@@ -6,9 +6,9 @@ export async function GET() {
     const rows = await sql`
       SELECT
         v.*,
-        r.nome AS responsavel_nome
+        u.nome AS responsavel_nome
       FROM visitantes v
-      LEFT JOIN responsaveis r ON v.responsavel_id = r.id
+      LEFT JOIN users u ON v.user_id = u.id
       ORDER BY v.data_cadastro DESC
     `
     return NextResponse.json(rows)

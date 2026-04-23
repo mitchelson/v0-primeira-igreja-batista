@@ -10,9 +10,9 @@ export async function GET(
     const rows = await sql`
       SELECT
         v.*,
-        r.nome AS responsavel_nome
+        u.nome AS responsavel_nome
       FROM visitantes v
-      LEFT JOIN responsaveis r ON v.responsavel_id = r.id
+      LEFT JOIN users u ON v.user_id = u.id
       WHERE v.id = ${id}
     `
 
@@ -69,7 +69,7 @@ export async function PUT(
         membro_igreja = COALESCE(${membro_igreja ?? null}, membro_igreja),
         quer_visita = COALESCE(${quer_visita ?? null}, quer_visita),
         sem_whatsapp = COALESCE(${sem_whatsapp ?? null}, sem_whatsapp),
-        responsavel_id = ${responsavel_id ?? null}
+        user_id = ${responsavel_id ?? null}
       WHERE id = ${id}
       RETURNING *
     `

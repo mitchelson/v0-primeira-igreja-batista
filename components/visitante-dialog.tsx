@@ -75,7 +75,7 @@ export default function VisitanteDialog({
   const [responsaveis, setResponsaveis] = useState<Responsavel[]>([])
   const [responsavelSelecionado, setResponsavelSelecionado] = useState<
     string | null
-  >(visitante.responsavel_id || null)
+  >(visitante.user_id || null)
   const [nomeResponsavel, setNomeResponsavel] = useState<string>(
     visitante.responsavel_nome || "",
   )
@@ -365,9 +365,16 @@ export default function VisitanteDialog({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Nenhum</SelectItem>
-                    {responsaveis.map((r) => (
+                    {responsaveis.map((r: any) => (
                       <SelectItem key={r.id} value={r.id}>
-                        {r.nome}
+                        <span className="flex items-center gap-2">
+                          {r.foto_url ? (
+                            <img src={r.foto_url} alt="" className="h-5 w-5 rounded-full object-cover" />
+                          ) : (
+                            <span className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium">{r.nome?.[0]}</span>
+                          )}
+                          {r.nome}
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
