@@ -147,7 +147,9 @@ export default async function MinhaAreaPage() {
                                   </span>
                                 )}
                                 <span className="flex items-center gap-1">
-                                  {e.icon}
+                                  <span className="text-xl">
+                                    {e.icone || ""}
+                                  </span>
                                   {e.ministerio}
                                 </span>
                                 {e.funcao && (
