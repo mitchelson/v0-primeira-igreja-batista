@@ -1,357 +1,138 @@
-"use client"
-
-import { useEffect, useState, useCallback } from "react"
-import { useVisitantes } from "@/hooks/use-visitantes"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { formatarData } from "@/lib/utils"
-import {
-  Search,
-  Plus,
-  User,
-  AlertCircle,
-  FileText,
-  Users,
-  MessageSquare,
-} from "lucide-react"
+import { sql } from "@/lib/neon"
+import { auth } from "@/lib/auth"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Users, Calendar, Music, ClipboardList } from "lucide-react"
 import Link from "next/link"
-import VisitanteDialog from "@/components/visitante-dialog"
-import NovoVisitanteDialog from "@/components/novo-visitante-dialog"
-import RelatorioMensalDialog from "@/components/relatorio-mensal-dialog"
-import type { Visitante, VisitanteComResponsavel } from "@/types/supabase"
 
-export default function AdminPage() {
-  const { visitantes, isLoading, criar, atualizar, deletar, mutate } =
-    useVisitantes()
-  const [visitantesFiltrados, setVisitantesFiltrados] = useState<
-    VisitanteComResponsavel[]
-  >([])
-  const [termoBusca, setTermoBusca] = useState("")
-  const [visitanteSelecionado, setVisitanteSelecionado] =
-    useState<VisitanteComResponsavel | null>(null)
-  const [novoVisitanteDialogAberto, setNovoVisitanteDialogAberto] =
-    useState(false)
-  const [relatorioDialogAberto, setRelatorioDialogAberto] = useState(false)
-  const [dataSelecionada, setDataSelecionada] = useState<string>("")
-  const [datasAgrupadas, setDatasAgrupadas] = useState<string[]>([])
-  const [visitantesPorData, setVisitantesPorData] = useState<
-    Record<string, VisitanteComResponsavel[]>
-  >({})
-  const [mensagensEnviadas, setMensagensEnviadas] = useState<
-    Record<string, Set<string>>
-  >({})
+export const dynamic = "force-dynamic"
 
-  useEffect(() => {
-    if (!isLoading && visitantes.length > 0) {
-      setVisitantesFiltrados(visitantes)
-      agruparPorData(visitantes)
-      carregarMensagensEnviadas()
-    }
-  }, [visitantes, isLoading])
+export default async function AdminDashboard() {
+  const session = await auth()
 
-  const carregarMensagensEnviadas = async () => {
-    try {
-      const res = await fetch("/api/visitantes/mensagens-status")
-      if (res.ok) {
-        const dados: Record<string, string[]> = await res.json()
-        // Convert arrays to Sets for easier lookup
-        const mapa: Record<string, Set<string>> = {}
-        for (const [visitanteId, categorias] of Object.entries(dados)) {
-          mapa[visitanteId] = new Set(categorias)
-        }
-        setMensagensEnviadas(mapa)
-      }
-    } catch (error) {
-      console.error("Erro ao carregar mensagens enviadas:", error)
-    }
-  }
-
-  const agruparPorData = useCallback((lista: VisitanteComResponsavel[]) => {
-    const grupos: Record<string, VisitanteComResponsavel[]> = {}
-
-    lista.forEach((visitante) => {
-      const dataFormatada = formatarData(visitante.data_cadastro)
-      if (!grupos[dataFormatada]) {
-        grupos[dataFormatada] = []
-      }
-      grupos[dataFormatada].push(visitante)
-    })
-
-    setVisitantesPorData(grupos)
-    setDatasAgrupadas(
-      Object.keys(grupos).sort((a, b) => {
-        const [diaA, mesA, anoA] = a.split("/").map(Number)
-        const [diaB, mesB, anoB] = b.split("/").map(Number)
-        if (anoA && anoB && mesA && mesB && diaA && diaB)
-          return (
-            new Date(anoB, mesB - 1, diaB).getTime() -
-            new Date(anoA, mesA - 1, diaA).getTime()
-          )
-        return 0
-      }),
-    )
-
-    // Set dataSelecionada to the first date
-    const primeiradata = Object.keys(grupos).sort((a, b) => {
-      const [diaA, mesA, anoA] = a.split("/").map(Number)
-      const [diaB, mesB, anoB] = b.split("/").map(Number)
-      if (anoA && anoB && mesA && mesB && diaA && diaB)
-        return (
-          new Date(anoB, mesB - 1, diaB).getTime() -
-          new Date(anoA, mesA - 1, diaA).getTime()
-        )
-      return 0
-    })[0]
-    if (primeiradata && !dataSelecionada) {
-      setDataSelecionada(primeiradata)
-    }
-  }, [dataSelecionada])
-
-  const carregarVisitantes = async () => {
-    try {
-      await mutate()
-    } catch (error) {
-      console.error("Erro ao carregar visitantes:", error)
-    }
-  }
-
-  useEffect(() => {
-    if (termoBusca.trim() === "") {
-      setVisitantesFiltrados(visitantes)
-      agruparPorData(visitantes)
-    } else {
-      const termo = termoBusca.toLowerCase()
-      const filtrados = visitantes.filter(
-        (v) =>
-          v.nome.toLowerCase().includes(termo) ||
-          v.celular.includes(termo) ||
-          v.responsavel_nome?.toLowerCase().includes(termo),
-      )
-      setVisitantesFiltrados(filtrados)
-      agruparPorData(filtrados)
-    }
-  }, [termoBusca, visitantes])
-
-  const handleVisitanteAtualizado = async (visitanteAtualizado: Visitante) => {
-    await mutate() // Recarrega a lista de visitantes para atualizar o responsavel
-    carregarMensagensEnviadas()
-    setVisitanteSelecionado(null)
-  }
-
-  const handleNovoVisitante = () => {
-    carregarVisitantes()
-    setNovoVisitanteDialogAberto(false)
-  }
-
-  const renderMensagemStatus = (visitante: VisitanteComResponsavel) => {
-    if (visitante.sem_whatsapp) {
-      return null
-    }
-    // Show dots for each category - green if sent, gray if not
-    const categoriasEnviadas = mensagensEnviadas[visitante.id] || new Set()
-    // Assuming 3 categories - adjust based on actual number
-    const categoriasDots = Array(3).fill(0)
-    return (
-      <div className="flex items-center gap-1">
-        {categoriasDots.map((_, idx) => (
-          <div
-            key={idx}
-            className={`h-2 w-2 rounded-full ${
-              idx < categoriasEnviadas.size
-                ? "bg-green-500"
-                : "bg-muted-foreground/40"
-            }`}
-            title={
-              idx < categoriasEnviadas.size
-                ? "Mensagem enviada"
-                : "Mensagem não enviada"
-            }
-          />
-        ))}
-      </div>
-    )
-  }
+  const [visitantesCount, eventosProximos, escalasUsuario, ministeriosCount] = await Promise.all([
+    sql`SELECT count(*)::int as total FROM visitantes WHERE data_cadastro >= now() - interval '30 days'`,
+    sql`SELECT id, titulo, data, horario, tipo FROM eventos WHERE data >= CURRENT_DATE ORDER BY data ASC LIMIT 5`,
+    session?.user?.id
+      ? sql`
+          SELECT e.id, e.funcao, e.status, ev.titulo, ev.data, ev.horario, m.nome as ministerio
+          FROM escalas e
+          JOIN eventos ev ON ev.id = e.evento_id
+          JOIN ministerios m ON m.id = e.ministerio_id
+          WHERE e.user_id = ${session.user.id} AND ev.data >= CURRENT_DATE
+          ORDER BY ev.data ASC LIMIT 5
+        `
+      : Promise.resolve([]),
+    sql`SELECT count(*)::int as total FROM ministerios WHERE ativo = true`,
+  ])
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Administracao de Visitantes</CardTitle>
-                <CardDescription>
-                  Gerencie os visitantes cadastrados
-                </CardDescription>
-              </div>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              <Button variant="outline" size="sm" asChild className="hidden sm:flex">
-                <Link href="/admin/responsaveis">
-                  <Users className="mr-2 h-4 w-4" /> Responsaveis
-                </Link>
-              </Button>
-              <Button variant="outline" size="icon" asChild className="sm:hidden">
-                <Link href="/admin/responsaveis">
-                  <Users className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="sm" asChild className="hidden sm:flex">
-                <Link href="/admin/mensagens">
-                  <MessageSquare className="mr-2 h-4 w-4" /> Mensagens
-                </Link>
-              </Button>
-              <Button variant="outline" size="icon" asChild className="sm:hidden">
-                <Link href="/admin/mensagens">
-                  <MessageSquare className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button 
-                onClick={() => setRelatorioDialogAberto(true)}
-                variant="outline"
-                size="sm"
-                className="hidden sm:flex"
-              >
-                <FileText className="mr-2 h-4 w-4" /> Relatorio
-              </Button>
-              <Button 
-                onClick={() => setRelatorioDialogAberto(true)}
-                variant="outline"
-                size="icon"
-                className="sm:hidden"
-              >
-                <FileText className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="relative mb-6">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome, telefone ou responsavel"
-              className="pl-8"
-              value={termoBusca}
-              onChange={(e) => setTermoBusca(e.target.value)}
-            />
-          </div>
+      <h1 className="text-2xl font-bold">Dashboard</h1>
 
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-            </div>
-          ) : visitantesFiltrados.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {termoBusca
-                ? "Nenhum visitante encontrado para esta busca."
-                : "Nenhum visitante cadastrado."}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {datasAgrupadas.length > 1 && (
-                <div className="flex items-center gap-2">
-                  <label
-                    htmlFor="select-data"
-                    className="text-sm font-medium whitespace-nowrap"
-                  >
-                    Data:
-                  </label>
-                  <Select
-                    value={dataSelecionada}
-                    onValueChange={setDataSelecionada}
-                  >
-                    <SelectTrigger id="select-data" className="w-40">
-                      <SelectValue placeholder="Selecione uma data" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {datasAgrupadas.map((data) => (
-                        <SelectItem key={data} value={data}>
-                          {data}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Link href="/admin/visitantes">
+          <Card className="hover:bg-accent transition-colors">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Visitantes (30d)</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{visitantesCount[0].total}</div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/admin/ministerios">
+          <Card className="hover:bg-accent transition-colors">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Ministérios</CardTitle>
+              <Music className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{ministeriosCount[0].total}</div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/admin/eventos">
+          <Card className="hover:bg-accent transition-colors">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Próximos Eventos</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{eventosProximos.length}</div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/admin/escalas">
+          <Card className="hover:bg-accent transition-colors">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Minhas Escalas</CardTitle>
+              <ClipboardList className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{escalasUsuario.length}</div>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
 
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Próximos Eventos</CardTitle>
+            <CardDescription>Eventos agendados</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {eventosProximos.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum evento agendado.</p>
+            ) : (
               <div className="space-y-3">
-                {dataSelecionada &&
-                  visitantesPorData[dataSelecionada]?.map((visitante) => (
-                    <button
-                      key={visitante.id}
-                      className="flex flex-row w-full items-center justify-between p-3 border rounded-lg hover:bg-accent cursor-pointer gap-3"
-                      onClick={() => setVisitanteSelecionado(visitante)}
-                    >
-                      <div className="flex flex-col text-left min-w-0">
-                        <h3 className="font-medium text-sm truncate">
-                          {visitante.nome}
-                        </h3>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2 text-xs text-muted-foreground">
-                          <span>{visitante.celular}</span>
-                          {visitante.responsavel_nome && (
-                            <div className="flex items-center text-emerald-600">
-                              <User className="h-3 w-3 mr-0.5" />
-                              <span>{visitante.responsavel_nome}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {renderMensagemStatus(visitante) && (
-                        <div className="flex-shrink-0">
-                          {renderMensagemStatus(visitante)}
-                        </div>
-                      )}
-                    </button>
-                  ))}
+                {eventosProximos.map((ev: any) => (
+                  <div key={ev.id} className="flex items-center justify-between border-b pb-2 last:border-0">
+                    <div>
+                      <p className="font-medium text-sm">{ev.titulo}</p>
+                      <p className="text-xs text-muted-foreground">{ev.tipo}</p>
+                    </div>
+                    <div className="text-right text-sm">
+                      <p>{new Date(ev.data).toLocaleDateString("pt-BR")}</p>
+                      {ev.horario && <p className="text-xs text-muted-foreground">{ev.horario}</p>}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
 
-      {visitanteSelecionado && (
-        <VisitanteDialog
-          visitante={visitanteSelecionado}
-          onClose={() => setVisitanteSelecionado(null)}
-          onUpdate={handleVisitanteAtualizado}
-        />
-      )}
-
-      {novoVisitanteDialogAberto && (
-        <NovoVisitanteDialog
-          onClose={() => setNovoVisitanteDialogAberto(false)}
-          onSave={handleNovoVisitante}
-        />
-      )}
-
-      <RelatorioMensalDialog
-        isOpen={relatorioDialogAberto}
-        onClose={() => setRelatorioDialogAberto(false)}
-        visitantes={visitantes}
-      />
-
-      {/* FAB - Novo Visitante */}
-      <button
-        onClick={() => setNovoVisitanteDialogAberto(true)}
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
-        aria-label="Novo Visitante"
-      >
-        <Plus className="h-6 w-6" />
-      </button>
+        <Card>
+          <CardHeader>
+            <CardTitle>Minhas Escalas</CardTitle>
+            <CardDescription>Suas próximas participações</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {escalasUsuario.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma escala futura.</p>
+            ) : (
+              <div className="space-y-3">
+                {escalasUsuario.map((esc: any) => (
+                  <div key={esc.id} className="flex items-center justify-between border-b pb-2 last:border-0">
+                    <div>
+                      <p className="font-medium text-sm">{esc.titulo}</p>
+                      <p className="text-xs text-muted-foreground">{esc.ministerio}{esc.funcao ? ` · ${esc.funcao}` : ""}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm">{new Date(esc.data).toLocaleDateString("pt-BR")}</p>
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${esc.status === "confirmado" ? "bg-green-100 text-green-700" : esc.status === "recusado" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
+                        {esc.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

@@ -30,6 +30,7 @@ async function main() {
       nome TEXT NOT NULL UNIQUE,
       descricao TEXT,
       cor TEXT DEFAULT '#D4C5B0',
+      icone TEXT DEFAULT '⛪',
       ativo BOOLEAN NOT NULL DEFAULT true,
       ordem INT NOT NULL DEFAULT 0,
       criado_em TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -74,7 +75,8 @@ async function main() {
       funcao TEXT,
       status TEXT NOT NULL DEFAULT 'pendente',
       observacao TEXT,
-      criado_em TIMESTAMPTZ NOT NULL DEFAULT now()
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE (evento_id, user_id, ministerio_id)
     )
   `
   await sql`CREATE INDEX IF NOT EXISTS idx_escalas_evento ON escalas(evento_id)`
