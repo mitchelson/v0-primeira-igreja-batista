@@ -3,27 +3,18 @@ import { sql } from "@/lib/neon"
 
 export async function GET() {
   try {
-    // Verifica se a coluna user_id existe (migração 010)
-    const colCheck = await sql`
-      SELECT 1 FROM information_schema.columns
-      WHERE table_name = 'responsaveis' AND column_name = 'user_id' LIMIT 1
+    const rows = await sql`
+      SELECT r.*, u.nome as user_nome, u.foto_url
+      FROM responsaveis r
+      LEFT JOIN users u ON u.id = r.user_id
+      WHERE r.user_id IS NULL
+         OR r.user_id IN (
+           SELECT mm.user_id FROM ministerio_membros mm
+           JOIN ministerios m ON m.id = mm.ministerio_id
+           WHERE m.nome ILIKE '%integra%'
+         )
+      ORDER BY r.nome ASC
     `
-
-    const rows = colCheck.length > 0
-      ? await sql`
-          SELECT r.*, u.nome as user_nome, u.foto_url
-          FROM responsaveis r
-          LEFT JOIN users u ON u.id = r.user_id
-          WHERE r.user_id IS NULL
-             OR r.user_id IN (
-               SELECT mm.user_id FROM ministerio_membros mm
-               JOIN ministerios m ON m.id = mm.ministerio_id
-               WHERE m.nome = 'Integração & Comunhão'
-             )
-          ORDER BY r.nome ASC
-        `
-      : await sql`SELECT * FROM responsaveis ORDER BY nome ASC`
-
     return NextResponse.json(rows)
   } catch (error) {
     console.error("Erro ao buscar responsáveis:", error)
