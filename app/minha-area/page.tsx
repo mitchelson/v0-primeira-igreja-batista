@@ -18,7 +18,7 @@ export default async function MinhaAreaPage() {
 
   const userId = session.user.id;
 
-  const [escalas, ministerios] = await Promise.all([
+  const [escalas, ministerios, userInfo] = await Promise.all([
     sql`
       SELECT e.id, e.funcao, e.status, ev.titulo, ev.data, ev.horario, m.nome as ministerio
       FROM escalas e
@@ -34,7 +34,10 @@ export default async function MinhaAreaPage() {
       WHERE mm.user_id = ${userId} AND m.ativo = true
       ORDER BY m.nome
     `,
+    sql`SELECT criado_em FROM users WHERE id = ${userId}`,
   ]);
+
+  const isNewUser = userInfo[0] && (Date.now() - new Date(userInfo[0].criado_em).getTime()) < 60_000;
 
   const pendentes = escalas.filter((e: any) => e.status === "pendente").length;
 
@@ -43,6 +46,12 @@ export default async function MinhaAreaPage() {
       <Header />
       <PullToRefresh>
         <div className="mx-auto max-w-lg px-4 py-6 space-y-5">
+          {isNewUser && (
+            <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-center">
+              <p className="text-lg font-semibold text-green-800">✅ Cadastro efetuado com sucesso!</p>
+              <p className="text-sm text-green-700 mt-1">Bem-vindo(a) à Primeira Igreja Batista de Roraima</p>
+            </div>
+          )}
           {/* Greeting */}
           <div>
             <h1 className="text-2xl font-bold tracking-tight">

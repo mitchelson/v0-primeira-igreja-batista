@@ -44,11 +44,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         INSERT INTO users (google_id, email, nome, foto_url, role)
         VALUES (${account.providerAccountId}, ${email}, ${name}, ${image}, ${role})
       `
+      ;(user as any).isNewUser = true
       return true
     },
 
-    async jwt({ token, account }) {
+    async jwt({ token, account, user }) {
       if (account) {
+        token.isNewUser = !!(user as any)?.isNewUser
         const rows = await sql`
           SELECT id, role, ativo FROM users WHERE google_id = ${account.providerAccountId} LIMIT 1
         `

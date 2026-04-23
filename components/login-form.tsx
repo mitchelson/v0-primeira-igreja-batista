@@ -12,7 +12,7 @@ export default function LoginForm() {
         <CardDescription>Faça login com sua conta Google para acessar o sistema</CardDescription>
       </CardHeader>
       <CardContent>
-        <Button className="w-full" onClick={() => signIn("google", { callbackUrl: "/admin" })}>
+        <Button className="w-full" onClick={() => signIn("google", { callbackUrl: "/minha-area" })}>
           Entrar com Google
         </Button>
       </CardContent>
