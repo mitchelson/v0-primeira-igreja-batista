@@ -4,7 +4,16 @@ import { sql } from "@/lib/neon"
 export async function GET() {
   try {
     const rows = await sql`
-      SELECT * FROM responsaveis ORDER BY nome ASC
+      SELECT r.*, u.nome as user_nome, u.foto_url
+      FROM responsaveis r
+      LEFT JOIN users u ON u.id = r.user_id
+      WHERE r.user_id IS NULL
+         OR r.user_id IN (
+           SELECT mm.user_id FROM ministerio_membros mm
+           JOIN ministerios m ON m.id = mm.ministerio_id
+           WHERE m.nome = 'Integração & Comunhão'
+         )
+      ORDER BY r.nome ASC
     `
     return NextResponse.json(rows)
   } catch (error) {

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Music, ClipboardList, Clock, MapPin } from "lucide-react";
 import Header from "@/components/header";
 import { EscalaActions } from "./escala-actions";
+import { PendenciasMensagens } from "./pendencias-mensagens";
 import { PushNotificationRegister } from "@/components/push-notification-register";
 import { PullToRefresh } from "@/components/pull-to-refresh";
 
@@ -66,6 +67,8 @@ export default async function MinhaAreaPage() {
 
           <PushNotificationRegister />
 
+          <PendenciasMensagens />
+
           <Card className="shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -98,51 +101,42 @@ export default async function MinhaAreaPage() {
                     return (
                       <div
                         key={e.id}
-                        className="rounded-xl border bg-card p-4 space-y-3"
+                        className="rounded-xl border bg-card overflow-hidden"
                       >
-                        {/* Row 1: Date badge + Title */}
-                        <div className="flex items-center gap-3">
-                          <div className="flex flex-col items-center justify-center rounded-lg bg-primary/10 text-primary min-w-[3.25rem] py-2 px-2">
-                            <span className="text-lg font-bold leading-none">
-                              {dia}
-                            </span>
-                            <span className="text-[10px] uppercase font-medium mt-0.5">
-                              {mes}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground capitalize">
-                              {diaSemana}
-                            </span>
+                        <div className="flex items-stretch">
+                          {/* Date sidebar */}
+                          <div className="flex flex-col items-center justify-center bg-primary/10 text-primary w-16 py-4 shrink-0">
+                            <span className="text-2xl font-bold leading-none">{dia}</span>
+                            <span className="text-[10px] uppercase font-semibold tracking-wide mt-1">{mes}</span>
+                            <span className="text-[10px] text-muted-foreground capitalize mt-0.5">{diaSemana}</span>
                           </div>
-                          <p className="font-semibold text-sm leading-tight truncate flex-1 min-w-0">
-                            {e.titulo}
-                          </p>
-                        </div>
 
-                        {/* Row 2: Details + Status tag */}
-                        <div className="flex items-end justify-between gap-2">
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                            {e.horario && (
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {e.horario}
-                              </span>
-                            )}
-                            <span className="flex items-center gap-1">
-                              {e.icone}
-                              <Music className="h-3 w-3" />
-                              {e.ministerio}
-                            </span>
-                            {e.funcao && (
-                              <Badge
-                                variant="secondary"
-                                className="text-[11px] font-normal"
-                              >
-                                {e.funcao}
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex-shrink-0">
-                            <EscalaActions id={e.id} status={e.status} />
+                          {/* Content */}
+                          <div className="flex flex-col justify-between flex-1 min-w-0 p-3 gap-2">
+                            <p className="font-semibold text-sm leading-tight">{e.titulo}</p>
+
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                {e.horario && (
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    {e.horario}
+                                  </span>
+                                )}
+                                <span className="flex items-center gap-1">
+                                  <Music className="h-3 w-3" />
+                                  {e.ministerio}
+                                </span>
+                                {e.funcao && (
+                                  <Badge variant="secondary" className="text-[11px] font-normal">
+                                    {e.funcao}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="shrink-0">
+                                <EscalaActions id={e.id} status={e.status} />
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>

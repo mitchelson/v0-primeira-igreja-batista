@@ -36,7 +36,7 @@ export default function MinisterioDetailPage() {
   const [notifying, setNotifying] = useState(false)
 
   const isAdmin = session?.user?.role === "admin"
-  const lider = ministerio?.membros?.find((m: any) => m.is_lider)
+  const lider = ministerio?.membros?.filter((m: any) => m.is_lider) || []
   const membros = ministerio?.membros || []
   const minEscalas = escalas?.filter((e: any) => e.ministerio_id === id) || []
 
@@ -139,21 +139,21 @@ export default function MinisterioDetailPage() {
 
         {/* Membros */}
         <TabsContent value="membros" className="space-y-3 mt-4">
-          {lider && (
-            <Card className="border-amber-200 bg-amber-50/50">
+          {lider.map((l: any) => (
+            <Card key={l.user_id} className="border-amber-200 bg-amber-50/50">
               <CardContent className="p-3 flex items-center gap-3">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={lider.foto_url} />
-                  <AvatarFallback>{lider.nome?.[0]}</AvatarFallback>
+                  <AvatarImage src={l.foto_url} />
+                  <AvatarFallback>{l.nome?.[0]}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium text-sm">{lider.nome}</p>
-                  <p className="text-xs text-muted-foreground">{lider.email}</p>
+                  <p className="font-medium text-sm">{l.nome}</p>
+                  <p className="text-xs text-muted-foreground">{l.email}</p>
                 </div>
                 <Badge className="ml-auto bg-amber-100 text-amber-700 gap-1"><Crown className="h-3 w-3" />Líder</Badge>
               </CardContent>
             </Card>
-          )}
+          ))}
           {membros.filter((m: any) => !m.is_lider).map((m: any) => (
             <Card key={m.user_id}>
               <CardContent className="p-3 flex items-center gap-3">
