@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Trash2, Check, X, AlertCircle, Crown, Users, Tag, CalendarDays } from "lucide-react"
+import { Plus, Trash2, Check, X, AlertCircle, Crown, Users, Tag, CalendarDays, Share2, Bell, Loader2 } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -33,6 +33,7 @@ export default function MinisterioDetailPage() {
   const [addUser, setAddUser] = useState("")
   const [addFuncao, setAddFuncao] = useState("")
   const [conflictDialog, setConflictDialog] = useState<any>(null)
+  const [notifying, setNotifying] = useState(false)
 
   const isAdmin = session?.user?.role === "admin"
   const lider = ministerio?.membros?.find((m: any) => m.is_lider)
@@ -83,6 +84,31 @@ export default function MinisterioDetailPage() {
   const handleStatus = async (escalaId: string, status: string) => {
     await fetch(`/api/escalas/${escalaId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) })
     toast({ title: `Status: ${status}` }); mutateEscalas()
+  }
+
+  const selectedEvento = futureEventos?.find((e: any) => e.id === eventoId)
+
+  const handleShareWhatsApp = () => {
+    if (!selectedEvento || minEscalas.length === 0) return
+    const data = new Date(selectedEvento.data).toLocaleDateString("pt-BR")
+    let text = `📋 *Escala - ${ministerio.nome}*\n📅 ${selectedEvento.titulo} — ${data}${selectedEvento.horario ? ` às ${selectedEvento.horario}` : ""}\n\n`
+    minEscalas.forEach((e: any) => { text += `• ${e.user_nome}${e.funcao ? ` (${e.funcao})` : ""}\n` })
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank")
+  }
+
+  const handleNotifyEscalados = async () => {
+    if (!eventoId || minEscalas.length === 0) return
+    setNotifying(true)
+    try {
+      const res = await fetch("/api/escalas/notify", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ evento_id: eventoId, ministerio_id: id }),
+      })
+      const data = await res.json()
+      if (res.ok) toast({ title: "Notificações enviadas", description: `${data.total} escalado(s) notificado(s)` })
+      else toast({ title: "Erro ao notificar", description: data.error, variant: "destructive" })
+    } catch { toast({ title: "Erro ao notificar", variant: "destructive" }) }
+    finally { setNotifying(false) }
   }
 
   const statusBadge = (s: string) => {
@@ -191,6 +217,18 @@ export default function MinisterioDetailPage() {
               </Button>
             )}
           </div>
+
+          {eventoId && minEscalas.length > 0 && (
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleShareWhatsApp}>
+                <Share2 className="h-4 w-4 mr-1" />WhatsApp
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleNotifyEscalados} disabled={notifying}>
+                {notifying ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Bell className="h-4 w-4 mr-1" />}
+                Notificar
+              </Button>
+            </div>
+          )}
 
           {eventoId && minEscalas.length === 0 && (
             <p className="text-center text-muted-foreground py-4">Nenhum membro escalado para este evento.</p>
