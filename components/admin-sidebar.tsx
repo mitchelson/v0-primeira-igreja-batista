@@ -9,7 +9,7 @@ import {
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter,
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Home, Users, MessageSquare, UserCog, Calendar, ClipboardList, Plus } from "lucide-react"
+import { Home, Users, MessageSquare, UserCog, Calendar, ClipboardList, Plus, Settings } from "lucide-react"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -23,6 +23,7 @@ const adminOnlyItems = [
   { title: "Membros", href: "/admin/membros", icon: UserCog },
   { title: "Eventos", href: "/admin/eventos", icon: Calendar },
   { title: "Escalas", href: "/admin/escalas", icon: ClipboardList },
+  { title: "Configurações", href: "/admin/configuracoes", icon: Settings },
 ]
 
 export function AdminSidebar() {

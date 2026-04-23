@@ -57,9 +57,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.role = rows[0].role
         }
       } else if (token.userId) {
-        // Sempre busca role atualizado do banco
         const rows = await sql`SELECT role FROM users WHERE id = ${token.userId} LIMIT 1`
         if (rows.length > 0) token.role = rows[0].role
+      }
+      if (token.userId) {
+        const mRows = await sql`SELECT ministerio_id FROM ministerio_membros WHERE user_id = ${token.userId}`
+        token.ministerioIds = mRows.map((r: any) => r.ministerio_id)
       }
       return token
     },
@@ -68,6 +71,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (token.userId) {
         session.user.id = token.userId as string
         session.user.role = token.role as string
+        session.user.ministerioIds = (token.ministerioIds as string[]) || []
       }
       return session
     },
