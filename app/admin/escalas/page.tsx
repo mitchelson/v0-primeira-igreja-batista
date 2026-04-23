@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AlertCircle, Plus, Trash2, Check, X } from "lucide-react"
@@ -27,8 +26,9 @@ export default function EscalasAdminPage() {
   const [addFuncao, setAddFuncao] = useState("")
   const [conflictDialog, setConflictDialog] = useState<any>(null)
 
-  // Busca membros do ministério selecionado para adicionar
+  // Busca membros e funções do ministério selecionado
   const { data: minDetail } = useSWR(addMin ? `/api/ministerios/${addMin}` : null, fetcher)
+  const { data: minFuncoes } = useSWR(addMin ? `/api/ministerios/${addMin}/funcoes` : null, fetcher)
 
   const futureEventos = eventos?.filter((e: any) => new Date(e.data) >= new Date(new Date().toDateString())).sort((a: any, b: any) => new Date(a.data).getTime() - new Date(b.data).getTime())
 
@@ -138,7 +138,7 @@ export default function EscalasAdminPage() {
           <div className="space-y-4">
             <div>
               <Label>Ministério</Label>
-              <Select value={addMin} onValueChange={v => { setAddMin(v); setAddUser("") }}>
+              <Select value={addMin} onValueChange={v => { setAddMin(v); setAddUser(""); setAddFuncao("") }}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
                   {ministerios?.map((m: any) => <SelectItem key={m.id} value={m.id}>{m.icone} {m.nome}</SelectItem>)}
@@ -158,7 +158,17 @@ export default function EscalasAdminPage() {
                 </Select>
               </div>
             )}
-            <div><Label>Função (opcional)</Label><Input value={addFuncao} onChange={e => setAddFuncao(e.target.value)} placeholder="Ex: vocal, guitarra" /></div>
+            <div>
+              <Label>Função (opcional)</Label>
+              <Select value={addFuncao} onValueChange={setAddFuncao}>
+                <SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
+                <SelectContent>
+                  {minFuncoes?.map((f: any) => (
+                    <SelectItem key={f.id} value={f.nome}>{f.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Button className="w-full" onClick={handleAdd} disabled={!addMin || !addUser}>Escalar</Button>
           </div>
         </DialogContent>

@@ -64,7 +64,7 @@ export function AdminSidebar() {
               {ministerios?.filter((m: any) => m.ativo).map((m: any) => (
                 <SidebarMenuItem key={m.id}>
                   <SidebarMenuButton asChild isActive={pathname === `/admin/ministerios/${m.id}`}>
-                    <Link href={`/admin/ministerios`}>
+                    <Link href={`/admin/ministerios/${m.id}`}>
                       <span className="text-base leading-none">{m.icone || "⛪"}</span>
                       <span>{m.nome}</span>
                     </Link>

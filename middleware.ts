@@ -1,7 +1,10 @@
 import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
 
-const adminOnlyPaths = ["/admin/membros", "/admin/ministerios", "/admin/eventos"]
+const adminOnlyPaths = ["/admin/membros", "/admin/eventos"]
+
+// UUID pattern for ministry detail pages
+const ministerioDetailRegex = /^\/admin\/ministerios\/[0-9a-f-]{36}$/
 
 export default auth((req) => {
   const { pathname } = req.nextUrl
@@ -33,6 +36,16 @@ export default auth((req) => {
   if (pathname.startsWith("/admin")) {
     if (role !== "admin" && role !== "lider") {
       return NextResponse.redirect(new URL("/minha-area", req.url))
+    }
+
+    // Líderes podem acessar /admin/ministerios/[id] (validação de pertencimento é feita no client)
+    if (ministerioDetailRegex.test(pathname) && role === "lider") {
+      return NextResponse.next()
+    }
+
+    // /admin/ministerios (gerenciar) é admin only
+    if (pathname === "/admin/ministerios" && role !== "admin") {
+      return NextResponse.redirect(new URL("/admin", req.url))
     }
 
     // Páginas restritas a admin
