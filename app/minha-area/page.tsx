@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar, Music, ClipboardList, Clock, MapPin } from "lucide-react"
 import Header from "@/components/header"
 import { EscalaActions } from "./escala-actions"
+import { PushNotificationRegister } from "@/components/push-notification-register"
 
 export default async function MinhaAreaPage() {
   const session = await auth()
@@ -52,7 +53,8 @@ export default async function MinhaAreaPage() {
           )}
         </div>
 
-        {/* Escalas */}
+        <PushNotificationRegister />
+
         <Card className="shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">

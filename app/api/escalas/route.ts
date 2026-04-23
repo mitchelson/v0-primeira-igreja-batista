@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
+import { sendPushToUser } from "@/lib/push"
 
 export async function GET(request: NextRequest) {
   const eventoId = request.nextUrl.searchParams.get("evento_id")
@@ -71,6 +72,18 @@ export async function POST(request: NextRequest) {
   const warning = conflitos.length > 0
     ? `Atenção: usuário também escalado em ${conflitos.map((c: any) => c.ministerio_nome).join(", ")}`
     : undefined
+
+  // Envia push notification ao membro escalado
+  if (rows.length > 0) {
+    const min = await sql`SELECT nome FROM ministerios WHERE id = ${ministerio_id}`
+    const ev = await sql`SELECT titulo, data FROM eventos WHERE id = ${evento_id}`
+    const dataFormatada = new Date(ev[0].data).toLocaleDateString("pt-BR")
+    sendPushToUser(user_id, {
+      title: "📋 Você foi escalado!",
+      body: `${min[0]?.nome} — ${ev[0]?.titulo} (${dataFormatada})`,
+      url: "/minha-area",
+    }).catch(() => {})
+  }
 
   return NextResponse.json({ ...rows[0], warning }, { status: 201 })
 }
