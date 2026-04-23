@@ -3,9 +3,9 @@ import { auth } from "@/lib/auth"
 import { sql } from "@/lib/neon"
 
 export const dynamic = "force-dynamic"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Music, ClipboardList } from "lucide-react"
+import { Calendar, Music, ClipboardList, Clock, MapPin } from "lucide-react"
 import Header from "@/components/header"
 import { EscalaActions } from "./escala-actions"
 
@@ -33,55 +33,119 @@ export default async function MinhaAreaPage() {
     `,
   ])
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="container mx-auto max-w-2xl px-4 py-6 space-y-6">
-        <h1 className="text-2xl font-bold">Minha Área</h1>
-        <p className="text-muted-foreground">Olá, {session.user.name}!</p>
+  const pendentes = escalas.filter((e: any) => e.status === "pendente").length
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><ClipboardList className="h-5 w-5" />Próximas Escalas</CardTitle>
-            <CardDescription>Suas participações agendadas</CardDescription>
+  return (
+    <div className="min-h-screen bg-muted/30">
+      <Header />
+      <div className="mx-auto max-w-lg px-4 py-6 space-y-5">
+        {/* Greeting */}
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Olá, {session.user.name?.split(" ")[0]}! 👋</h1>
+          {pendentes > 0 && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Você tem <span className="font-semibold text-orange-600">{pendentes}</span> escala{pendentes > 1 ? "s" : ""} pendente{pendentes > 1 ? "s" : ""}
+            </p>
+          )}
+          {pendentes === 0 && escalas.length > 0 && (
+            <p className="text-sm text-muted-foreground mt-1">Tudo em dia! ✅</p>
+          )}
+        </div>
+
+        {/* Escalas */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <ClipboardList className="h-5 w-5 text-primary" />
+              Próximas Escalas
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {escalas.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhuma escala futura.</p>
+              <div className="text-center py-8">
+                <Calendar className="h-10 w-10 mx-auto text-muted-foreground/40 mb-2" />
+                <p className="text-sm text-muted-foreground">Nenhuma escala futura</p>
+              </div>
             ) : (
               <div className="space-y-3">
-                {escalas.map((e: any) => (
-                  <div key={e.id} className="flex items-center justify-between border rounded-lg p-3">
-                    <div>
-                      <p className="font-medium text-sm">{e.titulo}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        <span>{new Date(e.data).toLocaleDateString("pt-BR")}</span>
-                        {e.horario && <span>· {e.horario}</span>}
+                {escalas.map((e: any) => {
+                  const data = new Date(e.data)
+                  const dia = data.toLocaleDateString("pt-BR", { day: "2-digit" })
+                  const mes = data.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")
+                  const diaSemana = data.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")
+
+                  return (
+                    <div
+                      key={e.id}
+                      className="flex items-start gap-3 rounded-xl border bg-card p-4"
+                    >
+                      {/* Date badge */}
+                      <div className="flex flex-col items-center justify-center rounded-lg bg-primary/10 text-primary min-w-[3.25rem] py-2 px-2">
+                        <span className="text-lg font-bold leading-none">{dia}</span>
+                        <span className="text-[10px] uppercase font-medium mt-0.5">{mes}</span>
+                        <span className="text-[10px] text-muted-foreground capitalize">{diaSemana}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">{e.ministerio}{e.funcao ? ` · ${e.funcao}` : ""}</p>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm leading-tight truncate">{e.titulo}</p>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-muted-foreground">
+                          {e.horario && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />{e.horario}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <Music className="h-3 w-3" />{e.ministerio}
+                          </span>
+                        </div>
+                        {e.funcao && (
+                          <Badge variant="secondary" className="mt-2 text-[11px] font-normal">{e.funcao}</Badge>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex-shrink-0">
+                        <EscalaActions id={e.id} status={e.status} />
+                      </div>
                     </div>
-                    <EscalaActions id={e.id} status={e.status} />
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Music className="h-5 w-5" />Meus Ministérios</CardTitle>
+        {/* Ministérios */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Music className="h-5 w-5 text-primary" />
+              Meus Ministérios
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {ministerios.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Você não está vinculado a nenhum ministério.</p>
+              <div className="text-center py-8">
+                <Music className="h-10 w-10 mx-auto text-muted-foreground/40 mb-2" />
+                <p className="text-sm text-muted-foreground">Nenhum ministério vinculado</p>
+              </div>
             ) : (
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 {ministerios.map((m: any) => (
-                  <Badge key={m.nome} variant="outline" className="text-sm py-1 px-3" style={{ borderColor: m.cor }}>
-                    {m.icone} {m.nome}{m.is_lider ? " ★" : ""}
-                  </Badge>
+                  <div
+                    key={m.nome}
+                    className="flex items-center gap-3 rounded-xl border p-3"
+                    style={{ borderLeftWidth: 4, borderLeftColor: m.cor || "hsl(var(--primary))" }}
+                  >
+                    <span className="text-xl">{m.icone || "🎵"}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{m.nome}</p>
+                      {m.is_lider && (
+                        <span className="text-[11px] text-amber-600 font-medium">★ Líder</span>
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
