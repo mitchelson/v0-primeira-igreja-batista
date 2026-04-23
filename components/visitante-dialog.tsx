@@ -52,6 +52,7 @@ import {
   MessageSquare,
   Loader2,
   ExternalLink,
+  Trash2,
 } from "lucide-react"
 import type {
   Visitante,
@@ -65,12 +66,14 @@ interface VisitanteDialogProps {
   visitante: Visitante & { responsavel_nome?: string | null }
   onClose: () => void
   onUpdate: (visitante: Visitante) => void
+  onDelete?: (id: string) => void
 }
 
 export default function VisitanteDialog({
   visitante,
   onClose,
   onUpdate,
+  onDelete,
 }: VisitanteDialogProps) {
   const [responsaveis, setResponsaveis] = useState<Responsavel[]>([])
   const [responsavelSelecionado, setResponsavelSelecionado] = useState<
@@ -103,6 +106,8 @@ export default function VisitanteDialog({
   const [categoriaParaDesmarcar, setCategoriaParaDesmarcar] =
     useState<MensagemCategoria | null>(null)
   const [desmarcando, setDesmarcando] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deletando, setDeletando] = useState(false)
 
   const fetchCategorias = useCallback(async () => {
     try {
@@ -314,15 +319,28 @@ export default function VisitanteDialog({
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               Detalhes do Visitante
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setEditandoCadastro(true)}
-                className="h-8 w-8 p-0"
-              >
-                <Edit className="h-4 w-4" />
-                <span className="sr-only">Editar visitante</span>
-              </Button>
+              <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditandoCadastro(true)}
+                  className="h-8 w-8 p-0"
+                >
+                  <Edit className="h-4 w-4" />
+                  <span className="sr-only">Editar visitante</span>
+                </Button>
+                {onDelete && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setConfirmDelete(true)}
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Excluir visitante</span>
+                  </Button>
+                )}
+              </div>
             </DialogTitle>
             <DialogDescription>
               Cadastrado em {formatarData(visitante.data_cadastro)}
@@ -574,6 +592,45 @@ export default function VisitanteDialog({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {desmarcando ? "Desmarcando..." : "Desmarcar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirmation modal for deleting visitor */}
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir visitante?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir <strong>{visitante.nome}</strong>? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletando}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deletando}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                setDeletando(true)
+                try {
+                  const res = await fetch(`/api/visitantes/${visitante.id}`, { method: "DELETE" })
+                  if (res.ok) {
+                    toast({ title: "Visitante excluído" })
+                    onDelete?.(visitante.id)
+                    onClose()
+                  } else {
+                    toast({ title: "Erro ao excluir", variant: "destructive" })
+                  }
+                } catch {
+                  toast({ title: "Erro ao excluir", variant: "destructive" })
+                } finally {
+                  setDeletando(false)
+                  setConfirmDelete(false)
+                }
+              }}
+            >
+              {deletando ? "Excluindo..." : "Excluir"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

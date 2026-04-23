@@ -328,6 +328,7 @@ export default function AdminPage() {
           visitante={visitanteSelecionado}
           onClose={() => setVisitanteSelecionado(null)}
           onUpdate={handleVisitanteAtualizado}
+          onDelete={() => { mutate(); setVisitanteSelecionado(null) }}
         />
       )}
 
