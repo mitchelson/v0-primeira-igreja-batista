@@ -49,7 +49,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
     async jwt({ token, account }) {
       if (account) {
-        // Busca dados do user no banco
         const rows = await sql`
           SELECT id, role, ativo FROM users WHERE google_id = ${account.providerAccountId} LIMIT 1
         `
@@ -57,6 +56,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.userId = rows[0].id
           token.role = rows[0].role
         }
+      } else if (token.userId) {
+        // Sempre busca role atualizado do banco
+        const rows = await sql`SELECT role FROM users WHERE id = ${token.userId} LIMIT 1`
+        if (rows.length > 0) token.role = rows[0].role
       }
       return token
     },
