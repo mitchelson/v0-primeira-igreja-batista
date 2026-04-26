@@ -94,7 +94,7 @@ export default async function AdminDashboard() {
                       <p className="text-xs text-muted-foreground">{ev.tipo}</p>
                     </div>
                     <div className="text-right text-sm">
-                      <p>{new Date(ev.data).toLocaleDateString("pt-BR")}</p>
+                      <p>{new Date(ev.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}</p>
                       {ev.horario && <p className="text-xs text-muted-foreground">{ev.horario}</p>}
                     </div>
                   </div>
@@ -121,7 +121,7 @@ export default async function AdminDashboard() {
                       <p className="text-xs text-muted-foreground">{esc.ministerio}{esc.funcao ? ` · ${esc.funcao}` : ""}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm">{new Date(esc.data).toLocaleDateString("pt-BR")}</p>
+                      <p className="text-sm">{new Date(esc.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}</p>
                       <span className={`text-xs px-1.5 py-0.5 rounded ${esc.status === "confirmado" ? "bg-green-100 text-green-700" : esc.status === "recusado" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
                         {esc.status}
                       </span>

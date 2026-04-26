@@ -158,7 +158,7 @@ export default function EscalasAdminPage() {
           <SelectContent>
             {futureEventos?.map((ev: any) => (
               <SelectItem key={ev.id} value={ev.id}>
-                {ev.titulo} — {new Date(ev.data).toLocaleDateString("pt-BR")}
+                {ev.titulo} — {new Date(ev.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}
                 {ev.horario ? ` ${ev.horario}` : ""}
               </SelectItem>
             ))}

@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
   if (rows.length > 0) {
     const min = await sql`SELECT nome FROM ministerios WHERE id = ${ministerio_id}`
     const ev = await sql`SELECT titulo, data FROM eventos WHERE id = ${evento_id}`
-    const dataFormatada = new Date(ev[0].data).toLocaleDateString("pt-BR")
+    const dataFormatada = new Date(ev[0].data).toLocaleDateString("pt-BR", { timeZone: "UTC" })
     sendPushToUser(user_id, {
       title: "📋 Você foi escalado!",
       body: `${min[0]?.nome} — ${ev[0]?.titulo} (${dataFormatada})`,

@@ -90,7 +90,7 @@ export default function MinisterioDetailPage() {
 
   const handleShareWhatsApp = () => {
     if (!selectedEvento || minEscalas.length === 0) return
-    const data = new Date(selectedEvento.data).toLocaleDateString("pt-BR")
+    const data = new Date(selectedEvento.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })
     let text = `📋 *Escala - ${ministerio.nome}*\n📅 ${selectedEvento.titulo} — ${data}${selectedEvento.horario ? ` às ${selectedEvento.horario}` : ""}\n\n`
     minEscalas.forEach((e: any) => { text += `• ${e.user_nome}${e.funcao ? ` (${e.funcao})` : ""}\n` })
 
@@ -208,7 +208,7 @@ export default function MinisterioDetailPage() {
                 <SelectContent>
                   {futureEventos?.map((ev: any) => (
                     <SelectItem key={ev.id} value={ev.id}>
-                      {ev.titulo} — {new Date(ev.data).toLocaleDateString("pt-BR")}{ev.horario ? ` ${ev.horario}` : ""}
+                      {ev.titulo} — {new Date(ev.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}{ev.horario ? ` ${ev.horario}` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>

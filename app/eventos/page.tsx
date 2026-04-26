@@ -60,7 +60,7 @@ export default async function EventosPage() {
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center text-gray-700">
                         <span className="mr-2">📅</span>
-                        <span className="font-semibold">{new Date(evento.data).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}</span>
+                        <span className="font-semibold">{new Date(evento.data).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" })}</span>
                       </div>
                       {evento.horario && (
                         <div className="flex items-center text-gray-700">

@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   const evento = await sql`SELECT titulo, data FROM eventos WHERE id = ${evento_id}`
   if (!evento.length) return NextResponse.json({ error: "Evento não encontrado" }, { status: 404 })
 
-  const dataFormatada = new Date(evento[0].data).toLocaleDateString("pt-BR")
+  const dataFormatada = new Date(evento[0].data).toLocaleDateString("pt-BR", { timeZone: "UTC" })
 
   const escalados = await sql`
     SELECT DISTINCT e.user_id FROM escalas e
