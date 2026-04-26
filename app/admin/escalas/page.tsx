@@ -50,9 +50,10 @@ export default function EscalasAdminPage() {
     fetcher,
   );
 
+  const todayUTC = new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()))
   const futureEventos = eventos
     ?.filter(
-      (e: any) => new Date(e.data) >= new Date(new Date().toDateString()),
+      (e: any) => new Date(e.data) >= todayUTC,
     )
     .sort(
       (a: any, b: any) =>

@@ -40,7 +40,9 @@ export default function MinisterioDetailPage() {
   const membros = ministerio?.membros || []
   const minEscalas = escalas?.filter((e: any) => e.ministerio_id === id) || []
 
-  const futureEventos = eventos?.filter((e: any) => new Date(e.data) >= new Date(new Date().toDateString()))
+  const now = new Date()
+  const todayUTC = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
+  const futureEventos = eventos?.filter((e: any) => new Date(e.data) >= todayUTC)
     .sort((a: any, b: any) => new Date(a.data).getTime() - new Date(b.data).getTime())
 
   const handleAddFuncao = async () => {

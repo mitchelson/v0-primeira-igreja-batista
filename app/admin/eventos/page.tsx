@@ -82,8 +82,8 @@ export default function EventosAdminPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {eventos?.map((ev: any) => {
           const d = new Date(ev.data)
-          const dia = d.toLocaleDateString("pt-BR", { day: "2-digit" })
-          const mes = d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")
+          const dia = d.toLocaleDateString("pt-BR", { day: "2-digit", timeZone: "UTC" })
+          const mes = d.toLocaleDateString("pt-BR", { month: "short", timeZone: "UTC" }).replace(".", "")
           return (
             <Card key={ev.id}>
               <CardContent className="p-4">

@@ -104,13 +104,13 @@ export default async function MinhaAreaPage() {
                   {escalas.map((e: any) => {
                     const data = new Date(e.data);
                     const dia = data.toLocaleDateString("pt-BR", {
-                      day: "2-digit",
+                      day: "2-digit", timeZone: "UTC",
                     });
                     const mes = data
-                      .toLocaleDateString("pt-BR", { month: "short" })
+                      .toLocaleDateString("pt-BR", { month: "short", timeZone: "UTC" })
                       .replace(".", "");
                     const diaSemana = data
-                      .toLocaleDateString("pt-BR", { weekday: "short" })
+                      .toLocaleDateString("pt-BR", { weekday: "short", timeZone: "UTC" })
                       .replace(".", "");
 
                     return (
