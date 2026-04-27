@@ -274,7 +274,7 @@ export default function AdminPage() {
                     value={dataSelecionada}
                     onValueChange={setDataSelecionada}
                   >
-                    <SelectTrigger id="select-data" className="w-40">
+                    <SelectTrigger id="select-data" className="w-full sm:w-40">
                       <SelectValue placeholder="Selecione uma data" />
                     </SelectTrigger>
                     <SelectContent>
@@ -348,7 +348,7 @@ export default function AdminPage() {
       {/* FAB - Novo Visitante */}
       <button
         onClick={() => setNovoVisitanteDialogAberto(true)}
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
+        className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
         aria-label="Novo Visitante"
       >
         <Plus className="h-6 w-6" />

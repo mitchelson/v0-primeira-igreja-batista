@@ -320,7 +320,7 @@ export default function MensagensPage() {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground hidden sm:inline">
                         {cat.ativa ? "Ativa" : "Inativa"}
                       </span>
                       <Switch

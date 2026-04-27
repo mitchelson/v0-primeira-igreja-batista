@@ -303,12 +303,12 @@ export default function RelatorioMensalDialog({
           {renderPreviewDados()}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
           <Button variant="outline" onClick={handleClose}>
             Cancelar
           </Button>
           <Button onClick={handleVisualizarDados} disabled={loading}>
-            {loading ? "Carregando..." : "Visualizar Dados do Periodo"}
+            {loading ? "Carregando..." : "Visualizar Dados"}
           </Button>
         </DialogFooter>
       </DialogContent>

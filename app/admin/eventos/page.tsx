@@ -61,7 +61,7 @@ export default function EventosAdminPage() {
             <DialogHeader><DialogTitle>{editing ? "Editar" : "Novo"} Evento</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div><Label>Título</Label><Input value={form.titulo} onChange={e => setForm({ ...form, titulo: e.target.value })} /></div>
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1"><Label>Data</Label><Input type="date" value={form.data} onChange={e => setForm({ ...form, data: e.target.value })} /></div>
                 <div className="flex-1"><Label>Horário</Label><Input type="time" value={form.horario} onChange={e => setForm({ ...form, horario: e.target.value })} /></div>
               </div>

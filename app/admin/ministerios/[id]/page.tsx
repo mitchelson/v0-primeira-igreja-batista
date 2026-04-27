@@ -138,7 +138,7 @@ export default function MinisterioDetailPage() {
       </div>
 
       <Tabs defaultValue="membros">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="membros"><Users className="h-4 w-4 mr-1" />Membros</TabsTrigger>
           <TabsTrigger value="funcoes"><Tag className="h-4 w-4 mr-1" />Funções</TabsTrigger>
           <TabsTrigger value="escala"><CalendarDays className="h-4 w-4 mr-1" />Escala</TabsTrigger>
@@ -146,7 +146,7 @@ export default function MinisterioDetailPage() {
 
         {/* Membros */}
         <TabsContent value="membros" className="mt-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {lider.map((l: any) => (
             <Card key={l.user_id} className="border-amber-200 bg-amber-50/50">
               <CardContent className="p-4 flex flex-col items-center text-center gap-2">
@@ -218,19 +218,19 @@ export default function MinisterioDetailPage() {
             </div>
             {eventoId && (
               <Button onClick={() => { setAddOpen(true); setAddUser(""); setAddFuncao("") }}>
-                <Plus className="h-4 w-4 mr-1" />Escalar
+                <Plus className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Escalar</span>
               </Button>
             )}
           </div>
 
           {eventoId && minEscalas.length > 0 && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" onClick={handleShareWhatsApp}>
-                <Share2 className="h-4 w-4 mr-1" />Compartilhar
+                <Share2 className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Compartilhar</span>
               </Button>
               <Button variant="outline" size="sm" onClick={handleNotifyEscalados} disabled={notifying}>
-                {notifying ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Bell className="h-4 w-4 mr-1" />}
-                Notificar
+                {notifying ? <Loader2 className="h-4 w-4 sm:mr-1 animate-spin" /> : <Bell className="h-4 w-4 sm:mr-1" />}
+                <span className="hidden sm:inline">Notificar</span>
               </Button>
             </div>
           )}
@@ -239,7 +239,7 @@ export default function MinisterioDetailPage() {
             <p className="text-center text-muted-foreground py-4">Nenhum membro escalado para este evento.</p>
           )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {minEscalas.map((e: any) => (
             <Card key={e.id}>
               <CardContent className="p-4 flex flex-col items-center text-center gap-2 relative">

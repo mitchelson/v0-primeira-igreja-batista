@@ -144,8 +144,8 @@ export default function EscalasAdminPage() {
               setAddUser("");
             }}
           >
-            <Plus className="h-4 w-4 mr-1" />
-            Escalar membro
+            <Plus className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Escalar membro</span>
           </Button>
         )}
       </div>
@@ -186,7 +186,7 @@ export default function EscalasAdminPage() {
 
               <TabsContent
                 value="all"
-                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4"
               >
                 {escalas.map((e: any) => (
                   <EscalaRow
@@ -203,7 +203,7 @@ export default function EscalasAdminPage() {
                 <TabsContent
                   key={id}
                   value={id}
-                  className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4"
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4"
                 >
                   {v.escalas.map((e: any) => (
                     <EscalaRow

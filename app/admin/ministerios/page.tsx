@@ -57,9 +57,9 @@ export default function MinisteriosAdminPage() {
             <div className="space-y-4">
               <div><Label>Nome</Label><Input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} /></div>
               <div><Label>Descrição</Label><Input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} /></div>
-              <div className="flex gap-4">
-                <div className="flex-1"><Label>Cor</Label><Input type="color" value={form.cor} onChange={e => setForm({ ...form, cor: e.target.value })} /></div>
-                <div className="flex-1"><Label>Ícone</Label><Input value={form.icone} onChange={e => setForm({ ...form, icone: e.target.value })} /></div>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex-1 min-w-[100px]"><Label>Cor</Label><Input type="color" value={form.cor} onChange={e => setForm({ ...form, cor: e.target.value })} /></div>
+                <div className="flex-1 min-w-[100px]"><Label>Ícone</Label><Input value={form.icone} onChange={e => setForm({ ...form, icone: e.target.value })} /></div>
                 <div className="w-20"><Label>Ordem</Label><Input type="number" value={form.ordem} onChange={e => setForm({ ...form, ordem: Number(e.target.value) })} /></div>
               </div>
               <Button className="w-full" onClick={handleSave}>Salvar</Button>

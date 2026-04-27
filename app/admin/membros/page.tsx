@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Search, UserCog, Plus, X } from "lucide-react"
+import { Search, UserCog, Plus, X, Crown } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -61,13 +61,13 @@ export default function MembrosAdminPage() {
         <h1 className="text-2xl font-bold">Membros</h1>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar por nome ou email" className="pl-8" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <Select value={filterMin} onValueChange={setFilterMin}>
-          <SelectTrigger className="w-48"><SelectValue placeholder="Ministério" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="Ministério" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="none">Sem ministério</SelectItem>
@@ -91,7 +91,7 @@ export default function MembrosAdminPage() {
                 <AvatarFallback>{u.nome?.[0]}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-medium text-sm truncate max-w-[120px]">{u.nome}</p>
+                <p className="font-medium text-sm truncate max-w-full">{u.nome}</p>
                 <span className={`text-xs px-1.5 py-0.5 rounded ${roleColor(u.role)}`}>{u.role}</span>
                 {!u.ativo && <Badge variant="destructive" className="text-xs ml-1">Inativo</Badge>}
               </div>
@@ -138,11 +138,11 @@ export default function MembrosAdminPage() {
                 <Label>Ministérios</Label>
                 <div className="space-y-2 mt-2">
                   {editUser.ministerios?.map((m: any) => (
-                    <div key={m.ministerio_id} className="flex items-center justify-between text-sm border rounded p-2">
-                      <span>{m.nome}</span>
-                      <div className="flex items-center gap-2">
+                    <div key={m.ministerio_id} className="flex items-center justify-between text-sm border rounded p-2 gap-2">
+                      <span className="truncate min-w-0">{m.nome}</span>
+                      <div className="flex items-center gap-1 shrink-0">
                         <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => handleToggleLider(editUser.id, m.ministerio_id, m.is_lider)}>
-                          {m.is_lider ? "Remover líder" : "Promover líder"}
+                          {m.is_lider ? <><Crown className="h-3 w-3 sm:mr-1" /><span className="hidden sm:inline">Remover líder</span></> : <><Crown className="h-3 w-3 sm:mr-1" /><span className="hidden sm:inline">Promover líder</span></>}
                         </Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleRemoveMinisterio(editUser.id, m.ministerio_id)}>
                           <X className="h-3 w-3" />
