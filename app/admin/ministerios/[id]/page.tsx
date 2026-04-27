@@ -40,6 +40,12 @@ export default function MinisterioDetailPage() {
   const lider = ministerio?.membros?.filter((m: any) => m.is_lider) || []
   const membros = ministerio?.membros || []
   const minEscalas = escalas?.filter((e: any) => e.ministerio_id === id) || []
+  const [editMembro, setEditMembro] = useState<any>(null)
+
+  const handleUpdateRole = async (userId: string, role: string) => {
+    await fetch("/api/users", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: userId, role }) })
+    toast({ title: "Papel atualizado" }); setEditMembro(null); mutateMin()
+  }
 
   const now = new Date()
   const todayUTC = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
@@ -149,7 +155,7 @@ export default function MinisterioDetailPage() {
         <TabsContent value="membros" className="mt-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {lider.map((l: any) => (
-            <Card key={l.user_id} className="border-amber-200 bg-amber-50/50">
+            <Card key={l.user_id} className={`border-amber-200 bg-amber-50/50 ${isAdmin ? "cursor-pointer hover:border-amber-300" : ""}`} onClick={() => isAdmin && setEditMembro(l)}>
               <CardContent className="p-4 flex flex-col items-center text-center gap-2">
                 <Avatar className="h-14 w-14">
                   <AvatarImage src={l.foto_url} />
@@ -158,18 +164,22 @@ export default function MinisterioDetailPage() {
                 <div>
                   <p className="font-medium text-sm">{l.nome}</p>
                   <Badge className="mt-1 bg-amber-100 text-amber-700 gap-1 text-xs"><Crown className="h-3 w-3" />Líder</Badge>
+                  {l.role && l.role !== "membro" && <span className={`text-[10px] px-1.5 py-0.5 rounded ml-1 ${l.role === "admin" ? "bg-red-100 text-red-700" : l.role === "supervisor" ? "bg-purple-100 text-purple-700" : ""}`}>{l.role}</span>}
                 </div>
               </CardContent>
             </Card>
           ))}
           {membros.filter((m: any) => !m.is_lider).map((m: any) => (
-            <Card key={m.user_id}>
+            <Card key={m.user_id} className={isAdmin ? "cursor-pointer hover:border-primary/30" : ""} onClick={() => isAdmin && setEditMembro(m)}>
               <CardContent className="p-4 flex flex-col items-center text-center gap-2">
                 <Avatar className="h-14 w-14">
                   <AvatarImage src={m.foto_url} />
                   <AvatarFallback>{m.nome?.[0]}</AvatarFallback>
                 </Avatar>
-                <p className="text-sm font-medium">{m.nome}</p>
+                <div>
+                  <p className="text-sm font-medium">{m.nome}</p>
+                  {m.role && m.role !== "membro" && <span className={`text-[10px] px-1.5 py-0.5 rounded ${m.role === "admin" ? "bg-red-100 text-red-700" : m.role === "supervisor" ? "bg-purple-100 text-purple-700" : m.role === "lider" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"}`}>{m.role}</span>}
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -255,17 +265,33 @@ export default function MinisterioDetailPage() {
                 </div>
               )}
 
-              {/* Posições necessárias */}
+              {/* Posições necessárias como cards clicáveis */}
               {eventoPosicoes?.filter((p: any) => p.ministerio_id === id).length > 0 && (
                 <div>
                   <p className="text-sm font-medium mb-2">Posições necessárias:</p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {eventoPosicoes.filter((p: any) => p.ministerio_id === id).map((p: any) => {
-                      const filled = minEscalas.filter((e: any) => e.funcao === p.funcao).length
+                      const assigned = minEscalas.filter((e: any) => e.funcao === p.funcao)
+                      const filled = assigned.length
+                      const isFull = filled >= p.quantidade
                       return (
-                        <Badge key={p.id} variant={filled >= p.quantidade ? "default" : "outline"} className="text-xs gap-1">
-                          {p.funcao} {filled}/{p.quantidade}
-                        </Badge>
+                        <Card key={p.id} className={`cursor-pointer transition-colors ${isFull ? "border-green-200 bg-green-50/50" : "hover:border-primary/30"}`}
+                          onClick={() => { if (!isFull) { setAddOpen(true); setAddUser(""); setAddFuncao(p.funcao) } }}>
+                          <CardContent className="p-3">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-medium text-sm">{p.funcao}</span>
+                              <Badge variant={isFull ? "default" : "outline"} className="text-xs">{filled}/{p.quantidade}</Badge>
+                            </div>
+                            {assigned.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {assigned.map((e: any) => (
+                                  <span key={e.id} className="text-xs text-muted-foreground">{e.user_nome}</span>
+                                ))}
+                              </div>
+                            )}
+                            {!isFull && <p className="text-xs text-primary mt-1">Toque para escalar</p>}
+                          </CardContent>
+                        </Card>
                       )
                     })}
                   </div>
@@ -359,6 +385,31 @@ export default function MinisterioDetailPage() {
           <Button variant="outline" onClick={() => setConflictDialog(null)}>Entendi</Button>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog editar membro */}
+      {isAdmin && (
+        <Dialog open={!!editMembro} onOpenChange={(v) => { if (!v) setEditMembro(null) }}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Editar {editMembro?.nome}</DialogTitle></DialogHeader>
+            {editMembro && (
+              <div className="space-y-4">
+                <div>
+                  <Label>Papel no sistema</Label>
+                  <Select value={editMembro.role || "membro"} onValueChange={v => handleUpdateRole(editMembro.user_id, v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="supervisor">Supervisor</SelectItem>
+                      <SelectItem value="lider">Líder</SelectItem>
+                      <SelectItem value="membro">Membro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }
