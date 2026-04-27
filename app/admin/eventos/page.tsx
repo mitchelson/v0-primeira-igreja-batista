@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Pencil, Trash2, Settings2, X } from "lucide-react"
+import { Plus, Pencil, Trash2, Settings2, X, BookmarkPlus } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -79,6 +79,19 @@ export default function EventosAdminPage() {
   }
 
   // Modelo CRUD
+  const handleSaveAsModelo = async (ev: any) => {
+    const nome = prompt("Nome do modelo:", ev.titulo)
+    if (!nome?.trim()) return
+    const posRes = await fetch(`/api/eventos/${ev.id}/posicoes`)
+    const posicoes = posRes.ok ? (await posRes.json()).map((p: any) => ({ ministerio_id: p.ministerio_id, funcao: p.funcao, quantidade: p.quantidade })) : []
+    const res = await fetch("/api/eventos/modelos", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome: nome.trim(), tipo: ev.tipo, horario: ev.horario, descricao: ev.descricao, posicoes })
+    })
+    if (res.ok) { toast({ title: "Modelo criado a partir do evento" }); mutateModelos() }
+    else toast({ title: "Erro ao criar modelo", variant: "destructive" })
+  }
+
   const handleSaveModelo = async () => {
     const method = editingModelo ? "PUT" : "POST"
     const url = editingModelo ? `/api/eventos/modelos/${editingModelo.id}` : "/api/eventos/modelos"
@@ -198,6 +211,7 @@ export default function EventosAdminPage() {
                     </div>
                     {ev.descricao && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{ev.descricao}</p>}
                     <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleSaveAsModelo(ev)} title="Salvar como modelo"><BookmarkPlus className="h-3.5 w-3.5" /></Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPosOpen(ev)} title="Posições"><Settings2 className="h-3.5 w-3.5" /></Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(ev)}><Pencil className="h-3.5 w-3.5" /></Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(ev.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
