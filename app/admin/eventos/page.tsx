@@ -8,9 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Pencil, Trash2, Copy, Settings2, X } from "lucide-react"
+import { Plus, Pencil, Trash2, Settings2, X } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -20,7 +20,6 @@ export default function EventosAdminPage() {
   const { data: eventos, mutate } = useSWR("/api/eventos", fetcher)
   const { data: modelos, mutate: mutateModelos } = useSWR("/api/eventos/modelos", fetcher)
   const { data: ministerios } = useSWR("/api/ministerios", fetcher)
-  const { data: allFuncoes } = useSWR("/api/ministerios", fetcher) // for funcoes per ministerio
 
   // Evento form
   const [open, setOpen] = useState(false)
@@ -45,10 +44,6 @@ export default function EventosAdminPage() {
   // Funcoes do ministério selecionado
   const { data: minFuncoes } = useSWR(
     posMinId ? `/api/ministerios/${posMinId}/funcoes` : null, fetcher
-  )
-  const { data: modeloMinFuncoes } = useSWR(
-    modeloPosicoes.length >= 0 && modeloPosicoes[modeloPosicoes.length - 1]?.ministerio_id
-      ? null : null, fetcher
   )
 
   const resetForm = () => { setForm({ titulo: "", data: "", horario: "", descricao: "", tipo: "Culto", modelo_id: "" }); setEditing(null) }
@@ -144,10 +139,8 @@ export default function EventosAdminPage() {
 
         {/* === EVENTOS TAB === */}
         <TabsContent value="eventos" className="space-y-4 mt-4">
+          <Button className="w-full sm:w-auto" onClick={() => { resetForm(); setOpen(true) }}><Plus className="h-4 w-4 mr-1" />Novo Evento</Button>
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm() }}>
-            <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-1" />Novo Evento</Button>
-            </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>{editing ? "Editar" : "Novo"} Evento</DialogTitle></DialogHeader>
               <div className="space-y-4">
@@ -219,10 +212,8 @@ export default function EventosAdminPage() {
 
         {/* === MODELOS TAB === */}
         <TabsContent value="modelos" className="space-y-4 mt-4">
+          <Button className="w-full sm:w-auto" onClick={() => { resetModeloForm(); setModeloOpen(true) }}><Plus className="h-4 w-4 mr-1" />Novo Modelo</Button>
           <Dialog open={modeloOpen} onOpenChange={(v) => { setModeloOpen(v); if (!v) resetModeloForm() }}>
-            <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-1" />Novo Modelo</Button>
-            </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>{editingModelo ? "Editar" : "Novo"} Modelo</DialogTitle></DialogHeader>
               <div className="space-y-4">
