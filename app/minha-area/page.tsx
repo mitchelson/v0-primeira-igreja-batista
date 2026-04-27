@@ -5,7 +5,14 @@ import { sql } from "@/lib/neon";
 export const dynamic = "force-dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Music, ClipboardList, Clock, MapPin, Users } from "lucide-react";
+import {
+  Calendar,
+  Music,
+  ClipboardList,
+  Clock,
+  MapPin,
+  Users,
+} from "lucide-react";
 import Header from "@/components/header";
 import { EscalaActions } from "./escala-actions";
 import { PendenciasMensagens } from "./pendencias-mensagens";
@@ -39,7 +46,10 @@ export default async function MinhaAreaPage() {
   ]);
 
   // Buscar colegas de escala (mesmo evento + mesmo ministério)
-  const escalaIds = escalas.map((e: any) => ({ evento_id: e.evento_id, ministerio_id: e.ministerio_id }));
+  const escalaIds = escalas.map((e: any) => ({
+    evento_id: e.evento_id,
+    ministerio_id: e.ministerio_id,
+  }));
   let colegas: Record<string, any[]> = {};
   if (escalaIds.length > 0) {
     const colegasRows = await sql`
@@ -129,13 +139,20 @@ export default async function MinhaAreaPage() {
                   {escalas.map((e: any) => {
                     const data = new Date(e.data);
                     const dia = data.toLocaleDateString("pt-BR", {
-                      day: "2-digit", timeZone: "UTC",
+                      day: "2-digit",
+                      timeZone: "UTC",
                     });
                     const mes = data
-                      .toLocaleDateString("pt-BR", { month: "short", timeZone: "UTC" })
+                      .toLocaleDateString("pt-BR", {
+                        month: "short",
+                        timeZone: "UTC",
+                      })
                       .replace(".", "");
                     const diaSemana = data
-                      .toLocaleDateString("pt-BR", { weekday: "short", timeZone: "UTC" })
+                      .toLocaleDateString("pt-BR", {
+                        weekday: "short",
+                        timeZone: "UTC",
+                      })
                       .replace(".", "");
 
                     return (
@@ -198,9 +215,13 @@ export default async function MinhaAreaPage() {
                               if (!cols?.length) return null;
                               return (
                                 <div className="flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground border-t pt-1.5">
-                                  <Users className="h-3 w-3 shrink-0" />
+                                  <p>Colegas de escala</p>
                                   {cols.map((c: any, i: number) => (
-                                    <span key={i}>{c.nome}{c.funcao ? ` (${c.funcao})` : ""}{i < cols.length - 1 ? "," : ""}</span>
+                                    <span key={i}>
+                                      {c.nome}
+                                      {c.funcao ? ` (${c.funcao})` : ""}
+                                      {i < cols.length - 1 ? "," : ""}
+                                    </span>
                                   ))}
                                 </div>
                               );
