@@ -9,12 +9,9 @@ import {
   Calendar,
   Music,
   ClipboardList,
-  Clock,
-  MapPin,
-  Users,
 } from "lucide-react";
 import Header from "@/components/header";
-import { EscalaActions } from "./escala-actions";
+import { EscalaCard } from "./escala-card";
 import { PendenciasMensagens } from "./pendencias-mensagens";
 import { SolicitarMinisterio } from "./solicitar-ministerio";
 import { PushNotificationRegister } from "@/components/push-notification-register";
@@ -137,98 +134,23 @@ export default async function MinhaAreaPage() {
               ) : (
                 <div className="space-y-3">
                   {escalas.map((e: any) => {
-                    const data = new Date(e.data);
-                    const dia = data.toLocaleDateString("pt-BR", {
-                      day: "2-digit",
-                      timeZone: "UTC",
-                    });
-                    const mes = data
-                      .toLocaleDateString("pt-BR", {
-                        month: "short",
-                        timeZone: "UTC",
-                      })
-                      .replace(".", "");
-                    const diaSemana = data
-                      .toLocaleDateString("pt-BR", {
-                        weekday: "short",
-                        timeZone: "UTC",
-                      })
-                      .replace(".", "");
-
+                    const key = `${e.evento_id}_${e.ministerio_id}`;
+                    const cols = colegas[key] || [];
                     return (
-                      <div
+                      <EscalaCard
                         key={e.id}
-                        className="rounded-xl border bg-card overflow-hidden"
-                      >
-                        <div className="flex items-stretch">
-                          {/* Date sidebar */}
-                          <div className="flex flex-col items-center justify-center bg-primary/10 text-primary w-16 py-4 shrink-0">
-                            <span className="text-2xl font-bold leading-none">
-                              {dia}
-                            </span>
-                            <span className="text-[10px] uppercase font-semibold tracking-wide mt-1">
-                              {mes}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground capitalize mt-0.5">
-                              {diaSemana}
-                            </span>
-                          </div>
-
-                          {/* Content */}
-                          <div className="flex flex-col justify-between flex-1 min-w-0 p-3 gap-2">
-                            <p className="font-semibold text-sm leading-tight">
-                              {e.titulo}
-                            </p>
-
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                                {e.horario && (
-                                  <span className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    {e.horario}
-                                  </span>
-                                )}
-                                <span className="flex items-center gap-1">
-                                  <span className="text-xl">
-                                    {e.icone || ""}
-                                  </span>
-                                  {e.ministerio}
-                                </span>
-                                {e.funcao && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-[11px] font-normal"
-                                  >
-                                    {e.funcao}
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="shrink-0">
-                                <EscalaActions id={e.id} status={e.status} />
-                              </div>
-                            </div>
-
-                            {/* Colegas de escala */}
-                            {(() => {
-                              const key = `${e.evento_id}_${e.ministerio_id}`;
-                              const cols = colegas[key];
-                              if (!cols?.length) return null;
-                              return (
-                                <div className="flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground border-t pt-1.5">
-                                  <p>Colegas de escala</p>
-                                  {cols.map((c: any, i: number) => (
-                                    <span key={i}>
-                                      {c.nome}
-                                      {c.funcao ? ` (${c.funcao})` : ""}
-                                      {i < cols.length - 1 ? "," : ""}
-                                    </span>
-                                  ))}
-                                </div>
-                              );
-                            })()}
-                          </div>
-                        </div>
-                      </div>
+                        escala={{
+                          id: e.id,
+                          titulo: e.titulo,
+                          data: e.data,
+                          horario: e.horario,
+                          ministerio: e.ministerio,
+                          icone: e.icone,
+                          funcao: e.funcao,
+                          status: e.status,
+                        }}
+                        colegas={cols.map((c: any) => ({ nome: c.nome, funcao: c.funcao }))}
+                      />
                     );
                   })}
                 </div>
