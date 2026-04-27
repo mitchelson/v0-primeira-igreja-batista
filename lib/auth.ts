@@ -1,6 +1,7 @@
 import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import { sql } from "@/lib/neon"
+import { cookies } from "next/headers"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google],
@@ -9,6 +10,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (!account || account.provider !== "google") return false
       const { email, name, image } = user
       if (!email) return false
+
+      const cookieStore = await cookies()
+      const authMode = cookieStore.get("auth_mode")?.value || "signup"
+      cookieStore.delete("auth_mode")
 
       // Verifica se já existe user com esse google_id
       const existing = await sql`
@@ -34,6 +39,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           WHERE id = ${pendente[0].id}
         `
         return true
+      }
+
+      // Modo login: não cria conta nova
+      if (authMode === "login") {
+        return "/login?error=no_account"
       }
 
       // Novo user — verifica se é o primeiro (vira admin)
