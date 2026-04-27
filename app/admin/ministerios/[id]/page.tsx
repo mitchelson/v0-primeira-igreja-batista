@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Trash2, Check, X, AlertCircle, Crown, Users, Tag, CalendarDays, Share2, Bell, Loader2 } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
+import { SearchableSelect } from "@/components/searchable-select"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -39,14 +40,27 @@ export default function MinisterioDetailPage() {
   const [notifying, setNotifying] = useState(false)
 
   const isAdmin = session?.user?.role === "admin"
-  const lider = ministerio?.membros?.filter((m: any) => m.is_lider) || []
-  const membros = ministerio?.membros || []
+  const pendentes = ministerio?.membros?.filter((m: any) => m.pendente) || []
+  const lider = ministerio?.membros?.filter((m: any) => m.is_lider && !m.pendente) || []
+  const membros = ministerio?.membros?.filter((m: any) => !m.pendente) || []
   const minEscalas = escalas?.filter((e: any) => e.ministerio_id === id) || []
   const [editMembro, setEditMembro] = useState<any>(null)
 
   const handleUpdateRole = async (userId: string, role: string) => {
     await fetch("/api/users", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: userId, role }) })
     toast({ title: "Papel atualizado" }); setEditMembro(null); mutateMin()
+  }
+
+  const handleAceitarMembro = async (userId: string) => {
+    await fetch("/api/users/ministerios", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId, ministerio_id: id, pendente: false }) })
+    toast({ title: "Membro aceito" }); mutateMin()
+  }
+
+  const handleRecusarMembro = async (userId: string) => {
+    await fetch("/api/users/ministerios", { method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId, ministerio_id: id }) })
+    toast({ title: "Solicitação recusada" }); mutateMin()
   }
 
   const now = new Date()
@@ -155,6 +169,28 @@ export default function MinisterioDetailPage() {
 
         {/* Membros */}
         <TabsContent value="membros" className="mt-4">
+          {pendentes.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm font-medium mb-2 text-orange-600">Solicitações pendentes ({pendentes.length})</p>
+              <div className="space-y-2">
+                {pendentes.map((m: any) => (
+                  <div key={m.user_id} className="flex items-center justify-between border border-orange-200 bg-orange-50/50 rounded-lg p-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={m.foto_url} />
+                        <AvatarFallback>{m.nome?.[0]}</AvatarFallback>
+                      </Avatar>
+                      <p className="text-sm font-medium truncate">{m.nome}</p>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" onClick={() => handleAceitarMembro(m.user_id)}><Check className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => handleRecusarMembro(m.user_id)}><X className="h-4 w-4" /></Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {lider.map((l: any) => (
             <Card key={l.user_id} className={`border-amber-200 bg-amber-50/50 ${isAdmin ? "cursor-pointer hover:border-amber-300" : ""}`} onClick={() => isAdmin && setEditMembro(l)}>
@@ -364,20 +400,16 @@ export default function MinisterioDetailPage() {
           <div className="space-y-4">
             <div>
               <Label>Membro</Label>
-              <Select value={addUser} onValueChange={setAddUser}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>
-                  {membros.map((m: any) => {
-                    const last = lastEscalas?.find((l: any) => l.user_id === m.user_id)
-                    const lastDate = last ? new Date(last.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" }) : null
-                    return (
-                      <SelectItem key={m.user_id} value={m.user_id}>
-                        {m.nome}{m.is_lider ? " ★" : ""}{lastDate ? ` — Última: ${lastDate}` : ""}
-                      </SelectItem>
-                    )
-                  })}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                value={addUser}
+                onValueChange={setAddUser}
+                placeholder="Buscar membro..."
+                options={membros.map((m: any) => {
+                  const last = lastEscalas?.find((l: any) => l.user_id === m.user_id)
+                  const lastDate = last ? new Date(last.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" }) : null
+                  return { value: m.user_id, label: `${m.nome}${m.is_lider ? " ★" : ""}`, sublabel: lastDate ? `Última: ${lastDate}` : undefined }
+                })}
+              />
             </div>
             <div>
               <Label>Função</Label>

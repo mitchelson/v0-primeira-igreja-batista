@@ -23,3 +23,6 @@ ALTER TABLE eventos ADD COLUMN IF NOT EXISTS modelo_id UUID REFERENCES evento_mo
 CREATE INDEX IF NOT EXISTS idx_evento_posicoes_evento ON evento_posicoes(evento_id);
 CREATE INDEX IF NOT EXISTS idx_evento_posicoes_modelo ON evento_posicoes(modelo_id);
 CREATE INDEX IF NOT EXISTS idx_evento_posicoes_ministerio ON evento_posicoes(ministerio_id);
+
+-- Migration 011: Coluna pendente em ministerio_membros
+ALTER TABLE ministerio_membros ADD COLUMN IF NOT EXISTS pendente BOOLEAN NOT NULL DEFAULT false;

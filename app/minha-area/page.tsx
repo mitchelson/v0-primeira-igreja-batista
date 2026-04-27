@@ -9,6 +9,7 @@ import { Calendar, Music, ClipboardList, Clock, MapPin, Users } from "lucide-rea
 import Header from "@/components/header";
 import { EscalaActions } from "./escala-actions";
 import { PendenciasMensagens } from "./pendencias-mensagens";
+import { SolicitarMinisterio } from "./solicitar-ministerio";
 import { PushNotificationRegister } from "@/components/push-notification-register";
 import { PullToRefresh } from "@/components/pull-to-refresh";
 
@@ -105,6 +106,8 @@ export default async function MinhaAreaPage() {
           <PushNotificationRegister />
 
           <PendenciasMensagens />
+
+          {ministerios.length === 0 && <SolicitarMinisterio />}
 
           <Card className="shadow-sm">
             <CardHeader className="pb-3">

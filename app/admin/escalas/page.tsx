@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { AlertCircle, Plus, Trash2, Check, X } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { SearchableSelect } from "@/components/searchable-select";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -272,19 +273,15 @@ export default function EscalasAdminPage() {
             {addMin && minDetail?.membros && (
               <div>
                 <Label>Membro</Label>
-                <Select value={addUser} onValueChange={setAddUser}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {minDetail.membros.map((mb: any) => (
-                      <SelectItem key={mb.user_id} value={mb.user_id}>
-                        {mb.nome}
-                        {mb.is_lider ? " ★" : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  value={addUser}
+                  onValueChange={setAddUser}
+                  placeholder="Buscar membro..."
+                  options={minDetail.membros.map((mb: any) => ({
+                    value: mb.user_id,
+                    label: `${mb.nome}${mb.is_lider ? " ★" : ""}`,
+                  }))}
+                />
               </div>
             )}
             <div>
