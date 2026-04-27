@@ -24,6 +24,8 @@ export default function MinisterioDetailPage() {
   const { data: ministerio, mutate: mutateMin } = useSWR(`/api/ministerios/${id}`, fetcher)
   const { data: funcoes, mutate: mutateFuncoes } = useSWR(`/api/ministerios/${id}/funcoes`, fetcher)
   const { data: eventos } = useSWR("/api/eventos", fetcher)
+  const { data: allMinEscalas } = useSWR(`/api/escalas?ministerio_id=${id}`, fetcher)
+  const { data: lastEscalas } = useSWR(`/api/escalas?ministerio_id=${id}&future=false`, fetcher)
   const [novaFuncao, setNovaFuncao] = useState("")
 
   // Escala state
@@ -228,9 +230,19 @@ export default function MinisterioDetailPage() {
                           <span className="text-lg font-bold leading-none">{dia}</span>
                           <span className="text-[10px] uppercase font-medium mt-0.5">{mes}</span>
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <p className="font-semibold text-sm truncate">{ev.titulo}</p>
                           <p className="text-xs text-muted-foreground">{ev.horario || ev.tipo}</p>
+                          {(() => {
+                            const evEscalas = allMinEscalas?.filter((e: any) => e.evento_id === ev.id) || []
+                            if (evEscalas.length === 0) return null
+                            return (
+                              <p className="text-[11px] text-muted-foreground mt-1 truncate">
+                                <Users className="h-3 w-3 inline mr-1" />
+                                {evEscalas.map((e: any) => e.user_nome).join(", ")}
+                              </p>
+                            )
+                          })()}
                         </div>
                       </CardContent>
                     </Card>
@@ -355,9 +367,15 @@ export default function MinisterioDetailPage() {
               <Select value={addUser} onValueChange={setAddUser}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
-                  {membros.map((m: any) => (
-                    <SelectItem key={m.user_id} value={m.user_id}>{m.nome}{m.is_lider ? " ★" : ""}</SelectItem>
-                  ))}
+                  {membros.map((m: any) => {
+                    const last = lastEscalas?.find((l: any) => l.user_id === m.user_id)
+                    const lastDate = last ? new Date(last.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" }) : null
+                    return (
+                      <SelectItem key={m.user_id} value={m.user_id}>
+                        {m.nome}{m.is_lider ? " ★" : ""}{lastDate ? ` — Última: ${lastDate}` : ""}
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
             </div>

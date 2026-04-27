@@ -5,7 +5,7 @@ import { sql } from "@/lib/neon";
 export const dynamic = "force-dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Music, ClipboardList, Clock, MapPin } from "lucide-react";
+import { Calendar, Music, ClipboardList, Clock, MapPin, Users } from "lucide-react";
 import Header from "@/components/header";
 import { EscalaActions } from "./escala-actions";
 import { PendenciasMensagens } from "./pendencias-mensagens";
@@ -20,7 +20,7 @@ export default async function MinhaAreaPage() {
 
   const [escalas, ministerios, userInfo] = await Promise.all([
     sql`
-      SELECT e.id, e.funcao, e.status, ev.titulo, ev.data, ev.horario, m.nome as ministerio
+      SELECT e.id, e.funcao, e.status, e.evento_id, e.ministerio_id, ev.titulo, ev.data, ev.horario, m.nome as ministerio
       FROM escalas e
       JOIN eventos ev ON ev.id = e.evento_id
       JOIN ministerios m ON m.id = e.ministerio_id
@@ -36,6 +36,28 @@ export default async function MinhaAreaPage() {
     `,
     sql`SELECT criado_em FROM users WHERE id = ${userId}`,
   ]);
+
+  // Buscar colegas de escala (mesmo evento + mesmo ministério)
+  const escalaIds = escalas.map((e: any) => ({ evento_id: e.evento_id, ministerio_id: e.ministerio_id }));
+  let colegas: Record<string, any[]> = {};
+  if (escalaIds.length > 0) {
+    const colegasRows = await sql`
+      SELECT e.evento_id, e.ministerio_id, u.nome, e.funcao
+      FROM escalas e
+      JOIN users u ON u.id = e.user_id
+      WHERE e.user_id != ${userId}
+        AND (e.evento_id, e.ministerio_id) IN (
+          SELECT evento_id, ministerio_id FROM escalas WHERE user_id = ${userId}
+            AND evento_id IN (SELECT id FROM eventos WHERE data >= CURRENT_DATE)
+        )
+      ORDER BY u.nome
+    `;
+    for (const c of colegasRows) {
+      const key = `${c.evento_id}_${c.ministerio_id}`;
+      if (!colegas[key]) colegas[key] = [];
+      colegas[key].push(c);
+    }
+  }
 
   const isNewUser =
     userInfo[0] &&
@@ -165,6 +187,21 @@ export default async function MinhaAreaPage() {
                                 <EscalaActions id={e.id} status={e.status} />
                               </div>
                             </div>
+
+                            {/* Colegas de escala */}
+                            {(() => {
+                              const key = `${e.evento_id}_${e.ministerio_id}`;
+                              const cols = colegas[key];
+                              if (!cols?.length) return null;
+                              return (
+                                <div className="flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground border-t pt-1.5">
+                                  <Users className="h-3 w-3 shrink-0" />
+                                  {cols.map((c: any, i: number) => (
+                                    <span key={i}>{c.nome}{c.funcao ? ` (${c.funcao})` : ""}{i < cols.length - 1 ? "," : ""}</span>
+                                  ))}
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
                       </div>

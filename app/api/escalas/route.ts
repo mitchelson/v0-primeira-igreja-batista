@@ -4,6 +4,7 @@ import { sendPushToUser } from "@/lib/push"
 
 export async function GET(request: NextRequest) {
   const eventoId = request.nextUrl.searchParams.get("evento_id")
+  const ministerioId = request.nextUrl.searchParams.get("ministerio_id")
 
   if (eventoId) {
     const rows = await sql`
@@ -13,6 +14,30 @@ export async function GET(request: NextRequest) {
       JOIN ministerios m ON m.id = e.ministerio_id
       WHERE e.evento_id = ${eventoId}
       ORDER BY m.nome, u.nome
+    `
+    return NextResponse.json(rows)
+  }
+
+  if (ministerioId) {
+    const future = request.nextUrl.searchParams.get("future")
+    if (future === "false") {
+      // Última escala de cada membro neste ministério
+      const rows = await sql`
+        SELECT DISTINCT ON (e.user_id) e.user_id, ev.data
+        FROM escalas e
+        JOIN eventos ev ON ev.id = e.evento_id
+        WHERE e.ministerio_id = ${ministerioId} AND ev.data < CURRENT_DATE
+        ORDER BY e.user_id, ev.data DESC
+      `
+      return NextResponse.json(rows)
+    }
+    const rows = await sql`
+      SELECT e.id, e.evento_id, e.user_id, e.funcao, u.nome as user_nome
+      FROM escalas e
+      JOIN users u ON u.id = e.user_id
+      JOIN eventos ev ON ev.id = e.evento_id
+      WHERE e.ministerio_id = ${ministerioId} AND ev.data >= CURRENT_DATE
+      ORDER BY ev.data, u.nome
     `
     return NextResponse.json(rows)
   }
