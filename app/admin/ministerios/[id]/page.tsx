@@ -29,6 +29,7 @@ export default function MinisterioDetailPage() {
   // Escala state
   const [eventoId, setEventoId] = useState("")
   const { data: escalas, mutate: mutateEscalas } = useSWR(eventoId ? `/api/escalas?evento_id=${eventoId}` : null, fetcher)
+  const { data: eventoPosicoes } = useSWR(eventoId ? `/api/eventos/${eventoId}/posicoes` : null, fetcher)
   const [addOpen, setAddOpen] = useState(false)
   const [addUser, setAddUser] = useState("")
   const [addFuncao, setAddFuncao] = useState("")
@@ -202,69 +203,119 @@ export default function MinisterioDetailPage() {
 
         {/* Escala */}
         <TabsContent value="escala" className="space-y-4 mt-4">
-          <div className="flex items-end gap-2">
-            <div className="flex-1">
-              <Label>Evento</Label>
-              <Select value={eventoId} onValueChange={setEventoId}>
-                <SelectTrigger><SelectValue placeholder="Selecione um evento" /></SelectTrigger>
-                <SelectContent>
-                  {futureEventos?.map((ev: any) => (
-                    <SelectItem key={ev.id} value={ev.id}>
-                      {ev.titulo} — {new Date(ev.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}{ev.horario ? ` ${ev.horario}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {eventoId && (
-              <Button onClick={() => { setAddOpen(true); setAddUser(""); setAddFuncao("") }}>
-                <Plus className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Escalar</span>
-              </Button>
-            )}
-          </div>
+          {!eventoId ? (
+            <>
+              <p className="text-sm text-muted-foreground">Selecione um evento para gerenciar a escala:</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {futureEventos?.map((ev: any) => {
+                  const d = new Date(ev.data)
+                  const dia = d.toLocaleDateString("pt-BR", { day: "2-digit", timeZone: "UTC" })
+                  const mes = d.toLocaleDateString("pt-BR", { month: "short", timeZone: "UTC" }).replace(".", "")
+                  return (
+                    <Card key={ev.id} className="cursor-pointer hover:border-primary/30 transition-colors" onClick={() => setEventoId(ev.id)}>
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <div className="flex flex-col items-center justify-center rounded-lg bg-primary/10 text-primary min-w-[3rem] py-2 px-2">
+                          <span className="text-lg font-bold leading-none">{dia}</span>
+                          <span className="text-[10px] uppercase font-medium mt-0.5">{mes}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-sm truncate">{ev.titulo}</p>
+                          <p className="text-xs text-muted-foreground">{ev.horario || ev.tipo}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+                {(!futureEventos || futureEventos.length === 0) && (
+                  <p className="text-center text-muted-foreground py-4 col-span-full">Nenhum evento futuro.</p>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <Button variant="ghost" size="sm" onClick={() => setEventoId("")}>
+                  ← Voltar aos eventos
+                </Button>
+                <Button onClick={() => { setAddOpen(true); setAddUser(""); setAddFuncao("") }}>
+                  <Plus className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Escalar</span>
+                </Button>
+              </div>
 
-          {eventoId && minEscalas.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={handleShareWhatsApp}>
-                <Share2 className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Compartilhar</span>
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleNotifyEscalados} disabled={notifying}>
-                {notifying ? <Loader2 className="h-4 w-4 sm:mr-1 animate-spin" /> : <Bell className="h-4 w-4 sm:mr-1" />}
-                <span className="hidden sm:inline">Notificar</span>
-              </Button>
-            </div>
-          )}
+              {selectedEvento && (
+                <div className="flex items-center gap-3 p-3 border rounded-lg bg-muted/30">
+                  <div className="flex flex-col items-center justify-center rounded-lg bg-primary/10 text-primary min-w-[3rem] py-2 px-2">
+                    <span className="text-lg font-bold leading-none">{new Date(selectedEvento.data).toLocaleDateString("pt-BR", { day: "2-digit", timeZone: "UTC" })}</span>
+                    <span className="text-[10px] uppercase font-medium mt-0.5">{new Date(selectedEvento.data).toLocaleDateString("pt-BR", { month: "short", timeZone: "UTC" }).replace(".", "")}</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">{selectedEvento.titulo}</p>
+                    <p className="text-xs text-muted-foreground">{selectedEvento.horario || ""} {selectedEvento.tipo}</p>
+                  </div>
+                </div>
+              )}
 
-          {eventoId && minEscalas.length === 0 && (
-            <p className="text-center text-muted-foreground py-4">Nenhum membro escalado para este evento.</p>
-          )}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {minEscalas.map((e: any) => (
-            <Card key={e.id}>
-              <CardContent className="p-4 flex flex-col items-center text-center gap-2 relative">
-                <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-7 w-7 text-destructive" onClick={() => handleRemoveEscala(e.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                <Avatar className="h-14 w-14">
-                  <AvatarImage src={e.foto_url} />
-                  <AvatarFallback>{e.user_nome?.[0]}</AvatarFallback>
-                </Avatar>
+              {/* Posições necessárias */}
+              {eventoPosicoes?.filter((p: any) => p.ministerio_id === id).length > 0 && (
                 <div>
-                  <p className="text-sm font-medium">{e.user_nome}</p>
-                  {e.funcao && <p className="text-xs text-muted-foreground">{e.funcao}</p>}
+                  <p className="text-sm font-medium mb-2">Posições necessárias:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {eventoPosicoes.filter((p: any) => p.ministerio_id === id).map((p: any) => {
+                      const filled = minEscalas.filter((e: any) => e.funcao === p.funcao).length
+                      return (
+                        <Badge key={p.id} variant={filled >= p.quantidade ? "default" : "outline"} className="text-xs gap-1">
+                          {p.funcao} {filled}/{p.quantidade}
+                        </Badge>
+                      )
+                    })}
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className={`text-xs px-1.5 py-0.5 rounded ${statusBadge(e.status)}`}>{e.status}</span>
-                  {e.status === "pendente" && (
-                    <>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600" onClick={() => handleStatus(e.id, "confirmado")}><Check className="h-3 w-3" /></Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600" onClick={() => handleStatus(e.id, "recusado")}><X className="h-3 w-3" /></Button>
-                    </>
-                  )}
+              )}
+
+              {minEscalas.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" size="sm" onClick={handleShareWhatsApp}>
+                    <Share2 className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Compartilhar</span>
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleNotifyEscalados} disabled={notifying}>
+                    {notifying ? <Loader2 className="h-4 w-4 sm:mr-1 animate-spin" /> : <Bell className="h-4 w-4 sm:mr-1" />}
+                    <span className="hidden sm:inline">Notificar</span>
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-          </div>
+              )}
+
+              {minEscalas.length === 0 && (
+                <p className="text-center text-muted-foreground py-4">Nenhum membro escalado para este evento.</p>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {minEscalas.map((e: any) => (
+                <Card key={e.id}>
+                  <CardContent className="p-4 flex flex-col items-center text-center gap-2 relative">
+                    <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-7 w-7 text-destructive" onClick={() => handleRemoveEscala(e.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                    <Avatar className="h-14 w-14">
+                      <AvatarImage src={e.foto_url} />
+                      <AvatarFallback>{e.user_nome?.[0]}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-medium">{e.user_nome}</p>
+                      {e.funcao && <p className="text-xs text-muted-foreground">{e.funcao}</p>}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${statusBadge(e.status)}`}>{e.status}</span>
+                      {e.status === "pendente" && (
+                        <>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600" onClick={() => handleStatus(e.id, "confirmado")}><Check className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600" onClick={() => handleStatus(e.id, "recusado")}><X className="h-3 w-3" /></Button>
+                        </>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              </div>
+            </>
+          )}
         </TabsContent>
       </Tabs>
 

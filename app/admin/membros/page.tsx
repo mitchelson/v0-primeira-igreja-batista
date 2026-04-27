@@ -53,7 +53,7 @@ export default function MembrosAdminPage() {
     toast({ title: isLider ? "Removido como líder" : "Promovido a líder" }); mutate()
   }
 
-  const roleColor = (role: string) => role === "admin" ? "bg-red-100 text-red-700" : role === "lider" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"
+  const roleColor = (role: string) => role === "admin" ? "bg-red-100 text-red-700" : role === "supervisor" ? "bg-purple-100 text-purple-700" : role === "lider" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"
 
   return (
     <div className="space-y-6">
@@ -120,6 +120,7 @@ export default function MembrosAdminPage() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="supervisor">Supervisor</SelectItem>
                     <SelectItem value="lider">Líder</SelectItem>
                     <SelectItem value="membro">Membro</SelectItem>
                   </SelectContent>

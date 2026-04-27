@@ -150,73 +150,92 @@ export default function EscalasAdminPage() {
         )}
       </div>
 
-      <div>
-        <Label>Selecione o evento</Label>
-        <Select value={eventoId} onValueChange={setEventoId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Escolha um evento" />
-          </SelectTrigger>
-          <SelectContent>
-            {futureEventos?.map((ev: any) => (
-              <SelectItem key={ev.id} value={ev.id}>
-                {ev.titulo} — {new Date(ev.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}
-                {ev.horario ? ` ${ev.horario}` : ""}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {eventoId && escalas && (
+      {!eventoId ? (
         <>
-          {activeMinisterios.length === 0 && escalas.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              Nenhum membro escalado para este evento.
-            </p>
-          ) : (
-            <Tabs defaultValue={activeMinisterios[0]?.[0] || "all"}>
-              <TabsList className="flex-wrap h-auto">
-                <TabsTrigger value="all">Todos ({escalas.length})</TabsTrigger>
-                {activeMinisterios.map(([id, v]: any) => (
-                  <TabsTrigger key={id} value={id}>
-                    {v.icone} {v.nome} ({v.escalas.length})
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+          <p className="text-sm text-muted-foreground">Selecione um evento para gerenciar escalas:</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {futureEventos?.map((ev: any) => {
+              const d = new Date(ev.data);
+              const dia = d.toLocaleDateString("pt-BR", { day: "2-digit", timeZone: "UTC" });
+              const mes = d.toLocaleDateString("pt-BR", { month: "short", timeZone: "UTC" }).replace(".", "");
+              return (
+                <Card key={ev.id} className="cursor-pointer hover:border-primary/30 transition-colors" onClick={() => setEventoId(ev.id)}>
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="flex flex-col items-center justify-center rounded-lg bg-primary/10 text-primary min-w-[3rem] py-2 px-2">
+                      <span className="text-lg font-bold leading-none">{dia}</span>
+                      <span className="text-[10px] uppercase font-medium mt-0.5">{mes}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm truncate">{ev.titulo}</p>
+                      <p className="text-xs text-muted-foreground">{ev.horario || ev.tipo}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+            {(!futureEventos || futureEventos.length === 0) && (
+              <p className="text-center text-muted-foreground py-8 col-span-full">Nenhum evento futuro.</p>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <Button variant="ghost" size="sm" onClick={() => setEventoId("")}>
+            ← Voltar aos eventos
+          </Button>
 
-              <TabsContent
-                value="all"
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4"
-              >
-                {escalas.map((e: any) => (
-                  <EscalaRow
-                    key={e.id}
-                    e={e}
-                    onRemove={handleRemove}
-                    onStatus={handleStatus}
-                    statusBadge={statusBadge}
-                  />
-                ))}
-              </TabsContent>
+          {escalas && (
+            <>
+              {activeMinisterios.length === 0 && escalas.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  Nenhum membro escalado para este evento.
+                </p>
+              ) : (
+                <Tabs defaultValue={activeMinisterios[0]?.[0] || "all"}>
+                  <TabsList className="flex-wrap h-auto">
+                    <TabsTrigger value="all">Todos ({escalas.length})</TabsTrigger>
+                    {activeMinisterios.map(([id, v]: any) => (
+                      <TabsTrigger key={id} value={id}>
+                        {v.icone} {v.nome} ({v.escalas.length})
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
 
-              {activeMinisterios.map(([id, v]: any) => (
-                <TabsContent
-                  key={id}
-                  value={id}
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4"
-                >
-                  {v.escalas.map((e: any) => (
-                    <EscalaRow
-                      key={e.id}
-                      e={e}
-                      onRemove={handleRemove}
-                      onStatus={handleStatus}
-                      statusBadge={statusBadge}
-                    />
+                  <TabsContent
+                    value="all"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4"
+                  >
+                    {escalas.map((e: any) => (
+                      <EscalaRow
+                        key={e.id}
+                        e={e}
+                        onRemove={handleRemove}
+                        onStatus={handleStatus}
+                        statusBadge={statusBadge}
+                      />
+                    ))}
+                  </TabsContent>
+
+                  {activeMinisterios.map(([id, v]: any) => (
+                    <TabsContent
+                      key={id}
+                      value={id}
+                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4"
+                    >
+                      {v.escalas.map((e: any) => (
+                        <EscalaRow
+                          key={e.id}
+                          e={e}
+                          onRemove={handleRemove}
+                          onStatus={handleStatus}
+                          statusBadge={statusBadge}
+                        />
+                      ))}
+                    </TabsContent>
                   ))}
-                </TabsContent>
-              ))}
-            </Tabs>
+                </Tabs>
+              )}
+            </>
           )}
         </>
       )}

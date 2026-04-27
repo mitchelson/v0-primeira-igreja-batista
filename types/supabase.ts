@@ -132,3 +132,30 @@ export function isValidFaixaEtaria(faixa: string): faixa is FaixaEtariaType {
 export function isValidCivilStatus(status: string): status is CivilStatusType {
   return Object.values(CivilStatusEnum).includes(status as CivilStatusType)
 }
+
+// --- Evento models/positions types ---
+
+export interface EventoModelo {
+  id: string
+  nome: string
+  tipo: string
+  horario: string | null
+  descricao: string | null
+  criado_em: string
+  posicoes?: EventoPosicao[]
+}
+
+export interface EventoPosicao {
+  id: string
+  evento_id: string | null
+  modelo_id: string | null
+  ministerio_id: string
+  funcao: string
+  quantidade: number
+  criado_em: string
+  ministerio_nome?: string
+  ministerio_icone?: string
+}
+
+// Role types
+export type UserRole = "admin" | "supervisor" | "lider" | "membro"

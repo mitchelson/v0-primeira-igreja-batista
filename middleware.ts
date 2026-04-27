@@ -32,14 +32,14 @@ export default auth((req) => {
 
   const role = session.user?.role
 
-  // /admin/** → apenas admin e lider
+  // /admin/** → apenas admin, supervisor e lider
   if (pathname.startsWith("/admin")) {
-    if (role !== "admin" && role !== "lider") {
+    if (role !== "admin" && role !== "supervisor" && role !== "lider") {
       return NextResponse.redirect(new URL("/minha-area", req.url))
     }
 
-    // Líderes podem acessar /admin/ministerios/[id] (validação de pertencimento é feita no client)
-    if (ministerioDetailRegex.test(pathname) && role === "lider") {
+    // Líderes e supervisores podem acessar /admin/ministerios/[id]
+    if (ministerioDetailRegex.test(pathname) && (role === "lider" || role === "supervisor")) {
       return NextResponse.next()
     }
 
