@@ -53,10 +53,17 @@ export default function EventosAdminPage() {
     const method = editing ? "PUT" : "POST"
     const url = editing ? `/api/eventos/${editing.id}` : "/api/eventos"
     const payload = { ...form, modelo_id: form.modelo_id || null }
-    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
-    if (res.ok) {
-      toast({ title: editing ? "Evento atualizado" : "Evento criado" })
-      mutate(); setOpen(false); resetForm()
+    try {
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+      if (res.ok) {
+        toast({ title: editing ? "Evento atualizado" : "Evento criado" })
+        mutate(); setOpen(false); resetForm()
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast({ title: "Erro ao salvar evento", description: data.error || "Tente novamente", variant: "destructive" })
+      }
+    } catch {
+      toast({ title: "Erro de conexão", description: "Verifique sua internet e tente novamente", variant: "destructive" })
     }
   }
 
