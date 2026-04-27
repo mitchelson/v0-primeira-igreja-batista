@@ -7,6 +7,7 @@ import useSWR from "swr"
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Home, Users, MessageSquare, UserCog, Calendar, ClipboardList, Plus, Settings } from "lucide-react"
@@ -30,7 +31,9 @@ export function AdminSidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
   const { data: ministerios } = useSWR("/api/ministerios", fetcher, { refreshInterval: 30000 })
+  const { setOpenMobile } = useSidebar()
   const role = session?.user?.role
+  const closeMobile = () => setOpenMobile(false)
 
   return (
     <Sidebar>
@@ -46,7 +49,7 @@ export function AdminSidebar() {
               {fixedItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild isActive={pathname === item.href}>
-                    <Link href={item.href}>
+                    <Link href={item.href} onClick={closeMobile}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
                     </Link>
@@ -65,7 +68,7 @@ export function AdminSidebar() {
               {ministerios?.filter((m: any) => m.ativo).map((m: any) => (
                 <SidebarMenuItem key={m.id}>
                   <SidebarMenuButton asChild isActive={pathname === `/admin/ministerios/${m.id}`}>
-                    <Link href={`/admin/ministerios/${m.id}`}>
+                    <Link href={`/admin/ministerios/${m.id}`} onClick={closeMobile}>
                       <span className="text-base leading-none">{m.icone || "⛪"}</span>
                       <span>{m.nome}</span>
                     </Link>
@@ -75,7 +78,7 @@ export function AdminSidebar() {
               {role === "admin" && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={pathname === "/admin/ministerios"}>
-                    <Link href="/admin/ministerios">
+                    <Link href="/admin/ministerios" onClick={closeMobile}>
                       <Plus className="h-4 w-4" />
                       <span>Gerenciar</span>
                     </Link>
@@ -95,7 +98,7 @@ export function AdminSidebar() {
                 {adminOnlyItems.map((item) => (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={pathname === item.href}>
-                      <Link href={item.href}>
+                      <Link href={item.href} onClick={closeMobile}>
                         <item.icon className="h-4 w-4" />
                         <span>{item.title}</span>
                       </Link>
