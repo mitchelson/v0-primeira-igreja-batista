@@ -5,17 +5,13 @@ import { sql } from "@/lib/neon";
 export const dynamic = "force-dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Calendar,
-  Music,
-  ClipboardList,
-} from "lucide-react";
+import { Calendar, Music, ClipboardList } from "lucide-react";
 import Header from "@/components/header";
 import { EscalaCard } from "./escala-card";
 import { PendenciasMensagens } from "./pendencias-mensagens";
 import { SolicitarMinisterio } from "./solicitar-ministerio";
 import { PushNotificationRegister } from "@/components/push-notification-register";
-import { PullToRefresh } from "@/components/pull-to-refresh"
+import { PullToRefresh } from "@/components/pull-to-refresh";
 import { EditarNome } from "./editar-nome";
 
 export default async function MinhaAreaPage() {
@@ -24,14 +20,18 @@ export default async function MinhaAreaPage() {
 
   const userId = session.user.id;
 
-  const [escalas, ministerios, userInfo] = await Promise.all([
+  const [eventos, ministerios, userInfo] = await Promise.all([
     sql`
-      SELECT e.id, e.funcao, e.status, e.evento_id, e.ministerio_id, ev.titulo, ev.data, ev.horario, m.nome as ministerio
-      FROM escalas e
-      JOIN eventos ev ON ev.id = e.evento_id
-      JOIN ministerios m ON m.id = e.ministerio_id
-      WHERE e.user_id = ${userId} AND ev.data >= CURRENT_DATE
-      ORDER BY ev.data ASC
+      SELECT e.id, e.titulo, e.data, e.horario, e.observacoes,
+             CASE WHEN es.user_id IS NOT NULL THEN true ELSE false END as is_escalado,
+             es.id as escala_id, es.funcao as minha_funcao, es.status as meu_status, es.observacao as minha_observacao,
+             m.nome as ministerio, m.icone, m.cor
+      FROM eventos e
+      LEFT JOIN escalas es ON es.evento_id = e.id AND es.user_id = ${userId}
+      LEFT JOIN ministerios m ON m.id = es.ministerio_id
+      WHERE e.data >= CURRENT_DATE
+      ORDER BY e.data ASC
+      LIMIT 4
     `,
     sql`
       SELECT m.nome, m.icone, m.cor, mm.is_lider
@@ -43,28 +43,26 @@ export default async function MinhaAreaPage() {
     sql`SELECT criado_em FROM users WHERE id = ${userId}`,
   ]);
 
-  // Buscar colegas de escala (mesmo evento + mesmo ministério)
-  const escalaIds = escalas.map((e: any) => ({
-    evento_id: e.evento_id,
-    ministerio_id: e.ministerio_id,
-  }));
-  let colegas: Record<string, any[]> = {};
-  if (escalaIds.length > 0) {
+  // Buscar colegas de escala para cada evento
+  const eventoIds = eventos.map((e: any) => e.id);
+  let colegasPorEvento: Record<string, any[]> = {};
+  if (eventoIds.length > 0) {
     const colegasRows = await sql`
-      SELECT e.evento_id, e.ministerio_id, u.nome, e.funcao
+      SELECT e.evento_id, u.nome, u.foto_url, e.funcao, m.nome as ministerio
       FROM escalas e
       JOIN users u ON u.id = e.user_id
-      WHERE e.user_id != ${userId}
-        AND (e.evento_id, e.ministerio_id) IN (
-          SELECT evento_id, ministerio_id FROM escalas WHERE user_id = ${userId}
-            AND evento_id IN (SELECT id FROM eventos WHERE data >= CURRENT_DATE)
-        )
-      ORDER BY u.nome
+      JOIN ministerios m ON m.id = e.ministerio_id
+      WHERE e.evento_id = ANY(${eventoIds})
+      ORDER BY m.nome, u.nome
     `;
     for (const c of colegasRows) {
-      const key = `${c.evento_id}_${c.ministerio_id}`;
-      if (!colegas[key]) colegas[key] = [];
-      colegas[key].push(c);
+      if (!colegasPorEvento[c.evento_id]) colegasPorEvento[c.evento_id] = [];
+      colegasPorEvento[c.evento_id].push({
+        nome: c.nome,
+        foto_url: c.foto_url,
+        funcao: c.funcao,
+        ministerio: c.ministerio,
+      });
     }
   }
 
@@ -72,7 +70,9 @@ export default async function MinhaAreaPage() {
     userInfo[0] &&
     Date.now() - new Date(userInfo[0].criado_em).getTime() < 60_000;
 
-  const pendentes = escalas.filter((e: any) => e.status === "pendente").length;
+  const pendentes = eventos.filter(
+    (e: any) => e.is_escalado && e.meu_status === "pendente",
+  ).length;
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -126,7 +126,7 @@ export default async function MinhaAreaPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {escalas.length === 0 ? (
+              {eventos.length === 0 ? (
                 <div className="text-center py-8">
                   <Calendar className="h-10 w-10 mx-auto text-muted-foreground/40 mb-2" />
                   <p className="text-sm text-muted-foreground">
@@ -135,23 +135,26 @@ export default async function MinhaAreaPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {escalas.map((e: any) => {
-                    const key = `${e.evento_id}_${e.ministerio_id}`;
-                    const cols = colegas[key] || [];
+                  {eventos.map((e: any) => {
+                    const cols = colegasPorEvento[e.id] || [];
                     return (
                       <EscalaCard
                         key={e.id}
-                        escala={{
+                        evento={{
                           id: e.id,
                           titulo: e.titulo,
                           data: e.data,
                           horario: e.horario,
+                          observacoes: e.observacoes,
+                          is_escalado: e.is_escalado,
+                          escala_id: e.escala_id,
+                          minha_funcao: e.minha_funcao,
+                          meu_status: e.meu_status,
+                          minha_observacao: e.minha_observacao,
                           ministerio: e.ministerio,
                           icone: e.icone,
-                          funcao: e.funcao,
-                          status: e.status,
                         }}
-                        colegas={cols.map((c: any) => ({ nome: c.nome, funcao: c.funcao }))}
+                        colegas={cols}
                       />
                     );
                   })}
