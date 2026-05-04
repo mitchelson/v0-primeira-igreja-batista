@@ -105,7 +105,7 @@ export default async function MinhaAreaPage() {
                 {pendentes > 1 ? "s" : ""}
               </p>
             )}
-            {pendentes === 0 && escalas.length > 0 && (
+            {pendentes === 0 && eventos.length > 0 && (
               <p className="text-sm text-muted-foreground mt-1">
                 Tudo em dia! ✅
               </p>
