@@ -92,6 +92,7 @@ export default function MembrosAdminPage() {
               </Avatar>
               <div>
                 <p className="font-medium text-sm truncate max-w-full">{u.nome}</p>
+                <p className="text-[11px] text-muted-foreground truncate max-w-full">{u.email}</p>
                 <span className={`text-xs px-1.5 py-0.5 rounded ${roleColor(u.role)}`}>{u.role}</span>
                 {!u.ativo && <Badge variant="destructive" className="text-xs ml-1">Inativo</Badge>}
               </div>
@@ -111,7 +112,10 @@ export default function MembrosAdminPage() {
 
       <Dialog open={!!editUser} onOpenChange={(v) => { if (!v) setEditUser(null) }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Editar {editUser?.nome}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Editar {editUser?.nome}</DialogTitle>
+            {editUser?.email && <p className="text-sm text-muted-foreground">{editUser.email}</p>}
+          </DialogHeader>
           {editUser && (
             <div className="space-y-4">
               <div>

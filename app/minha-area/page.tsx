@@ -15,7 +15,8 @@ import { EscalaCard } from "./escala-card";
 import { PendenciasMensagens } from "./pendencias-mensagens";
 import { SolicitarMinisterio } from "./solicitar-ministerio";
 import { PushNotificationRegister } from "@/components/push-notification-register";
-import { PullToRefresh } from "@/components/pull-to-refresh";
+import { PullToRefresh } from "@/components/pull-to-refresh"
+import { EditarNome } from "./editar-nome";
 
 export default async function MinhaAreaPage() {
   const session = await auth();
@@ -90,8 +91,9 @@ export default async function MinhaAreaPage() {
           )}
           {/* Greeting */}
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">
+            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-1">
               Olá, {session.user.name?.split(" ")[0]}! 👋
+              <EditarNome nomeAtual={session.user.name ?? ""} />
             </h1>
             {pendentes > 0 && (
               <p className="text-sm text-muted-foreground mt-1">
