@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Search, UserCog, Plus, X, Crown } from "lucide-react"
+import { Search, Plus, X, Crown, Trash2 } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -23,6 +24,7 @@ export default function MembrosAdminPage() {
   const [filterMin, setFilterMin] = useState("all")
   const [editUser, setEditUser] = useState<any>(null)
   const [addMinId, setAddMinId] = useState("")
+  const [editNome, setEditNome] = useState("")
 
   const filtered = users?.filter((u: any) => {
     const matchSearch = !search || u.nome.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase())
@@ -46,6 +48,11 @@ export default function MembrosAdminPage() {
   const handleRemoveMinisterio = async (userId: string, ministerioId: string) => {
     await fetch("/api/users/ministerios", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: userId, ministerio_id: ministerioId }) })
     toast({ title: "Ministério desvinculado" }); mutate()
+  }
+
+  const handleDelete = async (id: string) => {
+    await fetch("/api/users", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) })
+    toast({ title: "Usuário deletado" }); setEditUser(null); mutate()
   }
 
   const handleToggleLider = async (userId: string, ministerioId: string, isLider: boolean) => {
@@ -84,7 +91,7 @@ export default function MembrosAdminPage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {filtered?.map((u: any) => (
-          <Card key={u.id} className="cursor-pointer hover:border-primary/30 transition-colors" onClick={() => setEditUser(u)}>
+          <Card key={u.id} className="cursor-pointer hover:border-primary/30 transition-colors" onClick={() => { setEditUser(u); setEditNome(u.nome) }}>
             <CardContent className="p-4 flex flex-col items-center text-center gap-2">
               <Avatar className="h-14 w-14">
                 <AvatarImage src={u.foto_url} />
@@ -113,11 +120,20 @@ export default function MembrosAdminPage() {
       <Dialog open={!!editUser} onOpenChange={(v) => { if (!v) setEditUser(null) }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar {editUser?.nome}</DialogTitle>
+            <DialogTitle>Editar membro</DialogTitle>
             {editUser?.email && <p className="text-sm text-muted-foreground">{editUser.email}</p>}
           </DialogHeader>
           {editUser && (
             <div className="space-y-4">
+              <div>
+                <Label>Nome</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input value={editNome} onChange={e => setEditNome(e.target.value)} placeholder="Nome do membro" />
+                  <Button size="sm" disabled={!editNome.trim() || editNome === editUser.nome} onClick={() => { handleUpdate(editUser.id, { nome: editNome }); setEditUser({ ...editUser, nome: editNome }) }}>
+                    Salvar
+                  </Button>
+                </div>
+              </div>
               <div>
                 <Label>Papel</Label>
                 <Select value={editUser.role} onValueChange={v => { handleUpdate(editUser.id, { role: v }); setEditUser({ ...editUser, role: v }) }}>
@@ -167,6 +183,30 @@ export default function MembrosAdminPage() {
                   </Select>
                   <Button size="sm" onClick={() => handleAddMinisterio(editUser.id)}><Plus className="h-4 w-4" /></Button>
                 </div>
+              </div>
+
+              <div className="pt-2 border-t">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm" className="w-full gap-2">
+                      <Trash2 className="h-4 w-4" /> Deletar usuário
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Deletar {editUser.nome}?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta ação é irreversível. O usuário e todos os seus dados serão removidos permanentemente.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => handleDelete(editUser.id)}>
+                        Deletar
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           )}
