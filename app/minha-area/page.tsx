@@ -90,26 +90,28 @@ export default async function MinhaAreaPage() {
             </div>
           )}
           {/* Greeting */}
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-1">
-              Olá, {session.user.name?.split(" ")[0]}! 👋
-              <EditarNome nomeAtual={session.user.name ?? ""} />
-            </h1>
-            {pendentes > 0 && (
-              <p className="text-sm text-muted-foreground mt-1">
-                Você tem{" "}
-                <span className="font-semibold text-orange-600">
-                  {pendentes}
-                </span>{" "}
-                escala{pendentes > 1 ? "s" : ""} pendente
-                {pendentes > 1 ? "s" : ""}
-              </p>
-            )}
-            {pendentes === 0 && eventos.length > 0 && (
-              <p className="text-sm text-muted-foreground mt-1">
-                Tudo em dia! ✅
-              </p>
-            )}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-1">
+                Olá, {session.user.name?.split(" ")[0]}! 👋
+                <EditarNome nomeAtual={session.user.name ?? ""} />
+              </h1>
+              {pendentes > 0 && (
+                <p className="text-[13px] text-gray-500 mt-1">
+                  Você tem{" "}
+                  <span className="font-semibold text-orange-600">
+                    {pendentes}
+                  </span>{" "}
+                  escala{pendentes > 1 ? "s" : ""} pendente
+                  {pendentes > 1 ? "s" : ""}
+                </p>
+              )}
+              {pendentes === 0 && eventos.length > 0 && (
+                <p className="text-[13px] text-green-600 mt-1">
+                  Tudo em dia! ✅
+                </p>
+              )}
+            </div>
           </div>
 
           <PushNotificationRegister />
@@ -118,24 +120,24 @@ export default async function MinhaAreaPage() {
 
           {ministerios.length === 0 && <SolicitarMinisterio />}
 
-          <Card className="shadow-sm">
+          <Card className="rounded-2xl border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <ClipboardList className="h-5 w-5 text-primary" />
+              <CardTitle className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                <ClipboardList className="h-4 w-4 text-gray-500" />
                 Próximas Escalas
               </CardTitle>
             </CardHeader>
             <CardContent>
               {eventos.length === 0 ? (
                 <div className="text-center py-8">
-                  <Calendar className="h-10 w-10 mx-auto text-muted-foreground/40 mb-2" />
-                  <p className="text-sm text-muted-foreground">
+                  <Calendar className="h-10 w-10 mx-auto text-gray-300 mb-2" />
+                  <p className="text-[13px] text-gray-500">
                     Nenhuma escala futura
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {eventos.map((e: any) => {
+                <div className="flex flex-col gap-3">
+                  {eventos.map((e: any, i: number) => {
                     const cols = colegasPorEvento[e.id] || [];
                     return (
                       <EscalaCard
@@ -156,6 +158,7 @@ export default async function MinhaAreaPage() {
                         }}
                         colegas={cols}
                         userName={session.user.name?.split(" ")[0] || ""}
+                        isNext={i === 0}
                       />
                     );
                   })}
@@ -165,27 +168,27 @@ export default async function MinhaAreaPage() {
           </Card>
 
           {/* Ministérios */}
-          <Card className="shadow-sm">
+          <Card className="rounded-2xl border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Music className="h-5 w-5 text-primary" />
+              <CardTitle className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                <Music className="h-4 w-4 text-gray-500" />
                 Meus Ministérios
               </CardTitle>
             </CardHeader>
             <CardContent>
               {ministerios.length === 0 ? (
                 <div className="text-center py-8">
-                  <Music className="h-10 w-10 mx-auto text-muted-foreground/40 mb-2" />
-                  <p className="text-sm text-muted-foreground">
+                  <Music className="h-10 w-10 mx-auto text-gray-300 mb-2" />
+                  <p className="text-[13px] text-gray-500">
                     Nenhum ministério vinculado
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-2">
+                <div className="flex flex-col gap-3">
                   {ministerios.map((m: any) => (
                     <div
                       key={m.nome}
-                      className="flex items-center gap-3 rounded-xl border p-3"
+                      className="flex items-center gap-3 rounded-xl border border-gray-200 p-3"
                       style={{
                         borderLeftWidth: 4,
                         borderLeftColor: m.cor || "hsl(var(--primary))",
@@ -193,7 +196,7 @@ export default async function MinhaAreaPage() {
                     >
                       <span className="text-xl">{m.icone || "🎵"}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{m.nome}</p>
+                        <p className="font-medium text-sm text-gray-900 truncate">{m.nome}</p>
                         {m.is_lider && (
                           <span className="text-[11px] text-amber-600 font-medium">
                             ★ Líder

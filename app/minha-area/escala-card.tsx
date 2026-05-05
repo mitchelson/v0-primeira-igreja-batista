@@ -36,107 +36,101 @@ interface EscalaCardProps {
   };
   colegas: Colega[];
   userName?: string;
+  isNext?: boolean;
 }
 
 function formatHorario(h: string) {
   return h.replace(/(\d{2}:\d{2})(:\d{2})/, "$1");
 }
 
-export function EscalaCard({ evento, colegas, userName }: EscalaCardProps) {
+export function EscalaCard({ evento, colegas, userName, isNext }: EscalaCardProps) {
   const data = new Date(evento.data);
-  const dia = data.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    timeZone: "UTC",
-  });
-  const mes = data
-    .toLocaleDateString("pt-BR", { month: "short", timeZone: "UTC" })
-    .replace(".", "");
-  const diaSemana = data
-    .toLocaleDateString("pt-BR", { weekday: "short", timeZone: "UTC" })
-    .replace(".", "");
+  const dia = data.toLocaleDateString("pt-BR", { day: "2-digit", timeZone: "UTC" });
+  const mes = data.toLocaleDateString("pt-BR", { month: "short", timeZone: "UTC" }).replace(".", "");
+  const diaSemana = data.toLocaleDateString("pt-BR", { weekday: "short", timeZone: "UTC" }).replace(".", "");
   const isPendente = evento.is_escalado && evento.meu_status === "pendente";
   const isEscalado = evento.is_escalado;
   const horarioFormatado = evento.horario ? formatHorario(evento.horario) : null;
+
+  const cardClass = isNext
+    ? "border-blue-600 bg-blue-50/50"
+    : isPendente
+      ? "border-orange-300 bg-orange-50/50 ring-1 ring-orange-200"
+      : "border-gray-200 bg-white";
 
   return (
     <Sheet>
       <SheetTrigger asChild>
         <button
-          className={`w-full text-left rounded-xl border overflow-hidden ${isPendente ? "border-orange-300 bg-orange-50/50 ring-1 ring-orange-200" : isEscalado ? "bg-card" : "bg-muted/20"}`}
+          className={`w-full text-left rounded-2xl border p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(0,0,0,0.08)] ${cardClass}`}
         >
-          <div className="flex items-stretch">
-            {/* Date sidebar */}
+          <div className="flex items-center gap-3">
+            {/* Date box */}
             <div
-              className={`flex flex-col items-center justify-center w-16 py-4 shrink-0 ${isPendente ? "bg-orange-100 text-orange-700" : isEscalado ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
+              className={`flex flex-col items-center justify-center rounded-xl p-2.5 min-w-[60px] ${
+                isNext ? "bg-blue-100 text-blue-700" : isPendente ? "bg-orange-100 text-orange-700" : "bg-gray-100 text-gray-700"
+              }`}
             >
-              <span className="text-2xl font-bold leading-none">{dia}</span>
-              <span className="text-[10px] uppercase font-semibold tracking-wide mt-1">
-                {mes}
-              </span>
-              <span className="text-[10px] text-muted-foreground capitalize mt-0.5">
-                {diaSemana}
-              </span>
+              <span className="text-xl font-bold leading-none">{dia}</span>
+              <span className="text-xs text-gray-500 uppercase font-semibold mt-0.5">{mes}</span>
+              <span className="text-[10px] text-gray-400 capitalize">{diaSemana}</span>
             </div>
 
-            {/* Content */}
-            <div className="flex flex-1 min-w-0 items-center p-3 gap-2">
-              <div className="flex flex-col flex-1 min-w-0 gap-1">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-semibold text-sm leading-tight">
-                    {evento.titulo}
-                  </p>
-                  {isPendente && (
-                    <Badge className="bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100 text-[10px] shrink-0">
-                      Pendente
-                    </Badge>
-                  )}
-                  {!isEscalado && (
-                    <Badge variant="outline" className="text-[10px] shrink-0">
-                      Não escalado
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                  {horarioFormatado && (
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {horarioFormatado}
-                    </span>
-                  )}
-                  {isEscalado && evento.ministerio && (
-                    <span className="flex items-center gap-1">
-                      <span className="text-xl">{evento.icone || ""}</span>
-                      {evento.ministerio}
-                    </span>
-                  )}
-                  {isEscalado && evento.minha_funcao && (
-                    <Badge variant="secondary" className="text-[11px] font-normal">
-                      {userName} - {evento.minha_funcao}
-                    </Badge>
-                  )}
-                </div>
-
-                {isEscalado && evento.escala_id && (
-                  <div className="mt-1" onClick={(e) => e.stopPropagation()}>
-                    <EscalaActions
-                      id={evento.escala_id}
-                      status={evento.meu_status || ""}
-                    />
-                  </div>
+            {/* Info */}
+            <div className="flex flex-col flex-1 min-w-0 gap-1.5">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-base font-semibold text-gray-900 leading-tight">
+                  {evento.titulo}
+                </p>
+                {isPendente && (
+                  <Badge className="bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100 text-[10px] shrink-0 rounded-full px-2.5 py-0.5">
+                    Pendente
+                  </Badge>
+                )}
+                {!isEscalado && (
+                  <Badge className="bg-gray-100 text-gray-500 border-0 text-[10px] shrink-0 rounded-full px-2.5 py-0.5">
+                    Não escalado
+                  </Badge>
                 )}
               </div>
 
-              {/* Chevron */}
-              <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+                {horarioFormatado && (
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-4 w-4 text-gray-400" />
+                    {horarioFormatado}
+                  </span>
+                )}
+                {isEscalado && evento.ministerio && (
+                  <span className="flex items-center gap-1">
+                    <span>{evento.icone || ""}</span>
+                    {evento.ministerio}
+                  </span>
+                )}
+              </div>
+
+              {isEscalado && evento.minha_funcao && (
+                <Badge className="bg-green-50 text-green-700 border-0 text-xs font-medium rounded-full px-2.5 py-0.5 w-fit">
+                  {userName} - {evento.minha_funcao}
+                </Badge>
+              )}
+
+              {isEscalado && evento.escala_id && (
+                <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                  <EscalaActions id={evento.escala_id} status={evento.meu_status || ""} />
+                </div>
+              )}
             </div>
+
+            {/* Chevron */}
+            <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" />
           </div>
         </button>
       </SheetTrigger>
       <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Colegas de Escala</SheetTitle>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[13px] text-gray-500">
             {evento.titulo}{horarioFormatado ? ` • ${horarioFormatado}` : ""}{evento.observacoes ? ` • ${evento.observacoes}` : ""}
           </p>
         </SheetHeader>
@@ -148,24 +142,19 @@ export function EscalaCard({ evento, colegas, userName }: EscalaCardProps) {
             }, {})
           ).map(([ministerio, membros]) => (
             <div key={ministerio}>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
                 {ministerio}
               </p>
               <div className="space-y-2">
                 {membros.map((c, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 p-3 rounded-lg border"
-                  >
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-gray-200">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={c.foto_url} alt={c.nome} />
-                      <AvatarFallback>
-                        {c.nome.split(" ").map((n) => n[0]).join("")}
-                      </AvatarFallback>
+                      <AvatarFallback>{c.nome.split(" ").map((n) => n[0]).join("")}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{c.nome}</p>
-                      <p className="text-xs text-muted-foreground">{c.funcao || "Sem função"}</p>
+                      <p className="font-medium text-sm text-gray-900 truncate">{c.nome}</p>
+                      <p className="text-xs text-gray-400">{c.funcao || "Sem função"}</p>
                     </div>
                   </div>
                 ))}

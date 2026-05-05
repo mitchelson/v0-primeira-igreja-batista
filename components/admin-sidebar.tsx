@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useSession } from "next-auth/react"
 import useSWR from "swr"
@@ -38,7 +39,9 @@ export function AdminSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
-        <Link href="/" className="font-bold text-lg">PIB Roraima</Link>
+        <Link href="/">
+          <Image src="/pib-logo-black.png" alt="PIB Roraima" width={120} height={40} className="h-8 w-auto" />
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         {/* Navegação principal */}

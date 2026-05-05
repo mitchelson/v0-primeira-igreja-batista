@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Menu, LogOut } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -23,8 +24,8 @@ export default function Header() {
   return (
     <header className="border-b">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="font-bold text-xl">
-          PIB Roraima
+        <Link href="/" className="flex items-center">
+          <Image src="/pib-logo-black.png" alt="PIB Roraima" width={120} height={40} className="h-8 w-auto" />
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">

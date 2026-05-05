@@ -17,8 +17,8 @@ export default function HomeLanding() {
       {/* ── Navbar ── */}
       <nav className="fixed top-0 inset-x-0 z-50 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="text-xl font-bold tracking-tight">
-            PIB<span className="text-[#c9a84c]"> Roraima</span>
+          <Link href="/">
+            <Image src="/pib-logo-white.png" alt="PIB Roraima" width={120} height={40} className="h-8 w-auto" />
           </Link>
           <div className="hidden md:flex items-center gap-8">
             {NAV_LINKS.map((l) => (
@@ -270,8 +270,8 @@ export default function HomeLanding() {
       <footer className="bg-[#050505] border-t border-white/5 pt-16 pb-24 md:pb-12 px-4">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10">
           <div>
-            <Link href="/" className="text-xl font-bold tracking-tight">
-              PIB<span className="text-[#c9a84c]"> Roraima</span>
+            <Link href="/">
+              <Image src="/pib-logo-white.png" alt="PIB Roraima" width={120} height={40} className="h-8 w-auto" />
             </Link>
             <p className="text-sm text-gray-500 mt-3 leading-relaxed">
               Uma comunidade apaixonada por Jesus, dedicada à transformação de vidas através do evangelho.
