@@ -1,13 +1,8 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Clock, Users, ChevronDown, Music } from "lucide-react";
+import { Clock, ChevronRight } from "lucide-react";
 import { EscalaActions } from "./escala-actions";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   Sheet,
   SheetContent,
@@ -115,84 +110,65 @@ export function EscalaCard({ evento, colegas, userName }: EscalaCardProps) {
               )}
             </div>
             <div className="shrink-0 flex items-center gap-2">
-              {colegas.length > 0 && (
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <button className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors">
-                      <Users className="h-3 w-3" />
-                      <span>
-                        {colegas.length} colega{colegas.length > 1 ? "s" : ""}
-                      </span>
-                    </button>
-                  </SheetTrigger>
-                  <SheetContent
-                    side="bottom"
-                    className="max-h-[80vh] overflow-y-auto"
-                  >
-                    <SheetHeader>
-                      <SheetTitle>
-                        Colegas de Escala - {evento.titulo}
-                      </SheetTitle>
-                    </SheetHeader>
-                    <div className="space-y-4 mt-4">
-                      {evento.observacoes && (
-                        <div className="rounded-lg border p-3 bg-muted/50">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Music className="h-4 w-4 text-primary" />
-                            <span className="font-medium text-sm">
-                              Observações do Evento
-                            </span>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {evento.observacoes}
-                          </p>
-                        </div>
-                      )}
-                      <div className="space-y-3">
-                        {colegas.map((c, i) => (
-                          <div
-                            key={i}
-                            className="flex items-center gap-3 p-3 rounded-lg border"
-                          >
-                            <Avatar className="h-10 w-10">
-                              <AvatarImage src={c.foto_url} alt={c.nome} />
-                              <AvatarFallback>
-                                {c.nome
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm truncate">
-                                {c.nome}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {c.ministerio} - {c.funcao || "Sem função"}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              )}
               {isEscalado && evento.escala_id && (
                 <EscalaActions
                   id={evento.escala_id}
                   status={evento.meu_status || ""}
                 />
               )}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <button className="flex items-center text-muted-foreground hover:text-foreground transition-colors">
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent
+                    side="bottom"
+                    className="max-h-[80vh] overflow-y-auto"
+                  >
+                    <SheetHeader>
+                      <SheetTitle>Colegas de Escala</SheetTitle>
+                      <p className="text-sm text-muted-foreground">
+                        {evento.titulo}{evento.horario ? ` • ${evento.horario}` : ""}{evento.observacoes ? ` • ${evento.observacoes}` : ""}
+                      </p>
+                    </SheetHeader>
+                    <div className="space-y-5 mt-4">
+                      {Object.entries(
+                        colegas.reduce<Record<string, Colega[]>>((acc, c) => {
+                          (acc[c.ministerio] ||= []).push(c);
+                          return acc;
+                        }, {})
+                      ).map(([ministerio, membros]) => (
+                        <div key={ministerio}>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                            {ministerio}
+                          </p>
+                          <div className="space-y-2">
+                            {membros.map((c, i) => (
+                              <div
+                                key={i}
+                                className="flex items-center gap-3 p-3 rounded-lg border"
+                              >
+                                <Avatar className="h-10 w-10">
+                                  <AvatarImage src={c.foto_url} alt={c.nome} />
+                                  <AvatarFallback>
+                                    {c.nome.split(" ").map((n) => n[0]).join("")}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm truncate">{c.nome}</p>
+                                  <p className="text-xs text-muted-foreground">{c.funcao || "Sem função"}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </SheetContent>
+              </Sheet>
             </div>
           </div>
-
-          {/* Observações da escala */}
-          {isEscalado && evento.minha_observacao && (
-            <div className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1">
-              <strong>Obs:</strong> {evento.minha_observacao}
-            </div>
-          )}
         </div>
       </div>
     </div>

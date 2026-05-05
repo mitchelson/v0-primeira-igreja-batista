@@ -25,11 +25,7 @@ export function EscalaActions({ id, status }: { id: string; status: string }) {
   }
 
   if (status === "confirmado")
-    return (
-      <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100 text-xs font-medium px-3 py-1.5">
-        <Check className="h-3.5 w-3.5 mr-1" />Confirmado
-      </Badge>
-    )
+    return null
 
   if (status === "recusado")
     return (
