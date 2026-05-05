@@ -1,8 +1,13 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Clock, ChevronRight } from "lucide-react";
+import { Clock, ChevronRight, ChevronDown } from "lucide-react";
 import { EscalaActions } from "./escala-actions";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Sheet,
   SheetContent,
@@ -155,54 +160,51 @@ export function EscalaCard({
       </SheetTrigger>
       <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Colegas de Escala</SheetTitle>
+          <SheetTitle>Detalhes do Evento</SheetTitle>
           <p className="text-[13px] text-gray-500">
             {evento.titulo}
             {horarioFormatado ? ` • ${horarioFormatado}` : ""}
             {evento.observacoes ? ` • ${evento.observacoes}` : ""}
           </p>
         </SheetHeader>
-        <div className="space-y-5 mt-4">
-          {Object.entries(
-            colegas.reduce<Record<string, Colega[]>>((acc, c) => {
-              (acc[c.ministerio] ||= []).push(c);
-              return acc;
-            }, {}),
-          ).map(([ministerio, membros]) => (
-            <div key={ministerio}>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
-                {ministerio}
-              </p>
-              <div className="space-y-2">
-                {membros.map((c, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 p-3 rounded-xl border border-gray-200"
-                  >
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={c.foto_url} alt={c.nome} />
-                      <AvatarFallback>
-                        {c.nome
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-gray-900 truncate">
-                        {c.nome}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {c.funcao || "Sem função"}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+
         <RepertoireSection eventoId={evento.id} />
+
+        <div className="border-t pt-4 mt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">Escalados</p>
+          <div className="space-y-2">
+            {Object.entries(
+              colegas.reduce<Record<string, Colega[]>>((acc, c) => {
+                (acc[c.ministerio] ||= []).push(c);
+                return acc;
+              }, {}),
+            ).map(([ministerio, membros]) => (
+              <Collapsible key={ministerio}>
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">
+                  <span className="text-sm font-medium text-gray-900">{ministerio}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">{membros.length}</span>
+                    <ChevronDown className="h-4 w-4 text-gray-400 transition-transform [[data-state=open]>&]:rotate-180" />
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2 space-y-2 pl-1">
+                  {membros.map((c, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-gray-200">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={c.foto_url} alt={c.nome} />
+                        <AvatarFallback>{c.nome.split(" ").map((n) => n[0]).join("")}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm text-gray-900 truncate">{c.nome}</p>
+                        <p className="text-xs text-gray-400">{c.funcao || "Sem função"}</p>
+                      </div>
+                    </div>
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
+            ))}
+          </div>
+        </div>
       </SheetContent>
     </Sheet>
   );
