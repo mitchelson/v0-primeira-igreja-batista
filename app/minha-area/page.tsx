@@ -5,7 +5,8 @@ import { sql } from "@/lib/neon";
 export const dynamic = "force-dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Music, ClipboardList } from "lucide-react";
+import { Calendar, Music, ClipboardList, Sparkles } from "lucide-react";
+import Link from "next/link";
 import Header from "@/components/header";
 import { EscalaCard } from "./escala-card";
 import { PendenciasMensagens } from "./pendencias-mensagens";
@@ -21,7 +22,7 @@ export default async function MinhaAreaPage() {
 
   const userId = session.user.id;
 
-  const [eventos, ministerios, userInfo] = await Promise.all([
+  const [eventos, ministerios, userInfo, giftResults] = await Promise.all([
     sql`
       SELECT e.id, e.titulo, e.data, e.horario, e.observacoes,
              CASE WHEN es.user_id IS NOT NULL THEN true ELSE false END as is_escalado,
@@ -42,6 +43,7 @@ export default async function MinhaAreaPage() {
       ORDER BY m.nome
     `,
     sql`SELECT criado_em FROM users WHERE id = ${userId}`,
+    sql`SELECT results FROM user_gift_results WHERE user_id = ${userId}`,
   ]);
 
   // Buscar colegas de escala para cada evento
@@ -209,6 +211,40 @@ export default async function MinhaAreaPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Dons Espirituais */}
+          <Card className="rounded-2xl border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                <Sparkles className="h-4 w-4 text-gray-500" />
+                Dons Espirituais
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {giftResults[0]?.results ? (
+                <div className="space-y-2">
+                  {(giftResults[0].results as any[]).filter((r: any) => r.rank <= 3).map((r: any) => (
+                    <div key={r.gift} className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-3">
+                      <span className="text-sm font-bold text-green-700">{r.rank}°</span>
+                      <p className="text-sm font-medium text-green-800 flex-1">{r.gift}</p>
+                      <span className="text-sm text-green-600 font-semibold">{r.score}/12</span>
+                    </div>
+                  ))}
+                  <Link href="/form-dons-espirituais" className="block text-center text-xs text-muted-foreground hover:underline mt-2">
+                    Ver resultado completo ou refazer
+                  </Link>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <Sparkles className="h-10 w-10 mx-auto text-gray-300 mb-2" />
+                  <p className="text-[13px] text-gray-500 mb-3">Descubra seus dons espirituais</p>
+                  <Link href="/form-dons-espirituais" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                    Fazer o teste
+                  </Link>
                 </div>
               )}
             </CardContent>
