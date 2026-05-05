@@ -12,6 +12,7 @@ import { PendenciasMensagens } from "./pendencias-mensagens";
 import { SolicitarMinisterio } from "./solicitar-ministerio";
 import { PushNotificationRegister } from "@/components/push-notification-register";
 import { PullToRefresh } from "@/components/pull-to-refresh";
+import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
 import { EditarNome } from "./editar-nome";
 
 export default async function MinhaAreaPage() {
@@ -115,6 +116,7 @@ export default async function MinhaAreaPage() {
           </div>
 
           <PushNotificationRegister />
+          <PwaInstallPrompt />
 
           <PendenciasMensagens />
 

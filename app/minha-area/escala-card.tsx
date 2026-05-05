@@ -138,7 +138,7 @@ export function EscalaCard({
                 </Badge>
               )}
               {!isEscalado && (
-                <Badge className="bg-gray-100 text-gray-500 border-0 text-[10px] shrink-0 rounded-full px-2.5 py-0.5">
+                <Badge className="bg-gray-100 text-gray-500 border-0 text-[10px] shrink-0 rounded-full px-2.5 py-0.5 w-fit">
                   Não escalado
                 </Badge>
               )}
@@ -171,7 +171,9 @@ export function EscalaCard({
         <RepertoireSection eventoId={evento.id} />
 
         <div className="border-t pt-4 mt-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">Escalados</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
+            Escalados
+          </p>
           <div className="space-y-2">
             {Object.entries(
               colegas.reduce<Record<string, Colega[]>>((acc, c) => {
@@ -181,22 +183,38 @@ export function EscalaCard({
             ).map(([ministerio, membros]) => (
               <Collapsible key={ministerio}>
                 <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">
-                  <span className="text-sm font-medium text-gray-900">{ministerio}</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {ministerio}
+                  </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400">{membros.length}</span>
+                    <span className="text-xs text-gray-400">
+                      {membros.length}
+                    </span>
                     <ChevronDown className="h-4 w-4 text-gray-400 transition-transform [[data-state=open]>&]:rotate-180" />
                   </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="mt-2 space-y-2 pl-1">
                   {membros.map((c, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-gray-200">
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 p-3 rounded-xl border border-gray-200"
+                    >
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={c.foto_url} alt={c.nome} />
-                        <AvatarFallback>{c.nome.split(" ").map((n) => n[0]).join("")}</AvatarFallback>
+                        <AvatarFallback>
+                          {c.nome
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-gray-900 truncate">{c.nome}</p>
-                        <p className="text-xs text-gray-400">{c.funcao || "Sem função"}</p>
+                        <p className="font-medium text-sm text-gray-900 truncate">
+                          {c.nome}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {c.funcao || "Sem função"}
+                        </p>
                       </div>
                     </div>
                   ))}
