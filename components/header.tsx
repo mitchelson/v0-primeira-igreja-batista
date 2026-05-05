@@ -3,10 +3,11 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Menu, LogOut } from "lucide-react"
+import { Menu, LogOut, RefreshCw } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useSession, signOut } from "next-auth/react"
 import useSWR from "swr"
+import { useEffect, useState } from "react"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -20,6 +21,11 @@ export default function Header() {
 
   // Admin always sees menus; others need to belong to the configured ministry
   const showMenus = isAdmin || !menuMinisterioId || userMinisterios.includes(menuMinisterioId)
+
+  const [isPwa, setIsPwa] = useState(false)
+  useEffect(() => {
+    setIsPwa(window.matchMedia("(display-mode: standalone)").matches)
+  }, [])
 
   return (
     <header className="border-b">
@@ -43,13 +49,20 @@ export default function Header() {
           )}
         </nav>
 
-        <Sheet>
-          <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Abrir menu</span>
+        <div className="flex items-center gap-1 md:hidden">
+          {isPwa && (
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400" onClick={() => window.location.reload()}>
+              <RefreshCw className="h-4 w-4" />
+              <span className="sr-only">Recarregar</span>
             </Button>
-          </SheetTrigger>
+          )}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Abrir menu</span>
+              </Button>
+            </SheetTrigger>
           <SheetContent side="right">
             <nav className="flex flex-col gap-4 mt-8">
               {showMenus && (
@@ -66,7 +79,8 @@ export default function Header() {
               )}
             </nav>
           </SheetContent>
-        </Sheet>
+          </Sheet>
+        </div>
       </div>
     </header>
   )
