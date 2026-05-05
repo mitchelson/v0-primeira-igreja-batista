@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Bell, BellOff } from "lucide-react"
+import { Bell, Check } from "lucide-react"
+import { toast } from "@/components/ui/use-toast"
 
 export function PushNotificationRegister() {
   const [supported, setSupported] = useState(false)
@@ -10,10 +11,14 @@ export function PushNotificationRegister() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return
     setSupported(true)
+
+    // Check existing subscription
     navigator.serviceWorker.ready.then((reg) =>
-      reg.pushManager.getSubscription().then((sub) => setSubscribed(!!sub))
+      reg.pushManager.getSubscription().then((sub) => {
+        if (sub) setSubscribed(true)
+      })
     )
   }, [])
 
@@ -22,6 +27,13 @@ export function PushNotificationRegister() {
   const subscribe = async () => {
     setLoading(true)
     try {
+      // Request notification permission first (required on iOS)
+      const permission = await Notification.requestPermission()
+      if (permission !== "granted") {
+        toast({ title: "Permissão negada", description: "Ative as notificações nas configurações do dispositivo.", variant: "destructive" })
+        return
+      }
+
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
@@ -33,8 +45,10 @@ export function PushNotificationRegister() {
         body: JSON.stringify(sub.toJSON()),
       })
       setSubscribed(true)
-    } catch (e) {
+      toast({ title: "Notificações ativadas ✅" })
+    } catch (e: any) {
       console.error("Push subscribe error:", e)
+      toast({ title: "Erro ao ativar", description: "Tente novamente ou verifique as permissões.", variant: "destructive" })
     } finally {
       setLoading(false)
     }
@@ -43,7 +57,7 @@ export function PushNotificationRegister() {
   return (
     <Button size="sm" onClick={subscribe} disabled={loading}>
       <Bell className="mr-2 h-4 w-4" />
-      Ativar notificações
+      {loading ? "Ativando..." : "Ativar notificações"}
     </Button>
   )
 }
