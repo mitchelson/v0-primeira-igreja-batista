@@ -38,6 +38,10 @@ interface EscalaCardProps {
   userName?: string;
 }
 
+function formatHorario(h: string) {
+  return h.replace(/(\d{2}:\d{2})(:\d{2})/, "$1");
+}
+
 export function EscalaCard({ evento, colegas, userName }: EscalaCardProps) {
   const data = new Date(evento.data);
   const dia = data.toLocaleDateString("pt-BR", {
@@ -52,125 +56,124 @@ export function EscalaCard({ evento, colegas, userName }: EscalaCardProps) {
     .replace(".", "");
   const isPendente = evento.is_escalado && evento.meu_status === "pendente";
   const isEscalado = evento.is_escalado;
+  const horarioFormatado = evento.horario ? formatHorario(evento.horario) : null;
 
   return (
-    <div
-      className={`rounded-xl border overflow-hidden ${isPendente ? "border-orange-300 bg-orange-50/50 ring-1 ring-orange-200" : isEscalado ? "bg-card" : "bg-muted/20"}`}
-    >
-      <div className="flex items-stretch">
-        {/* Date sidebar */}
-        <div
-          className={`flex flex-col items-center justify-center w-16 py-4 shrink-0 ${isPendente ? "bg-orange-100 text-orange-700" : isEscalado ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
+    <Sheet>
+      <SheetTrigger asChild>
+        <button
+          className={`w-full text-left rounded-xl border overflow-hidden ${isPendente ? "border-orange-300 bg-orange-50/50 ring-1 ring-orange-200" : isEscalado ? "bg-card" : "bg-muted/20"}`}
         >
-          <span className="text-2xl font-bold leading-none">{dia}</span>
-          <span className="text-[10px] uppercase font-semibold tracking-wide mt-1">
-            {mes}
-          </span>
-          <span className="text-[10px] text-muted-foreground capitalize mt-0.5">
-            {diaSemana}
-          </span>
-        </div>
-
-        {/* Content */}
-        <div className="flex flex-col justify-between flex-1 min-w-0 p-3 gap-2">
-          <div className="flex items-start justify-between gap-2">
-            <p className="font-semibold text-sm leading-tight">
-              {evento.titulo}
-            </p>
-            {isPendente && (
-              <Badge className="bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100 text-[10px] shrink-0">
-                Pendente
-              </Badge>
-            )}
-            {!isEscalado && (
-              <Badge variant="outline" className="text-[10px] shrink-0">
-                Não escalado
-              </Badge>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-              {evento.horario && (
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {evento.horario}
-                </span>
-              )}
-              {isEscalado && evento.ministerio && (
-                <span className="flex items-center gap-1">
-                  <span className="text-xl">{evento.icone || ""}</span>
-                  {evento.ministerio}
-                </span>
-              )}
-              {isEscalado && evento.minha_funcao && (
-                <Badge variant="secondary" className="text-[11px] font-normal">
-                  {userName} - {evento.minha_funcao}
-                </Badge>
-              )}
+          <div className="flex items-stretch">
+            {/* Date sidebar */}
+            <div
+              className={`flex flex-col items-center justify-center w-16 py-4 shrink-0 ${isPendente ? "bg-orange-100 text-orange-700" : isEscalado ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
+            >
+              <span className="text-2xl font-bold leading-none">{dia}</span>
+              <span className="text-[10px] uppercase font-semibold tracking-wide mt-1">
+                {mes}
+              </span>
+              <span className="text-[10px] text-muted-foreground capitalize mt-0.5">
+                {diaSemana}
+              </span>
             </div>
-            <div className="shrink-0 flex items-center gap-2">
-              {isEscalado && evento.escala_id && (
-                <EscalaActions
-                  id={evento.escala_id}
-                  status={evento.meu_status || ""}
-                />
-              )}
-              <Sheet>
-                <SheetTrigger asChild>
-                  <button className="flex items-center text-muted-foreground hover:text-foreground transition-colors">
-                    <ChevronRight className="h-5 w-5" />
-                  </button>
-                </SheetTrigger>
-                <SheetContent
-                    side="bottom"
-                    className="max-h-[80vh] overflow-y-auto"
+
+            {/* Content */}
+            <div className="flex flex-1 min-w-0 items-center p-3 gap-2">
+              <div className="flex flex-col flex-1 min-w-0 gap-1">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-semibold text-sm leading-tight">
+                    {evento.titulo}
+                  </p>
+                  {isPendente && (
+                    <Badge className="bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100 text-[10px] shrink-0">
+                      Pendente
+                    </Badge>
+                  )}
+                  {!isEscalado && (
+                    <Badge variant="outline" className="text-[10px] shrink-0">
+                      Não escalado
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  {horarioFormatado && (
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {horarioFormatado}
+                    </span>
+                  )}
+                  {isEscalado && evento.ministerio && (
+                    <span className="flex items-center gap-1">
+                      <span className="text-xl">{evento.icone || ""}</span>
+                      {evento.ministerio}
+                    </span>
+                  )}
+                  {isEscalado && evento.minha_funcao && (
+                    <Badge variant="secondary" className="text-[11px] font-normal">
+                      {userName} - {evento.minha_funcao}
+                    </Badge>
+                  )}
+                </div>
+
+                {isEscalado && evento.escala_id && (
+                  <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                    <EscalaActions
+                      id={evento.escala_id}
+                      status={evento.meu_status || ""}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Chevron */}
+              <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+            </div>
+          </div>
+        </button>
+      </SheetTrigger>
+      <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Colegas de Escala</SheetTitle>
+          <p className="text-sm text-muted-foreground">
+            {evento.titulo}{horarioFormatado ? ` • ${horarioFormatado}` : ""}{evento.observacoes ? ` • ${evento.observacoes}` : ""}
+          </p>
+        </SheetHeader>
+        <div className="space-y-5 mt-4">
+          {Object.entries(
+            colegas.reduce<Record<string, Colega[]>>((acc, c) => {
+              (acc[c.ministerio] ||= []).push(c);
+              return acc;
+            }, {})
+          ).map(([ministerio, membros]) => (
+            <div key={ministerio}>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                {ministerio}
+              </p>
+              <div className="space-y-2">
+                {membros.map((c, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 p-3 rounded-lg border"
                   >
-                    <SheetHeader>
-                      <SheetTitle>Colegas de Escala</SheetTitle>
-                      <p className="text-sm text-muted-foreground">
-                        {evento.titulo}{evento.horario ? ` • ${evento.horario}` : ""}{evento.observacoes ? ` • ${evento.observacoes}` : ""}
-                      </p>
-                    </SheetHeader>
-                    <div className="space-y-5 mt-4">
-                      {Object.entries(
-                        colegas.reduce<Record<string, Colega[]>>((acc, c) => {
-                          (acc[c.ministerio] ||= []).push(c);
-                          return acc;
-                        }, {})
-                      ).map(([ministerio, membros]) => (
-                        <div key={ministerio}>
-                          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-                            {ministerio}
-                          </p>
-                          <div className="space-y-2">
-                            {membros.map((c, i) => (
-                              <div
-                                key={i}
-                                className="flex items-center gap-3 p-3 rounded-lg border"
-                              >
-                                <Avatar className="h-10 w-10">
-                                  <AvatarImage src={c.foto_url} alt={c.nome} />
-                                  <AvatarFallback>
-                                    {c.nome.split(" ").map((n) => n[0]).join("")}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-sm truncate">{c.nome}</p>
-                                  <p className="text-xs text-muted-foreground">{c.funcao || "Sem função"}</p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={c.foto_url} alt={c.nome} />
+                      <AvatarFallback>
+                        {c.nome.split(" ").map((n) => n[0]).join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{c.nome}</p>
+                      <p className="text-xs text-muted-foreground">{c.funcao || "Sem função"}</p>
                     </div>
-                  </SheetContent>
-              </Sheet>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          ))}
         </div>
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }
