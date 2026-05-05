@@ -126,7 +126,7 @@ export default async function MinhaAreaPage() {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base font-semibold text-gray-900">
                 <ClipboardList className="h-4 w-4 text-gray-500" />
-                Próximas Escalas
+                Próximas Eventos
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -198,7 +198,9 @@ export default async function MinhaAreaPage() {
                     >
                       <span className="text-xl">{m.icone || "🎵"}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-gray-900 truncate">{m.nome}</p>
+                        <p className="font-medium text-sm text-gray-900 truncate">
+                          {m.nome}
+                        </p>
                         {m.is_lider && (
                           <span className="text-[11px] text-amber-600 font-medium">
                             ★ Líder
