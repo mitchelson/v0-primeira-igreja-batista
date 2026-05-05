@@ -3,7 +3,7 @@ import { sql } from "@/lib/neon"
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { titulo, data, horario, descricao, tipo, observacoes } = await req.json()
+  const { titulo, data, horario, descricao, tipo, observacoes, repertorio_ministerio_id, repertorio_funcao } = await req.json()
   const rows = await sql`
     UPDATE eventos SET
       titulo = COALESCE(${titulo}, titulo),
@@ -11,7 +11,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       horario = COALESCE(${horario}, horario),
       descricao = COALESCE(${descricao}, descricao),
       tipo = COALESCE(${tipo}, tipo),
-      observacoes = COALESCE(${observacoes}, observacoes)
+      observacoes = COALESCE(${observacoes}, observacoes),
+      repertorio_ministerio_id = ${repertorio_ministerio_id ?? null},
+      repertorio_funcao = ${repertorio_funcao ?? null}
     WHERE id = ${id}
     RETURNING *
   `

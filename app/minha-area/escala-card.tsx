@@ -11,6 +11,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { RepertoireSection } from "./repertoire-section";
 
 interface Colega {
   nome: string;
@@ -43,14 +44,28 @@ function formatHorario(h: string) {
   return h.replace(/(\d{2}:\d{2})(:\d{2})/, "$1");
 }
 
-export function EscalaCard({ evento, colegas, userName, isNext }: EscalaCardProps) {
+export function EscalaCard({
+  evento,
+  colegas,
+  userName,
+  isNext,
+}: EscalaCardProps) {
   const data = new Date(evento.data);
-  const dia = data.toLocaleDateString("pt-BR", { day: "2-digit", timeZone: "UTC" });
-  const mes = data.toLocaleDateString("pt-BR", { month: "short", timeZone: "UTC" }).replace(".", "");
-  const diaSemana = data.toLocaleDateString("pt-BR", { weekday: "short", timeZone: "UTC" }).replace(".", "");
+  const dia = data.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    timeZone: "UTC",
+  });
+  const mes = data
+    .toLocaleDateString("pt-BR", { month: "short", timeZone: "UTC" })
+    .replace(".", "");
+  const diaSemana = data
+    .toLocaleDateString("pt-BR", { weekday: "short", timeZone: "UTC" })
+    .replace(".", "");
   const isPendente = evento.is_escalado && evento.meu_status === "pendente";
   const isEscalado = evento.is_escalado;
-  const horarioFormatado = evento.horario ? formatHorario(evento.horario) : null;
+  const horarioFormatado = evento.horario
+    ? formatHorario(evento.horario)
+    : null;
 
   const cardClass = isNext
     ? "border-blue-600 bg-blue-50/50"
@@ -68,12 +83,20 @@ export function EscalaCard({ evento, colegas, userName, isNext }: EscalaCardProp
             {/* Date box */}
             <div
               className={`flex flex-col items-center justify-center rounded-xl p-2.5 min-w-[60px] ${
-                isNext ? "bg-blue-100 text-blue-700" : isPendente ? "bg-orange-100 text-orange-700" : "bg-gray-100 text-gray-700"
+                isNext
+                  ? "bg-blue-100 text-blue-700"
+                  : isPendente
+                    ? "bg-orange-100 text-orange-700"
+                    : "bg-gray-100 text-gray-700"
               }`}
             >
               <span className="text-xl font-bold leading-none">{dia}</span>
-              <span className="text-xs text-gray-500 uppercase font-semibold mt-0.5">{mes}</span>
-              <span className="text-[10px] text-gray-400 capitalize">{diaSemana}</span>
+              <span className="text-xs text-gray-500 uppercase font-semibold mt-0.5">
+                {mes}
+              </span>
+              <span className="text-[10px] text-gray-400 capitalize">
+                {diaSemana}
+              </span>
             </div>
 
             {/* Info */}
@@ -85,11 +108,6 @@ export function EscalaCard({ evento, colegas, userName, isNext }: EscalaCardProp
                 {isPendente && (
                   <Badge className="bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100 text-[10px] shrink-0 rounded-full px-2.5 py-0.5">
                     Pendente
-                  </Badge>
-                )}
-                {!isEscalado && (
-                  <Badge className="bg-gray-100 text-gray-500 border-0 text-[10px] shrink-0 rounded-full px-2.5 py-0.5">
-                    Não escalado
                   </Badge>
                 )}
               </div>
@@ -114,10 +132,18 @@ export function EscalaCard({ evento, colegas, userName, isNext }: EscalaCardProp
                   {userName} - {evento.minha_funcao}
                 </Badge>
               )}
+              {!isEscalado && (
+                <Badge className="bg-gray-100 text-gray-500 border-0 text-[10px] shrink-0 rounded-full px-2.5 py-0.5">
+                  Não escalado
+                </Badge>
+              )}
 
               {isEscalado && evento.escala_id && (
                 <div className="mt-1" onClick={(e) => e.stopPropagation()}>
-                  <EscalaActions id={evento.escala_id} status={evento.meu_status || ""} />
+                  <EscalaActions
+                    id={evento.escala_id}
+                    status={evento.meu_status || ""}
+                  />
                 </div>
               )}
             </div>
@@ -131,7 +157,9 @@ export function EscalaCard({ evento, colegas, userName, isNext }: EscalaCardProp
         <SheetHeader>
           <SheetTitle>Colegas de Escala</SheetTitle>
           <p className="text-[13px] text-gray-500">
-            {evento.titulo}{horarioFormatado ? ` • ${horarioFormatado}` : ""}{evento.observacoes ? ` • ${evento.observacoes}` : ""}
+            {evento.titulo}
+            {horarioFormatado ? ` • ${horarioFormatado}` : ""}
+            {evento.observacoes ? ` • ${evento.observacoes}` : ""}
           </p>
         </SheetHeader>
         <div className="space-y-5 mt-4">
@@ -139,7 +167,7 @@ export function EscalaCard({ evento, colegas, userName, isNext }: EscalaCardProp
             colegas.reduce<Record<string, Colega[]>>((acc, c) => {
               (acc[c.ministerio] ||= []).push(c);
               return acc;
-            }, {})
+            }, {}),
           ).map(([ministerio, membros]) => (
             <div key={ministerio}>
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
@@ -147,14 +175,26 @@ export function EscalaCard({ evento, colegas, userName, isNext }: EscalaCardProp
               </p>
               <div className="space-y-2">
                 {membros.map((c, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-gray-200">
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 p-3 rounded-xl border border-gray-200"
+                  >
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={c.foto_url} alt={c.nome} />
-                      <AvatarFallback>{c.nome.split(" ").map((n) => n[0]).join("")}</AvatarFallback>
+                      <AvatarFallback>
+                        {c.nome
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-gray-900 truncate">{c.nome}</p>
-                      <p className="text-xs text-gray-400">{c.funcao || "Sem função"}</p>
+                      <p className="font-medium text-sm text-gray-900 truncate">
+                        {c.nome}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {c.funcao || "Sem função"}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -162,6 +202,7 @@ export function EscalaCard({ evento, colegas, userName, isNext }: EscalaCardProp
             </div>
           ))}
         </div>
+        <RepertoireSection eventoId={evento.id} />
       </SheetContent>
     </Sheet>
   );

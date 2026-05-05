@@ -8,14 +8,14 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { titulo, data, horario, descricao, tipo, modelo_id, observacoes } = await request.json()
+    const { titulo, data, horario, descricao, tipo, modelo_id, observacoes, repertorio_ministerio_id, repertorio_funcao } = await request.json()
     if (!titulo || !data) return NextResponse.json({ error: "titulo e data obrigatórios" }, { status: 400 })
 
     const safeModeloId = modelo_id || null
 
     const rows = await sql`
-      INSERT INTO eventos (titulo, data, horario, descricao, tipo, modelo_id, observacoes)
-      VALUES (${titulo}, ${data}, ${horario ?? null}, ${descricao ?? null}, ${tipo ?? "Culto"}, ${safeModeloId}, ${observacoes ?? null})
+      INSERT INTO eventos (titulo, data, horario, descricao, tipo, modelo_id, observacoes, repertorio_ministerio_id, repertorio_funcao)
+      VALUES (${titulo}, ${data}, ${horario ?? null}, ${descricao ?? null}, ${tipo ?? "Culto"}, ${safeModeloId}, ${observacoes ?? null}, ${repertorio_ministerio_id ?? null}, ${repertorio_funcao ?? null})
       RETURNING *
     `
     const evento = rows[0]

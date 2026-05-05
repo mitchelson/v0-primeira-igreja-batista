@@ -24,7 +24,7 @@ export default function EventosAdminPage() {
   // Evento form
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<any>(null)
-  const [form, setForm] = useState({ titulo: "", data: "", horario: "", descricao: "", tipo: "Culto", modelo_id: "" })
+  const [form, setForm] = useState({ titulo: "", data: "", horario: "", descricao: "", tipo: "Culto", modelo_id: "", repertorio_ministerio_id: "", repertorio_funcao: "" })
 
   // Modelo form
   const [modeloOpen, setModeloOpen] = useState(false)
@@ -46,13 +46,18 @@ export default function EventosAdminPage() {
     posMinId ? `/api/ministerios/${posMinId}/funcoes` : null, fetcher
   )
 
-  const resetForm = () => { setForm({ titulo: "", data: "", horario: "", descricao: "", tipo: "Culto", modelo_id: "" }); setEditing(null) }
+  // Funcoes do ministério de repertório selecionado
+  const { data: repFuncoes } = useSWR(
+    form.repertorio_ministerio_id ? `/api/ministerios/${form.repertorio_ministerio_id}/funcoes` : null, fetcher
+  )
+
+  const resetForm = () => { setForm({ titulo: "", data: "", horario: "", descricao: "", tipo: "Culto", modelo_id: "", repertorio_ministerio_id: "", repertorio_funcao: "" }); setEditing(null) }
   const resetModeloForm = () => { setModeloForm({ nome: "", tipo: "Culto", horario: "", descricao: "" }); setModeloPosicoes([]); setEditingModelo(null) }
 
   const handleSave = async () => {
     const method = editing ? "PUT" : "POST"
     const url = editing ? `/api/eventos/${editing.id}` : "/api/eventos"
-    const payload = { ...form, modelo_id: form.modelo_id || null }
+    const payload = { ...form, modelo_id: form.modelo_id || null, repertorio_ministerio_id: form.repertorio_ministerio_id || null, repertorio_funcao: form.repertorio_funcao || null }
     try {
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
       if (res.ok) {
@@ -74,7 +79,7 @@ export default function EventosAdminPage() {
   }
 
   const openEdit = (ev: any) => {
-    setForm({ titulo: ev.titulo, data: ev.data?.split("T")[0] || ev.data, horario: ev.horario || "", descricao: ev.descricao || "", tipo: ev.tipo, modelo_id: ev.modelo_id || "" })
+    setForm({ titulo: ev.titulo, data: ev.data?.split("T")[0] || ev.data, horario: ev.horario || "", descricao: ev.descricao || "", tipo: ev.tipo, modelo_id: ev.modelo_id || "", repertorio_ministerio_id: ev.repertorio_ministerio_id || "", repertorio_funcao: ev.repertorio_funcao || "" })
     setEditing(ev); setOpen(true)
   }
 
@@ -188,6 +193,23 @@ export default function EventosAdminPage() {
                   </Select>
                 </div>
                 <div><Label>Descrição</Label><Input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} /></div>
+                <div className="border-t pt-4 space-y-3">
+                  <Label className="text-sm font-semibold">Repertório — Permissão de edição</Label>
+                  <Select value={form.repertorio_ministerio_id} onValueChange={v => setForm({ ...form, repertorio_ministerio_id: v, repertorio_funcao: "" })}>
+                    <SelectTrigger><SelectValue placeholder="Ministério responsável (opcional)" /></SelectTrigger>
+                    <SelectContent>
+                      {ministerios?.map((m: any) => <SelectItem key={m.id} value={m.id}>{m.icone} {m.nome}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  {form.repertorio_ministerio_id && repFuncoes?.length > 0 && (
+                    <Select value={form.repertorio_funcao} onValueChange={v => setForm({ ...form, repertorio_funcao: v })}>
+                      <SelectTrigger><SelectValue placeholder="Função responsável (opcional)" /></SelectTrigger>
+                      <SelectContent>
+                        {repFuncoes.map((f: any) => <SelectItem key={f.id} value={f.nome}>{f.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
                 <Button className="w-full" onClick={handleSave}>Salvar</Button>
               </div>
             </DialogContent>
