@@ -155,6 +155,7 @@ export default async function MinhaAreaPage() {
                           icone: e.icone,
                         }}
                         colegas={cols}
+                        userName={session.user.name?.split(" ")[0] || ""}
                       />
                     );
                   })}

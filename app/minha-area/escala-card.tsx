@@ -40,9 +40,10 @@ interface EscalaCardProps {
     icone?: string;
   };
   colegas: Colega[];
+  userName?: string;
 }
 
-export function EscalaCard({ evento, colegas }: EscalaCardProps) {
+export function EscalaCard({ evento, colegas, userName }: EscalaCardProps) {
   const data = new Date(evento.data);
   const dia = data.toLocaleDateString("pt-BR", {
     day: "2-digit",
@@ -109,7 +110,7 @@ export function EscalaCard({ evento, colegas }: EscalaCardProps) {
               )}
               {isEscalado && evento.minha_funcao && (
                 <Badge variant="secondary" className="text-[11px] font-normal">
-                  {evento.minha_funcao}
+                  {userName} - {evento.minha_funcao}
                 </Badge>
               )}
             </div>
