@@ -19,7 +19,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { nome, descricao, cor, icone, ativo, ordem } = await req.json()
+  const { nome, descricao, cor, icone, ativo, ordem, form_obrigatorio } = await req.json()
+
+  await sql`ALTER TABLE ministerios ADD COLUMN IF NOT EXISTS form_obrigatorio BOOLEAN DEFAULT false`
+
   const rows = await sql`
     UPDATE ministerios SET
       nome = COALESCE(${nome}, nome),
@@ -27,7 +30,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       cor = COALESCE(${cor}, cor),
       icone = COALESCE(${icone}, icone),
       ativo = COALESCE(${ativo}, ativo),
-      ordem = COALESCE(${ordem}, ordem)
+      ordem = COALESCE(${ordem}, ordem),
+      form_obrigatorio = COALESCE(${form_obrigatorio ?? null}, form_obrigatorio)
     WHERE id = ${id}
     RETURNING *
   `

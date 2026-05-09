@@ -5,9 +5,9 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import Header from "@/components/header"
-import { CheckSquare, Square } from "lucide-react"
+import { CheckSquare, Square, Lock } from "lucide-react"
 
-type Ministerio = { id: string; nome: string; icone: string; cor: string; descricao: string | null }
+type Ministerio = { id: string; nome: string; icone: string; cor: string; descricao: string | null; form_obrigatorio: boolean }
 
 export default function FormMinisteriosPage() {
   const { data: session, status } = useSession()
@@ -19,7 +19,14 @@ export default function FormMinisteriosPage() {
   const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
-    fetch("/api/ministerios").then(r => r.json()).then(setMinistreios)
+    fetch("/api/ministerios").then(r => r.json()).then((data: Ministerio[]) => {
+      setMinistreios(data)
+      // Pre-select required ministries immediately
+      const obrigatorios = data.filter(m => m.form_obrigatorio).map(m => m.id)
+      if (obrigatorios.length > 0) {
+        setSelected(prev => Array.from(new Set([...prev, ...obrigatorios])))
+      }
+    })
   }, [])
 
   useEffect(() => {
@@ -92,8 +99,9 @@ export default function FormMinisteriosPage() {
     )
   }
 
-  const toggle = (id: string) => {
-    setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  const toggle = (m: Ministerio) => {
+    if (m.form_obrigatorio) return
+    setSelected(prev => prev.includes(m.id) ? prev.filter(x => x !== m.id) : [...prev, m.id])
   }
 
   const submit = async () => {
@@ -125,20 +133,26 @@ export default function FormMinisteriosPage() {
             )}
             {ministerios.filter((m: any) => m.ativo).map((m) => {
               const isSelected = selected.includes(m.id)
+              const isObrigatorio = !!m.form_obrigatorio
               return (
                 <button
                   key={m.id}
-                  onClick={() => toggle(m.id)}
+                  onClick={() => toggle(m)}
+                  disabled={isObrigatorio}
                   className={`w-full text-left rounded-xl border p-4 flex items-start gap-3 transition-colors ${
-                    isSelected
-                      ? "border-primary bg-primary/5"
-                      : "border-gray-200 hover:bg-muted/50"
+                    isObrigatorio
+                      ? "border-primary/40 bg-primary/5 cursor-default"
+                      : isSelected
+                        ? "border-primary bg-primary/5"
+                        : "border-gray-200 hover:bg-muted/50"
                   }`}
                 >
                   <div className="mt-0.5 shrink-0">
-                    {isSelected
-                      ? <CheckSquare className="h-5 w-5 text-primary" />
-                      : <Square className="h-5 w-5 text-gray-400" />
+                    {isObrigatorio
+                      ? <Lock className="h-5 w-5 text-primary/60" />
+                      : isSelected
+                        ? <CheckSquare className="h-5 w-5 text-primary" />
+                        : <Square className="h-5 w-5 text-gray-400" />
                     }
                   </div>
                   <div
@@ -148,10 +162,13 @@ export default function FormMinisteriosPage() {
                     {m.icone || "⛪"}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`font-medium text-sm ${isSelected ? "text-primary" : "text-gray-900"}`}>
+                    <p className={`font-medium text-sm ${isSelected || isObrigatorio ? "text-primary" : "text-gray-900"}`}>
                       {m.nome}
                     </p>
-                    {m.descricao && (
+                    {isObrigatorio && (
+                      <p className="text-[11px] text-primary/70 mt-0.5">participação obrigatória</p>
+                    )}
+                    {!isObrigatorio && m.descricao && (
                       <p className="text-xs text-muted-foreground mt-0.5">{m.descricao}</p>
                     )}
                   </div>
