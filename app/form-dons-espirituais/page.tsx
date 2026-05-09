@@ -85,6 +85,9 @@ export default function FormDonsEspirituaisPage() {
               <Button variant="outline" className="w-full mt-4" onClick={() => { setResults(null); setAnswers(Array(TOTAL_QUESTIONS).fill(null)); setCurrent(0); setStarted(true) }}>
                 Refazer o teste
               </Button>
+              <a href="/minha-area" className="block text-center text-sm text-primary underline mt-3">
+                Ir para Minha Área
+              </a>
             </CardContent>
           </Card>
         </div>

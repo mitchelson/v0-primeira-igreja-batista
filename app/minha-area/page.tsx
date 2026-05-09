@@ -5,7 +5,7 @@ import { sql } from "@/lib/neon";
 export const dynamic = "force-dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Music, ClipboardList, Sparkles } from "lucide-react";
+import { Calendar, Music, ClipboardList, Sparkles, BookOpen } from "lucide-react";
 import Link from "next/link";
 import Header from "@/components/header";
 import { EscalaCard } from "./escala-card";
@@ -213,6 +213,38 @@ export default async function MinhaAreaPage() {
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Formulários */}
+          <Card className="rounded-2xl border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                <BookOpen className="h-4 w-4 text-gray-500" />
+                Formulários
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Link
+                href="/form-dons-espirituais"
+                className="flex items-center gap-3 rounded-xl border border-gray-200 p-3 hover:bg-muted/50 transition-colors"
+              >
+                <Sparkles className="h-5 w-5 text-purple-500 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900">Formulário dos Dons Espirituais</p>
+                </div>
+                <span className="text-gray-400 text-xs">→</span>
+              </Link>
+              <Link
+                href="/form-ministerios"
+                className="flex items-center gap-3 rounded-xl border border-gray-200 p-3 hover:bg-muted/50 transition-colors"
+              >
+                <BookOpen className="h-5 w-5 text-blue-500 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900">Formulário dos Ministérios - Semeadura 2026.1</p>
+                </div>
+                <span className="text-gray-400 text-xs">→</span>
+              </Link>
             </CardContent>
           </Card>
 
