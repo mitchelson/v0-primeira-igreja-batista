@@ -11,7 +11,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Home, Users, MessageSquare, UserCog, Calendar, ClipboardList, Plus, Settings, BookOpen } from "lucide-react"
+import { Home, Users, MessageSquare, UserCog, Calendar, ClipboardList, Plus, Settings, BookOpen, Sparkles } from "lucide-react"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -25,6 +25,7 @@ const adminOnlyItems = [
   { title: "Membros", href: "/admin/membros", icon: UserCog },
   { title: "Eventos", href: "/admin/eventos", icon: Calendar },
   { title: "Escalas", href: "/admin/escalas", icon: ClipboardList },
+  { title: "Dons Espirituais", href: "/admin/dons-espirituais", icon: Sparkles },
   { title: "Form. Ministérios", href: "/admin/form-ministerios", icon: BookOpen },
   { title: "Configurações", href: "/admin/configuracoes", icon: Settings },
 ]
