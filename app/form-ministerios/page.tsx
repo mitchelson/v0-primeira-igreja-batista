@@ -7,39 +7,42 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import Header from "@/components/header"
 import { CheckSquare, Square, Lock } from "lucide-react"
 
-type Ministerio = { id: string; nome: string; icone: string; cor: string; descricao: string | null; form_obrigatorio: boolean }
+type Ministerio = { id: string; nome: string; icone: string; cor: string; descricao: string | null; form_obrigatorio: boolean; ativo: boolean }
 
 export default function FormMinisteriosPage() {
   const { data: session, status } = useSession()
-  const [ministerios, setMinistreios] = useState<Ministerio[]>([])
+  const [ministerios, setMinisterios] = useState<Ministerio[]>([])
   const [selected, setSelected] = useState<string[]>([])
-  const [existing, setExisting] = useState<string[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
-    fetch("/api/ministerios").then(r => r.json()).then((data: Ministerio[]) => {
-      setMinistreios(data)
-      // Pre-select required ministries immediately
-      const obrigatorios = data.filter(m => m.form_obrigatorio).map(m => m.id)
-      if (obrigatorios.length > 0) {
-        setSelected(prev => Array.from(new Set([...prev, ...obrigatorios])))
-      }
-    })
-  }, [])
+    if (status === "loading") return
 
-  useEffect(() => {
-    if (status !== "authenticated") { setLoading(false); return }
-    fetch("/api/form-ministerios")
-      .then(r => r.json())
-      .then(d => {
-        if (d.ministerios) {
-          setExisting(d.ministerios)
-          setSelected(d.ministerios)
-        }
-      })
-      .finally(() => setLoading(false))
+    const load = async () => {
+      const [mRes, formRes] = await Promise.all([
+        fetch("/api/ministerios").then(r => r.json()),
+        status === "authenticated"
+          ? fetch("/api/form-ministerios").then(r => r.json())
+          : Promise.resolve(null),
+      ])
+
+      const ativos = (mRes as Ministerio[]).filter(m => m.ativo !== false)
+      setMinisterios(ativos)
+
+      const obrigatorios = ativos.filter(m => m.form_obrigatorio).map(m => m.id)
+
+      if (formRes?.ministerios) {
+        setSelected(Array.from(new Set([...formRes.ministerios, ...obrigatorios])))
+      } else {
+        setSelected(obrigatorios)
+      }
+
+      setLoading(false)
+    }
+
+    load()
   }, [status])
 
   if (status === "loading" || loading) {
@@ -126,12 +129,7 @@ export default function FormMinisteriosPage() {
             <CardDescription>Semeadura 2026.1 — Selecione os ministérios em que deseja servir. Você pode marcar mais de um.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {existing && (
-              <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700">
-                Você já respondeu este formulário. Pode atualizar sua resposta abaixo.
-              </div>
-            )}
-            {ministerios.filter((m: any) => m.ativo).map((m) => {
+            {ministerios.map((m) => {
               const isSelected = selected.includes(m.id)
               const isObrigatorio = !!m.form_obrigatorio
               return (
