@@ -14,27 +14,34 @@ export function PushNotificationRegister() {
     if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return
     setSupported(true)
 
-    // Check existing subscription
-    navigator.serviceWorker.ready.then((reg) =>
+    navigator.serviceWorker.getRegistration().then((reg) => {
+      if (!reg) return
       reg.pushManager.getSubscription().then((sub) => {
         if (sub) setSubscribed(true)
       })
-    )
+    })
   }, [])
 
   if (!supported || subscribed) return null
 
+  const swReady = (): Promise<ServiceWorkerRegistration> =>
+    Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("sw-timeout")), 8000)
+      ),
+    ])
+
   const subscribe = async () => {
     setLoading(true)
     try {
-      // Request notification permission first (required on iOS)
       const permission = await Notification.requestPermission()
       if (permission !== "granted") {
         toast({ title: "Permissão negada", description: "Ative as notificações nas configurações do dispositivo.", variant: "destructive" })
         return
       }
 
-      const reg = await navigator.serviceWorker.ready
+      const reg = await swReady()
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
@@ -48,7 +55,10 @@ export function PushNotificationRegister() {
       toast({ title: "Notificações ativadas ✅" })
     } catch (e: any) {
       console.error("Push subscribe error:", e)
-      toast({ title: "Erro ao ativar", description: "Tente novamente ou verifique as permissões.", variant: "destructive" })
+      const description = e?.message === "sw-timeout"
+        ? "Recarregue a página e tente novamente."
+        : "Tente novamente ou verifique as permissões."
+      toast({ title: "Erro ao ativar notificações", description, variant: "destructive" })
     } finally {
       setLoading(false)
     }
