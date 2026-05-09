@@ -15,7 +15,9 @@ export async function GET() {
     )
   `
   const rows = await sql`SELECT ministerios FROM ministerio_form_respostas WHERE user_id = ${session.user.id}`
-  return NextResponse.json({ ministerios: rows[0]?.ministerios ?? null })
+  const raw = rows[0]?.ministerios ?? null
+  const ministerios = typeof raw === "string" ? JSON.parse(raw) : raw
+  return NextResponse.json({ ministerios })
 }
 
 export async function POST(request: Request) {

@@ -25,5 +25,10 @@ export async function GET() {
     ORDER BY mfr.updated_at DESC
   `
 
-  return NextResponse.json(rows)
+  const parsed = rows.map((r: any) => ({
+    ...r,
+    ministerios: typeof r.ministerios === "string" ? JSON.parse(r.ministerios) : r.ministerios,
+  }))
+
+  return NextResponse.json(parsed)
 }
