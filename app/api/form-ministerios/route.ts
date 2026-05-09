@@ -2,19 +2,33 @@ import { NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
 import { auth } from "@/lib/auth"
 
-export async function GET() {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
+async function ensureTable() {
   await sql`
     CREATE TABLE IF NOT EXISTS ministerio_form_respostas (
-      user_id TEXT PRIMARY KEY,
+      user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
       ministerios JSONB NOT NULL,
       created_at TIMESTAMPTZ DEFAULT now(),
       updated_at TIMESTAMPTZ DEFAULT now()
     )
   `
-  const rows = await sql`SELECT ministerios FROM ministerio_form_respostas WHERE user_id = ${session.user.id}`
+  await sql`
+    DO $$ BEGIN
+      IF (SELECT data_type FROM information_schema.columns WHERE table_name = 'ministerio_form_respostas' AND column_name = 'user_id') = 'text' THEN
+        ALTER TABLE ministerio_form_respostas DROP CONSTRAINT IF EXISTS ministerio_form_respostas_pkey;
+        ALTER TABLE ministerio_form_respostas ALTER COLUMN user_id TYPE UUID USING user_id::uuid;
+        ALTER TABLE ministerio_form_respostas ADD PRIMARY KEY (user_id);
+        ALTER TABLE ministerio_form_respostas ADD CONSTRAINT ministerio_form_respostas_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+      END IF;
+    END $$;
+  `
+}
+
+export async function GET() {
+  const session = await auth()
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  await ensureTable()
+  const rows = await sql`SELECT ministerios FROM ministerio_form_respostas WHERE user_id = ${session.user.id}::uuid`
   const raw = rows[0]?.ministerios ?? null
   const ministerios = typeof raw === "string" ? JSON.parse(raw) : raw
   return NextResponse.json({ ministerios })
@@ -29,18 +43,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Selecione ao menos um ministério" }, { status: 400 })
   }
 
-  await sql`
-    CREATE TABLE IF NOT EXISTS ministerio_form_respostas (
-      user_id TEXT PRIMARY KEY,
-      ministerios JSONB NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT now(),
-      updated_at TIMESTAMPTZ DEFAULT now()
-    )
-  `
+  await ensureTable()
 
   await sql`
     INSERT INTO ministerio_form_respostas (user_id, ministerios, updated_at)
-    VALUES (${session.user.id}, ${JSON.stringify(ministerios)}, now())
+    VALUES (${session.user.id}::uuid, ${JSON.stringify(ministerios)}, now())
     ON CONFLICT (user_id) DO UPDATE SET ministerios = ${JSON.stringify(ministerios)}, updated_at = now()
   `
 

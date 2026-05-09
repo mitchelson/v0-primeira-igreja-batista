@@ -11,12 +11,23 @@ export async function GET() {
 
   await sql`
     CREATE TABLE IF NOT EXISTS ministerio_form_respostas (
-      user_id TEXT PRIMARY KEY,
+      user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
       ministerios JSONB NOT NULL,
       created_at TIMESTAMPTZ DEFAULT now(),
       updated_at TIMESTAMPTZ DEFAULT now()
     )
   `
+  await sql`
+    DO $$ BEGIN
+      IF (SELECT data_type FROM information_schema.columns WHERE table_name = 'ministerio_form_respostas' AND column_name = 'user_id') = 'text' THEN
+        ALTER TABLE ministerio_form_respostas DROP CONSTRAINT IF EXISTS ministerio_form_respostas_pkey;
+        ALTER TABLE ministerio_form_respostas ALTER COLUMN user_id TYPE UUID USING user_id::uuid;
+        ALTER TABLE ministerio_form_respostas ADD PRIMARY KEY (user_id);
+        ALTER TABLE ministerio_form_respostas ADD CONSTRAINT ministerio_form_respostas_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+      END IF;
+    END $$;
+  `
+  await sql`ALTER TABLE ministerios ADD COLUMN IF NOT EXISTS form_obrigatorio BOOLEAN DEFAULT false`
 
   const rows = await sql`
     SELECT mfr.user_id, mfr.ministerios, mfr.updated_at, u.nome, u.foto_url
