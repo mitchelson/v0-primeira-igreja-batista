@@ -18,6 +18,7 @@ export default auth((req) => {
     pathname.startsWith("/contato") ||
     pathname.startsWith("/sermoes") ||
     pathname.startsWith("/feed") ||
+    pathname.startsWith("/perfil") ||
     pathname.startsWith("/api/feed") ||
     pathname.startsWith("/api/visitantes") ||
     pathname.startsWith("/api/auth")

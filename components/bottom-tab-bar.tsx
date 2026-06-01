@@ -14,7 +14,7 @@ export function BottomTabBar() {
 
   return (
     <nav className="fixed bottom-0 inset-x-0 z-50 bg-white border-t md:hidden">
-      <div className="flex justify-around items-center h-14">
+      <div className="flex justify-around items-center h-[52px]">
         <Link href="/feed" className={`flex flex-col items-center gap-0.5 text-[11px] ${pathname.startsWith("/feed") ? "text-black font-semibold" : "text-gray-400"}`}>
           <Newspaper className={`h-5 w-5 ${pathname.startsWith("/feed") ? "text-black" : "text-gray-400"}`} />
           Feed
