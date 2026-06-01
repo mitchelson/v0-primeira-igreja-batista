@@ -161,7 +161,12 @@ function NewPostForm({ mutate }: { mutate: () => void }) {
   const [uploading, setUploading] = useState(false)
   const [imagemUrl, setImagemUrl] = useState("")
   const [submitting, setSubmitting] = useState(false)
+  const [selectedMinisterios, setSelectedMinisterios] = useState<string[]>([])
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+  const [showMencoes, setShowMencoes] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const { data: ministerios } = useSWR("/api/ministerios", fetcher)
+  const { data: users } = useSWR(showMencoes ? "/api/users" : null, fetcher)
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -185,12 +190,21 @@ function NewPostForm({ mutate }: { mutate: () => void }) {
     setSubmitting(true)
     const res = await fetch("/api/feed", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ conteudo: conteudo.trim() || null, imagem_url: imagemUrl || null, link: link.trim() || null }),
+      body: JSON.stringify({
+        conteudo: conteudo.trim() || null,
+        imagem_url: imagemUrl || null,
+        link: link.trim() || null,
+        ministerio_ids: selectedMinisterios.length > 0 ? selectedMinisterios : null,
+        user_ids: selectedUsers.length > 0 ? selectedUsers : null,
+      }),
     })
     if (res.ok) {
       setConteudo("")
       setImagemUrl("")
       setLink("")
+      setSelectedMinisterios([])
+      setSelectedUsers([])
+      setShowMencoes(false)
       mutate()
     } else {
       const err = await res.json()
@@ -223,16 +237,82 @@ function NewPostForm({ mutate }: { mutate: () => void }) {
         className="w-full text-sm border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-300"
       />
       <div className="flex items-center justify-between">
-        <button onClick={() => fileRef.current?.click()} disabled={uploading} className="flex items-center gap-1 text-sm text-gray-600 hover:text-[#c9a84c]">
-          {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
-          <span>Imagem</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={() => fileRef.current?.click()} disabled={uploading} className="flex items-center gap-1 text-sm text-gray-600 hover:text-[#c9a84c]">
+            {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
+            <span>Imagem</span>
+          </button>
+          <button onClick={() => setShowMencoes(!showMencoes)} className="flex items-center gap-1 text-sm text-gray-600 hover:text-[#c9a84c]">
+            <span className="text-lg">@</span>
+            <span>Marcar</span>
+          </button>
+        </div>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
         <Button onClick={handleSubmit} disabled={submitting || (!conteudo.trim() && !imagemUrl)}>
           {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
           Publicar
         </Button>
       </div>
+
+      {/* Menções selecionadas */}
+      {(selectedMinisterios.length > 0 || selectedUsers.length > 0) && (
+        <div className="flex flex-wrap gap-1.5">
+          {selectedMinisterios.map((id) => {
+            const m = ministerios?.find((x: any) => x.id === id)
+            return m ? (
+              <span key={id} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-xs text-blue-700">
+                {m.icone} {m.nome}
+                <button onClick={() => setSelectedMinisterios(s => s.filter(x => x !== id))} className="text-blue-400 hover:text-blue-700">×</button>
+              </span>
+            ) : null
+          })}
+          {selectedUsers.map((id) => {
+            const u = users?.find((x: any) => x.id === id)
+            return u ? (
+              <span key={id} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-xs">
+                @{u.nome?.split(" ")[0]}
+                <button onClick={() => setSelectedUsers(s => s.filter(x => x !== id))} className="text-gray-400 hover:text-gray-700">×</button>
+              </span>
+            ) : null
+          })}
+        </div>
+      )}
+
+      {/* Painel de menções */}
+      {showMencoes && (
+        <div className="border rounded-lg p-3 space-y-3 max-h-48 overflow-y-auto">
+          <div>
+            <p className="text-xs font-semibold text-gray-500 mb-1.5">Ministérios</p>
+            <div className="flex flex-wrap gap-1.5">
+              {ministerios?.filter((m: any) => m.ativo).map((m: any) => (
+                <button
+                  key={m.id}
+                  onClick={() => setSelectedMinisterios(s => s.includes(m.id) ? s.filter(x => x !== m.id) : [...s, m.id])}
+                  className={`px-2 py-1 rounded-full text-xs border ${selectedMinisterios.includes(m.id) ? "bg-blue-100 border-blue-300 text-blue-700" : "bg-white border-gray-200"}`}
+                >
+                  {m.icone} {m.nome}
+                </button>
+              ))}
+            </div>
+          </div>
+          {users && (
+            <div>
+              <p className="text-xs font-semibold text-gray-500 mb-1.5">Pessoas</p>
+              <div className="flex flex-wrap gap-1.5">
+                {users?.slice(0, 20).map((u: any) => (
+                  <button
+                    key={u.id}
+                    onClick={() => setSelectedUsers(s => s.includes(u.id) ? s.filter(x => x !== u.id) : [...s, u.id])}
+                    className={`px-2 py-1 rounded-full text-xs border ${selectedUsers.includes(u.id) ? "bg-blue-100 border-blue-300 text-blue-700" : "bg-white border-gray-200"}`}
+                  >
+                    @{u.nome?.split(" ")[0]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

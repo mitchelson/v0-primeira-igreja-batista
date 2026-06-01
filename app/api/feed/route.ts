@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
   }
 
   const userId = session.user.id
-  const { conteudo, imagem_url, link } = await request.json()
+  const { conteudo, imagem_url, link, ministerio_ids, user_ids } = await request.json()
   if (!conteudo && !imagem_url) return NextResponse.json({ error: "Conteúdo ou imagem obrigatório" }, { status: 400 })
 
   try {
@@ -66,6 +66,35 @@ export async function POST(request: NextRequest) {
       VALUES (${userId}, ${conteudo || null}, ${imagem_url || null}, ${link || null})
       RETURNING *
     `
+    const postId = rows[0].id
+
+    // Notificar ministérios mencionados
+    if (ministerio_ids?.length > 0) {
+      for (const minId of ministerio_ids) {
+        const membros = await sql`
+          SELECT user_id FROM ministerio_membros WHERE ministerio_id = ${minId} AND pendente = false AND user_id != ${userId}
+        `
+        const min = await sql`SELECT nome FROM ministerios WHERE id = ${minId}`
+        for (const m of membros) {
+          await sql`
+            INSERT INTO notifications (user_id, tipo, titulo, mensagem, link)
+            VALUES (${m.user_id}, 'feed_mencao', '📢 ${min[0]?.nome} foi mencionado', ${conteudo?.substring(0, 80) || 'Nova postagem'}, '/feed')
+          `
+        }
+      }
+    }
+
+    // Notificar usuários mencionados
+    if (user_ids?.length > 0) {
+      for (const uid of user_ids) {
+        if (uid === userId) continue
+        await sql`
+          INSERT INTO notifications (user_id, tipo, titulo, mensagem, link)
+          VALUES (${uid}, 'feed_mencao', '📢 Você foi mencionado em uma postagem', ${conteudo?.substring(0, 80) || 'Nova postagem'}, '/feed')
+        `
+      }
+    }
+
     return NextResponse.json(rows[0], { status: 201 })
   } catch (error: any) {
     console.error("Erro ao criar post:", error)
