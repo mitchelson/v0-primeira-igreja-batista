@@ -9,6 +9,7 @@ import Header from "@/components/header";
 import { EscalaCard } from "./escala-card";
 import { PullToRefresh } from "@/components/pull-to-refresh";
 import { PushNotificationRegister } from "@/components/push-notification-register";
+import { TrocasPendentes } from "./trocas-pendentes";
 
 export default async function MinhaAreaPage() {
   const session = await auth();
@@ -20,6 +21,7 @@ export default async function MinhaAreaPage() {
     SELECT e.id, e.titulo, e.data, e.horario, e.observacoes,
            CASE WHEN es.user_id IS NOT NULL THEN true ELSE false END as is_escalado,
            es.id as escala_id, es.funcao as minha_funcao, es.status as meu_status, es.observacao as minha_observacao,
+           es.ministerio_id as meu_ministerio_id,
            m.nome as ministerio, m.icone, m.cor
     FROM eventos e
     LEFT JOIN escalas es ON es.evento_id = e.id AND es.user_id = ${userId}
@@ -63,6 +65,8 @@ export default async function MinhaAreaPage() {
         <div className="mx-auto max-w-lg px-4 py-6 space-y-4">
           <PushNotificationRegister />
 
+          <TrocasPendentes />
+
           {pendentes > 0 && (
             <p className="text-[13px] text-gray-500">
               Você tem{" "}
@@ -101,6 +105,7 @@ export default async function MinhaAreaPage() {
                         meu_status: e.meu_status,
                         minha_observacao: e.minha_observacao,
                         ministerio: e.ministerio,
+                        ministerio_id: e.meu_ministerio_id,
                         icone: e.icone,
                       }}
                       colegas={colegasPorEvento[e.id] || []}

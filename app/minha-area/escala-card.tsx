@@ -40,6 +40,7 @@ interface EscalaCardProps {
     meu_status?: string;
     minha_observacao?: string;
     ministerio?: string;
+    ministerio_id?: string;
     icone?: string;
   };
   colegas: Colega[];
@@ -150,6 +151,7 @@ export function EscalaCard({
                   <EscalaActions
                     id={evento.escala_id}
                     status={evento.meu_status || ""}
+                    ministerioId={evento.ministerio_id}
                   />
                 </div>
               )}
