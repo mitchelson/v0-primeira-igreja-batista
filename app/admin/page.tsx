@@ -1,138 +1,86 @@
 import { sql } from "@/lib/neon"
 import { auth } from "@/lib/auth"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Calendar, Music, ClipboardList } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Users, Calendar, Music, ClipboardList, MessageSquare, UserCog, Settings, Sparkles, BookOpen, ChevronRight } from "lucide-react"
 import Link from "next/link"
 
 export const dynamic = "force-dynamic"
 
 export default async function AdminDashboard() {
   const session = await auth()
+  const role = session?.user?.role
+  const ministerioIds: string[] = (session?.user as any)?.ministerioIds || []
 
-  const [visitantesCount, eventosProximos, escalasUsuario, ministeriosCount] = await Promise.all([
+  const [visitantesCount, ministerios] = await Promise.all([
     sql`SELECT count(*)::int as total FROM visitantes WHERE data_cadastro >= now() - interval '30 days'`,
-    sql`SELECT id, titulo, data, horario, tipo FROM eventos WHERE data >= CURRENT_DATE ORDER BY data ASC LIMIT 5`,
-    session?.user?.id
-      ? sql`
-          SELECT e.id, e.funcao, e.status, ev.titulo, ev.data, ev.horario, m.nome as ministerio
-          FROM escalas e
-          JOIN eventos ev ON ev.id = e.evento_id
-          JOIN ministerios m ON m.id = e.ministerio_id
-          WHERE e.user_id = ${session.user.id} AND ev.data >= CURRENT_DATE
-          ORDER BY ev.data ASC LIMIT 5
-        `
-      : Promise.resolve([]),
-    sql`SELECT count(*)::int as total FROM ministerios WHERE ativo = true`,
+    sql`SELECT id, nome, icone, cor FROM ministerios WHERE ativo = true ORDER BY ordem ASC, nome ASC`,
   ])
+
+  // Líderes/supervisores só veem seus ministérios
+  const visibleMinisterios = role === "admin"
+    ? ministerios
+    : ministerios.filter((m: any) => ministerioIds.includes(m.id))
+
+  const adminMenus = [
+    { href: "/admin/visitantes", label: "Visitantes", icon: Users, desc: `${visitantesCount[0].total} nos últimos 30 dias` },
+    { href: "/admin/mensagens", label: "Mensagens", icon: MessageSquare, desc: "Enviar e gerenciar" },
+    { href: "/admin/membros", label: "Membros", icon: UserCog, desc: "Gerenciar usuários" },
+    { href: "/admin/eventos", label: "Eventos", icon: Calendar, desc: "Criar e editar eventos" },
+    { href: "/admin/escalas", label: "Escalas", icon: ClipboardList, desc: "Gerenciar escalas" },
+    { href: "/admin/dons-espirituais", label: "Dons Espirituais", icon: Sparkles, desc: "Resultados" },
+    { href: "/admin/form-ministerios", label: "Form. Ministérios", icon: BookOpen, desc: "Respostas" },
+    { href: "/admin/configuracoes", label: "Configurações", icon: Settings, desc: "Sistema" },
+  ]
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <h1 className="text-xl font-bold">Administração</h1>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Link href="/admin/visitantes">
-          <Card className="hover:bg-accent transition-colors">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Visitantes (30d)</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{visitantesCount[0].total}</div>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/admin/ministerios">
-          <Card className="hover:bg-accent transition-colors">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Ministérios</CardTitle>
-              <Music className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{ministeriosCount[0].total}</div>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/admin/eventos">
-          <Card className="hover:bg-accent transition-colors">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Próximos Eventos</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{eventosProximos.length}</div>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/admin/escalas">
-          <Card className="hover:bg-accent transition-colors">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Minhas Escalas</CardTitle>
-              <ClipboardList className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{escalasUsuario.length}</div>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Próximos Eventos</CardTitle>
-            <CardDescription>Eventos agendados</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {eventosProximos.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum evento agendado.</p>
-            ) : (
-              <div className="space-y-3">
-                {eventosProximos.map((ev: any) => (
-                  <div key={ev.id} className="flex items-center justify-between border-b pb-2 last:border-0">
-                    <div>
-                      <p className="font-medium text-sm">{ev.titulo}</p>
-                      <p className="text-xs text-muted-foreground">{ev.tipo}</p>
-                    </div>
-                    <div className="text-right text-sm">
-                      <p>{new Date(ev.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}</p>
-                      {ev.horario && <p className="text-xs text-muted-foreground">{ev.horario}</p>}
-                    </div>
-                  </div>
-                ))}
+      {/* Ministérios */}
+      <section>
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Ministérios</h2>
+        <div className="grid gap-2">
+          {visibleMinisterios.map((m: any) => (
+            <Link key={m.id} href={`/admin/ministerios/${m.id}`}>
+              <div className="flex items-center gap-3 bg-white rounded-xl border p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors">
+                <span className="text-xl">{m.icone || "⛪"}</span>
+                <span className="flex-1 font-medium text-sm">{m.nome}</span>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Minhas Escalas</CardTitle>
-            <CardDescription>Suas próximas participações</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {escalasUsuario.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhuma escala futura.</p>
-            ) : (
-              <div className="space-y-3">
-                {escalasUsuario.map((esc: any) => (
-                  <div key={esc.id} className="flex items-center justify-between border-b pb-2 last:border-0">
-                    <div>
-                      <p className="font-medium text-sm">{esc.titulo}</p>
-                      <p className="text-xs text-muted-foreground">{esc.ministerio}{esc.funcao ? ` · ${esc.funcao}` : ""}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm">{new Date(esc.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}</p>
-                      <span className={`text-xs px-1.5 py-0.5 rounded ${esc.status === "confirmado" ? "bg-green-100 text-green-700" : esc.status === "recusado" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
-                        {esc.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+            </Link>
+          ))}
+          {role === "admin" && (
+            <Link href="/admin/ministerios">
+              <div className="flex items-center gap-3 bg-white rounded-xl border border-dashed p-3 hover:bg-gray-50 transition-colors">
+                <Music className="h-5 w-5 text-gray-400" />
+                <span className="flex-1 text-sm text-gray-500">Gerenciar ministérios</span>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            </Link>
+          )}
+        </div>
+      </section>
+
+      {/* Menu admin (só para admin) */}
+      {role === "admin" && (
+        <section>
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Sistema</h2>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {adminMenus.map((item) => (
+              <Link key={item.href} href={item.href}>
+                <div className="flex items-center gap-3 bg-white rounded-xl border p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors">
+                  <item.icon className="h-5 w-5 text-gray-600 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{item.label}</p>
+                    <p className="text-xs text-gray-500 truncate">{item.desc}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-gray-400" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }
