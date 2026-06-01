@@ -2,16 +2,18 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Newspaper, ClipboardList, User } from "lucide-react"
-
-const tabs = [
-  { href: "/feed", label: "Feed", icon: Newspaper },
-  { href: "/minha-area", label: "Serviço", icon: ClipboardList },
-  { href: "/minha-area/perfil", label: "Perfil", icon: User },
-]
+import { useSession } from "next-auth/react"
+import { Newspaper, ClipboardList } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function MinhaAreaLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const { data: session } = useSession()
+
+  const tabs = [
+    { href: "/feed", label: "Feed", icon: Newspaper },
+    { href: "/minha-area", label: "Serviço", icon: ClipboardList },
+  ]
 
   return (
     <div className="pb-16 md:pb-0">
@@ -34,6 +36,17 @@ export default function MinhaAreaLayout({ children }: { children: React.ReactNod
               </Link>
             )
           })}
+          {/* Perfil tab com foto */}
+          <Link
+            href="/minha-area/perfil"
+            className={`flex flex-col items-center gap-0.5 text-[11px] ${pathname.startsWith("/minha-area/perfil") ? "text-black font-semibold" : "text-gray-400"}`}
+          >
+            <Avatar className={`h-5 w-5 ${pathname.startsWith("/minha-area/perfil") ? "ring-2 ring-black" : ""}`}>
+              <AvatarImage src={session?.user?.image ?? undefined} />
+              <AvatarFallback className="text-[8px]">{session?.user?.name?.[0]}</AvatarFallback>
+            </Avatar>
+            Perfil
+          </Link>
         </div>
       </nav>
     </div>

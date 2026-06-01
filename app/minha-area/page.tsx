@@ -93,28 +93,22 @@ export default async function MinhaAreaPage() {
             </div>
           )}
           {/* Greeting */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-1">
-                Olá, {session.user.name?.split(" ")[0]}! 👋
-                <EditarNome nomeAtual={session.user.name ?? ""} />
-              </h1>
-              {pendentes > 0 && (
-                <p className="text-[13px] text-gray-500 mt-1">
-                  Você tem{" "}
-                  <span className="font-semibold text-orange-600">
-                    {pendentes}
-                  </span>{" "}
-                  escala{pendentes > 1 ? "s" : ""} pendente
-                  {pendentes > 1 ? "s" : ""}
-                </p>
-              )}
-              {pendentes === 0 && eventos.length > 0 && (
-                <p className="text-[13px] text-green-600 mt-1">
-                  Tudo em dia! ✅
-                </p>
-              )}
-            </div>
+          <div>
+            {pendentes > 0 && (
+              <p className="text-[13px] text-gray-500">
+                Você tem{" "}
+                <span className="font-semibold text-orange-600">
+                  {pendentes}
+                </span>{" "}
+                escala{pendentes > 1 ? "s" : ""} pendente
+                {pendentes > 1 ? "s" : ""}
+              </p>
+            )}
+            {pendentes === 0 && eventos.length > 0 && (
+              <p className="text-[13px] text-green-600">
+                Tudo em dia! ✅
+              </p>
+            )}
           </div>
 
           <PushNotificationRegister />

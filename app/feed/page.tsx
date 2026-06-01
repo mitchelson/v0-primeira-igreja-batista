@@ -3,9 +3,10 @@
 import React, { useState, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { usePathname } from "next/navigation"
 import useSWR from "swr"
 import { useSession } from "next-auth/react"
-import { Heart, MessageCircle, Send, Trash2, ImagePlus, Loader2, Pin } from "lucide-react"
+import { Heart, MessageCircle, Send, Trash2, ImagePlus, Loader2, Pin, Newspaper, ClipboardList } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -223,6 +224,7 @@ function NewPostForm({ mutate }: { mutate: () => void }) {
 
 export default function FeedPage() {
   const { data: session } = useSession()
+  const pathname = usePathname()
   const [page, setPage] = useState(1)
   const { data, mutate } = useSWR(`/api/feed?page=${page}`, fetcher)
   const { data: config } = useSWR("/api/config", fetcher)
@@ -231,11 +233,13 @@ export default function FeedPage() {
     (config?.feed_ministerio_id && session?.user?.ministerioIds?.includes(config.feed_ministerio_id))
 
   return (
-    <main className="min-h-screen bg-gray-100">
+    <main className="min-h-screen bg-gray-100 pb-16 md:pb-0">
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-40">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href="/" className="font-bold text-lg">PIB Roraima</Link>
+          <Link href="/">
+            <Image src="/pib-logo-black.png" alt="PIB Roraima" width={100} height={32} className="h-7 w-auto" />
+          </Link>
           <h1 className="font-semibold">Feed</h1>
           {session ? (
             <Link href="/minha-area" className="text-sm text-[#c9a84c] font-semibold">Minha Área</Link>
@@ -264,6 +268,29 @@ export default function FeedPage() {
           </div>
         )}
       </div>
+
+      {/* Tab bar mobile */}
+      {session && (
+        <nav className="fixed bottom-0 inset-x-0 z-50 bg-white border-t md:hidden">
+          <div className="flex justify-around items-center h-14">
+            <Link href="/feed" className={`flex flex-col items-center gap-0.5 text-[11px] ${pathname === "/feed" ? "text-black font-semibold" : "text-gray-400"}`}>
+              <Newspaper className={`h-5 w-5 ${pathname === "/feed" ? "text-black" : "text-gray-400"}`} />
+              Feed
+            </Link>
+            <Link href="/minha-area" className={`flex flex-col items-center gap-0.5 text-[11px] text-gray-400`}>
+              <ClipboardList className="h-5 w-5 text-gray-400" />
+              Serviço
+            </Link>
+            <Link href="/minha-area/perfil" className="flex flex-col items-center gap-0.5 text-[11px] text-gray-400">
+              <Avatar className="h-5 w-5">
+                <AvatarImage src={session?.user?.image ?? undefined} />
+                <AvatarFallback className="text-[8px]">{session?.user?.name?.[0]}</AvatarFallback>
+              </Avatar>
+              Perfil
+            </Link>
+          </div>
+        </nav>
+      )}
     </main>
   )
 }
