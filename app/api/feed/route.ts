@@ -32,25 +32,19 @@ export async function POST(request: NextRequest) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
 
-  // Verifica permissão: admin ou membro do ministério configurado
-  const userId = session.user.id
-  if (session.user.role !== "admin") {
-    const config = await sql`SELECT valor FROM app_config WHERE chave = 'feed_ministerio_id'`
-    const feedMinId = config[0]?.valor
-    if (!feedMinId) return NextResponse.json({ error: "Feed não configurado" }, { status: 403 })
-
-    const membership = await sql`
-      SELECT 1 FROM ministerio_membros WHERE user_id = ${userId} AND ministerio_id = ${feedMinId}
-    `
-    if (membership.length === 0) return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
+  // Apenas admin, lider ou supervisor podem postar
+  const role = session.user.role
+  if (role !== "admin" && role !== "lider" && role !== "supervisor") {
+    return NextResponse.json({ error: "Sem permissão para postar" }, { status: 403 })
   }
 
-  const { conteudo, imagem_url } = await request.json()
+  const userId = session.user.id
+  const { conteudo, imagem_url, link } = await request.json()
   if (!conteudo && !imagem_url) return NextResponse.json({ error: "Conteúdo ou imagem obrigatório" }, { status: 400 })
 
   const rows = await sql`
-    INSERT INTO feed_posts (autor_id, conteudo, imagem_url)
-    VALUES (${userId}, ${conteudo || null}, ${imagem_url || null})
+    INSERT INTO feed_posts (autor_id, conteudo, imagem_url, link)
+    VALUES (${userId}, ${conteudo || null}, ${imagem_url || null}, ${link || null})
     RETURNING *
   `
   return NextResponse.json(rows[0], { status: 201 })

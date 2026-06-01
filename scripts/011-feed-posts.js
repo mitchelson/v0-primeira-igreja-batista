@@ -17,6 +17,7 @@ async function main() {
       autor_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       conteudo TEXT,
       imagem_url TEXT,
+      link TEXT,
       fixado BOOLEAN DEFAULT false,
       ativo BOOLEAN DEFAULT true,
       criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),

@@ -92,6 +92,11 @@ function PostCard({ post, session, mutate }: { post: any; session: any; mutate: 
 
       {/* Content */}
       {post.conteudo && <p className="px-4 pb-3 text-sm whitespace-pre-wrap">{post.conteudo}</p>}
+      {post.link && (
+        <a href={post.link} target="_blank" rel="noopener noreferrer" className="mx-4 mb-3 flex items-center gap-2 text-sm text-blue-600 bg-blue-50 rounded-lg px-3 py-2 hover:bg-blue-100 transition-colors truncate">
+          🔗 {post.link.replace(/^https?:\/\//, "").split("/")[0]}
+        </a>
+      )}
       {post.imagem_url && (
         <div className="relative w-full aspect-video">
           <Image src={post.imagem_url} alt="" fill className="object-cover" />
@@ -152,6 +157,7 @@ function PostCard({ post, session, mutate }: { post: any; session: any; mutate: 
 
 function NewPostForm({ mutate }: { mutate: () => void }) {
   const [conteudo, setConteudo] = useState("")
+  const [link, setLink] = useState("")
   const [uploading, setUploading] = useState(false)
   const [imagemUrl, setImagemUrl] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -179,11 +185,12 @@ function NewPostForm({ mutate }: { mutate: () => void }) {
     setSubmitting(true)
     const res = await fetch("/api/feed", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ conteudo: conteudo.trim() || null, imagem_url: imagemUrl || null }),
+      body: JSON.stringify({ conteudo: conteudo.trim() || null, imagem_url: imagemUrl || null, link: link.trim() || null }),
     })
     if (res.ok) {
       setConteudo("")
       setImagemUrl("")
+      setLink("")
       mutate()
     } else {
       const err = await res.json()
@@ -208,6 +215,13 @@ function NewPostForm({ mutate }: { mutate: () => void }) {
           </button>
         </div>
       )}
+      <input
+        type="url"
+        value={link}
+        onChange={(e) => setLink(e.target.value)}
+        placeholder="Link (opcional)"
+        className="w-full text-sm border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-300"
+      />
       <div className="flex items-center justify-between">
         <button onClick={() => fileRef.current?.click()} disabled={uploading} className="flex items-center gap-1 text-sm text-gray-600 hover:text-[#c9a84c]">
           {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
@@ -227,10 +241,8 @@ export default function FeedPage() {
   const { data: session } = useSession()
   const [page, setPage] = useState(1)
   const { data, mutate } = useSWR(`/api/feed?page=${page}`, fetcher)
-  const { data: config } = useSWR("/api/config", fetcher)
 
-  const canPost = session?.user?.role === "admin" ||
-    (config?.feed_ministerio_id && session?.user?.ministerioIds?.includes(config.feed_ministerio_id))
+  const canPost = session?.user?.role === "admin" || session?.user?.role === "lider" || session?.user?.role === "supervisor"
 
   return (
     <main className="min-h-screen bg-gray-100 pb-16 md:pb-0">
