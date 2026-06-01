@@ -78,10 +78,12 @@ export async function POST(request: NextRequest) {
           SELECT user_id FROM ministerio_membros WHERE ministerio_id = ${minId} AND pendente = false AND user_id != ${userId}
         `
         const min = await sql`SELECT nome FROM ministerios WHERE id = ${minId}`
+        const titulo = `📢 ${min[0]?.nome} foi mencionado`
+        const msg = conteudo?.substring(0, 80) || "Nova postagem"
         for (const m of membros) {
           await sql`
             INSERT INTO notifications (user_id, tipo, titulo, mensagem, link)
-            VALUES (${m.user_id}, 'feed_mencao', '📢 ${min[0]?.nome} foi mencionado', ${conteudo?.substring(0, 80) || 'Nova postagem'}, '/feed')
+            VALUES (${m.user_id}, 'feed_mencao', ${titulo}, ${msg}, '/feed')
           `
         }
       }
@@ -89,11 +91,12 @@ export async function POST(request: NextRequest) {
 
     // Notificar usuários mencionados
     if (user_ids?.length > 0) {
+      const msg = conteudo?.substring(0, 80) || "Nova postagem"
       for (const uid of user_ids) {
         if (uid === userId) continue
         await sql`
           INSERT INTO notifications (user_id, tipo, titulo, mensagem, link)
-          VALUES (${uid}, 'feed_mencao', '📢 Você foi mencionado em uma postagem', ${conteudo?.substring(0, 80) || 'Nova postagem'}, '/feed')
+          VALUES (${uid}, 'feed_mencao', ${"📢 Você foi mencionado em uma postagem"}, ${msg}, '/feed')
         `
       }
     }
