@@ -17,8 +17,10 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RepertoireSection } from "./repertoire-section";
+import { UserProfileDialog } from "@/components/user-profile-dialog";
 
 interface Colega {
+  user_id?: string;
   nome: string;
   foto_url?: string;
   funcao?: string;
@@ -194,30 +196,27 @@ export function EscalaCard({
                   </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="mt-2 space-y-2 pl-1">
-                  {membros.map((c, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-3 p-3 rounded-xl border border-gray-200"
-                    >
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={c.foto_url} alt={c.nome} />
-                        <AvatarFallback>
-                          {c.nome
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-gray-900 truncate">
-                          {c.nome}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {c.funcao || "Sem função"}
-                        </p>
+                  {membros.map((c, i) => {
+                    const content = (
+                      <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={c.foto_url} alt={c.nome} />
+                          <AvatarFallback>
+                            {c.nome.split(" ").map((n) => n[0]).join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm text-gray-900 truncate">{c.nome}</p>
+                          <p className="text-xs text-gray-400">{c.funcao || "Sem função"}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                    return c.user_id ? (
+                      <UserProfileDialog key={i} userId={c.user_id}>{content}</UserProfileDialog>
+                    ) : (
+                      <div key={i}>{content}</div>
+                    );
+                  })}
                 </CollapsibleContent>
               </Collapsible>
             ))}

@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Trash2, Check, X, AlertCircle, Crown, Users, Tag, CalendarDays, Share2, Bell, Loader2 } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 import { SearchableSelect } from "@/components/searchable-select"
+import { UserProfileDialog } from "@/components/user-profile-dialog"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -208,18 +209,20 @@ export default function MinisterioDetailPage() {
             </Card>
           ))}
           {membros.filter((m: any) => !m.is_lider).map((m: any) => (
-            <Card key={m.user_id} className={isAdmin ? "cursor-pointer hover:border-primary/30" : ""} onClick={() => isAdmin && setEditMembro(m)}>
-              <CardContent className="p-4 flex flex-col items-center text-center gap-2">
-                <Avatar className="h-14 w-14">
-                  <AvatarImage src={m.foto_url} />
-                  <AvatarFallback>{m.nome?.[0]}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm font-medium">{m.nome}</p>
-                  {m.role && m.role !== "membro" && <span className={`text-[10px] px-1.5 py-0.5 rounded ${m.role === "admin" ? "bg-red-100 text-red-700" : m.role === "supervisor" ? "bg-purple-100 text-purple-700" : m.role === "lider" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"}`}>{m.role}</span>}
-                </div>
-              </CardContent>
-            </Card>
+            <UserProfileDialog key={m.user_id} userId={m.user_id}>
+              <Card className={isAdmin ? "cursor-pointer hover:border-primary/30" : "cursor-pointer"} onClick={(e: any) => { if (isAdmin) { e.stopPropagation(); setEditMembro(m) } }}>
+                <CardContent className="p-4 flex flex-col items-center text-center gap-2">
+                  <Avatar className="h-14 w-14">
+                    <AvatarImage src={m.foto_url} />
+                    <AvatarFallback>{m.nome?.[0]}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-medium">{m.nome}</p>
+                    {m.role && m.role !== "membro" && <span className={`text-[10px] px-1.5 py-0.5 rounded ${m.role === "admin" ? "bg-red-100 text-red-700" : m.role === "supervisor" ? "bg-purple-100 text-purple-700" : m.role === "lider" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"}`}>{m.role}</span>}
+                  </div>
+                </CardContent>
+              </Card>
+            </UserProfileDialog>
           ))}
           </div>
           {membros.length === 0 && <p className="text-center text-muted-foreground py-4">Nenhum membro neste ministério.</p>}

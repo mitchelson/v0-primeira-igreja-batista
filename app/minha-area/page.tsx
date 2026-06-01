@@ -33,7 +33,7 @@ export default async function MinhaAreaPage() {
   let colegasPorEvento: Record<string, any[]> = {};
   if (eventoIds.length > 0) {
     const colegasRows = await sql`
-      SELECT e.evento_id, u.nome, u.foto_url, e.funcao, m.nome as ministerio
+      SELECT e.evento_id, u.id as user_id, u.nome, u.foto_url, e.funcao, m.nome as ministerio
       FROM escalas e
       JOIN users u ON u.id = e.user_id
       JOIN ministerios m ON m.id = e.ministerio_id
@@ -43,6 +43,7 @@ export default async function MinhaAreaPage() {
     for (const c of colegasRows) {
       if (!colegasPorEvento[c.evento_id]) colegasPorEvento[c.evento_id] = [];
       colegasPorEvento[c.evento_id].push({
+        user_id: c.user_id,
         nome: c.nome,
         foto_url: c.foto_url,
         funcao: c.funcao,

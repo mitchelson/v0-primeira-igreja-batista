@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 import { BottomTabBar } from "@/components/bottom-tab-bar"
 import { NotificationsButton } from "@/components/notifications-button"
+import { UserProfileDialog } from "@/components/user-profile-dialog"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -98,12 +99,16 @@ function PostCard({ post, session, mutate }: { post: any; session: any; mutate: 
     <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 pb-2">
-        <Avatar className="h-10 w-10">
-          <AvatarImage src={post.autor_foto} />
-          <AvatarFallback>{post.autor_nome?.[0]}</AvatarFallback>
-        </Avatar>
+        <UserProfileDialog userId={post.autor_id}>
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={post.autor_foto} />
+            <AvatarFallback>{post.autor_nome?.[0]}</AvatarFallback>
+          </Avatar>
+        </UserProfileDialog>
         <div className="flex-1">
-          <p className="font-semibold text-sm">{post.autor_nome}</p>
+          <UserProfileDialog userId={post.autor_id}>
+            <p className="font-semibold text-sm hover:underline">{post.autor_nome}</p>
+          </UserProfileDialog>
           <p className="text-xs text-gray-500">{timeAgo(post.criado_em)}</p>
         </div>
         {post.fixado && <Pin className="h-4 w-4 text-[#c9a84c]" />}
