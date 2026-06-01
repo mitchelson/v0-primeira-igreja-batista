@@ -23,7 +23,8 @@ export async function requireMinisterioAccess(ministerioId: string): Promise<Aut
   if (session.user.role === "lider" || session.user.role === "supervisor") {
     const rows = await sql`
       SELECT 1 FROM ministerio_membros
-      WHERE user_id = ${session.user.id} AND ministerio_id = ${ministerioId} AND is_lider = true
+      WHERE user_id = ${session.user.id} AND ministerio_id = ${ministerioId}
+        AND (is_lider = true OR ${session.user.role} = 'supervisor')
     `
     if (rows.length > 0) return { authorized: true, session }
   }
