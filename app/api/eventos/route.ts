@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
+import { requireAdmin } from "@/lib/authorization"
 
 export async function GET() {
   const rows = await sql`SELECT * FROM eventos ORDER BY data DESC`
@@ -7,6 +8,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const check = await requireAdmin()
+  if (!check.authorized) return check.response
+
   try {
     const { titulo, data, horario, descricao, tipo, modelo_id, observacoes, repertorio_ministerio_id, repertorio_funcao } = await request.json()
     if (!titulo || !data) return NextResponse.json({ error: "titulo e data obrigatórios" }, { status: 400 })

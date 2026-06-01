@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { sql } from "@/lib/neon"
+import { requireAdmin } from "@/lib/authorization"
 
 export async function GET() {
+  const check = await requireAdmin()
+  if (!check.authorized) return check.response
+
   const rows = await sql`
     SELECT u.*, 
       COALESCE(json_agg(json_build_object('ministerio_id', mm.ministerio_id, 'nome', m.nome, 'is_lider', mm.is_lider)) 

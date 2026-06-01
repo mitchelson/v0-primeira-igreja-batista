@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
+import { requireMinisterioAccess, requireAdmin } from "@/lib/authorization"
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -19,6 +20,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const check = await requireMinisterioAccess(id)
+  if (!check.authorized) return check.response
+
   const { nome, descricao, cor, icone, ativo, ordem, form_obrigatorio } = await req.json()
 
   await sql`ALTER TABLE ministerios ADD COLUMN IF NOT EXISTS form_obrigatorio BOOLEAN DEFAULT false`
@@ -40,6 +44,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const check = await requireAdmin()
+  if (!check.authorized) return check.response
+
   await sql`DELETE FROM ministerios WHERE id = ${id}`
   return NextResponse.json({ ok: true })
 }

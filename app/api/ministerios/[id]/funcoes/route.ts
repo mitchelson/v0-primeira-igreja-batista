@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
+import { requireMinisterioAccess } from "@/lib/authorization"
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -9,6 +10,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const check = await requireMinisterioAccess(id)
+  if (!check.authorized) return check.response
+
   const { nome } = await req.json()
   if (!nome) return NextResponse.json({ error: "nome obrigatório" }, { status: 400 })
 
@@ -24,6 +28,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const check = await requireMinisterioAccess(id)
+  if (!check.authorized) return check.response
+
   const { funcao_id } = await req.json()
   if (!funcao_id) return NextResponse.json({ error: "funcao_id obrigatório" }, { status: 400 })
 

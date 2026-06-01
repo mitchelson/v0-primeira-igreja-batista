@@ -17,6 +17,9 @@ const fetcher = (url: string) => fetch(url).then(r => r.json())
 
 const fixedItems = [
   { title: "Dashboard", href: "/admin", icon: Home },
+]
+
+const adminOnlyFixedItems = [
   { title: "Visitantes", href: "/admin/visitantes", icon: Users },
   { title: "Mensagens", href: "/admin/mensagens", icon: MessageSquare },
 ]
@@ -36,7 +39,14 @@ export function AdminSidebar() {
   const { data: ministerios } = useSWR("/api/ministerios", fetcher, { refreshInterval: 30000 })
   const { setOpenMobile } = useSidebar()
   const role = session?.user?.role
+  const ministerioIds: string[] = (session?.user as any)?.ministerioIds || []
   const closeMobile = () => setOpenMobile(false)
+
+  const visibleMinisterios = ministerios?.filter((m: any) => {
+    if (!m.ativo) return false
+    if (role === "admin") return true
+    return ministerioIds.includes(m.id)
+  }) || []
 
   return (
     <Sidebar>
@@ -61,6 +71,16 @@ export function AdminSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              {role === "admin" && adminOnlyFixedItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton asChild isActive={pathname === item.href}>
+                    <Link href={item.href} onClick={closeMobile}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -70,7 +90,7 @@ export function AdminSidebar() {
           <SidebarGroupLabel>Ministérios</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {ministerios?.filter((m: any) => m.ativo).map((m: any) => (
+              {visibleMinisterios.map((m: any) => (
                 <SidebarMenuItem key={m.id}>
                   <SidebarMenuButton asChild isActive={pathname === `/admin/ministerios/${m.id}`}>
                     <Link href={`/admin/ministerios/${m.id}`} onClick={closeMobile}>

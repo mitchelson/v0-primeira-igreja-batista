@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
 import { sendPushToUser } from "@/lib/push"
+import { requireMinisterioAccess } from "@/lib/authorization"
 
 export async function GET(request: NextRequest) {
   const eventoId = request.nextUrl.searchParams.get("evento_id")
@@ -58,6 +59,9 @@ export async function POST(request: NextRequest) {
   if (!evento_id || !ministerio_id || !user_id) {
     return NextResponse.json({ error: "evento_id, ministerio_id e user_id obrigatórios" }, { status: 400 })
   }
+
+  const check = await requireMinisterioAccess(ministerio_id)
+  if (!check.authorized) return check.response
 
   // 1. Busca data do evento
   const evento = await sql`SELECT data FROM eventos WHERE id = ${evento_id}`

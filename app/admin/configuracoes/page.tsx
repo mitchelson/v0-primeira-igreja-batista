@@ -18,10 +18,12 @@ export default function ConfiguracoesPage() {
   const { data: ministerios } = useSWR("/api/ministerios", fetcher)
   const { data: config, mutate } = useSWR("/api/config", fetcher)
   const [menuMinisterioId, setMenuMinisterioId] = useState("")
-  const [saving, setSaving] = useState(false)
+  const [feedMinisterioId, setFeedMinisterioId] = useState("")
+  const [saving, setSaving] = useState("")
 
   useEffect(() => {
     if (config?.menu_ministerio_id) setMenuMinisterioId(config.menu_ministerio_id)
+    if (config?.feed_ministerio_id) setFeedMinisterioId(config.feed_ministerio_id)
   }, [config])
 
   if (session?.user?.role !== "admin") {
@@ -30,7 +32,7 @@ export default function ConfiguracoesPage() {
   }
 
   const handleSave = async () => {
-    setSaving(true)
+    setSaving("menu")
     try {
       await fetch("/api/config", {
         method: "PUT",
@@ -42,12 +44,12 @@ export default function ConfiguracoesPage() {
     } catch {
       toast({ title: "Erro ao salvar", variant: "destructive" })
     } finally {
-      setSaving(false)
+      setSaving("")
     }
   }
 
   const handleClear = async () => {
-    setSaving(true)
+    setSaving("menu")
     try {
       await fetch("/api/config", {
         method: "PUT",
@@ -60,7 +62,24 @@ export default function ConfiguracoesPage() {
     } catch {
       toast({ title: "Erro ao salvar", variant: "destructive" })
     } finally {
-      setSaving(false)
+      setSaving("")
+    }
+  }
+
+  const handleSaveFeed = async () => {
+    setSaving("feed")
+    try {
+      await fetch("/api/config", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chave: "feed_ministerio_id", valor: feedMinisterioId }),
+      })
+      mutate()
+      toast({ title: "Ministério do feed salvo" })
+    } catch {
+      toast({ title: "Erro ao salvar", variant: "destructive" })
+    } finally {
+      setSaving("")
     }
   }
 
@@ -98,15 +117,48 @@ export default function ConfiguracoesPage() {
             </Select>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={saving || !menuMinisterioId}>
-              {saving ? "Salvando..." : "Salvar"}
+            <Button onClick={handleSave} disabled={!!saving || !menuMinisterioId}>
+              {saving === "menu" ? "Salvando..." : "Salvar"}
             </Button>
             {menuMinisterioId && (
-              <Button variant="outline" onClick={handleClear} disabled={saving}>
+              <Button variant="outline" onClick={handleClear} disabled={!!saving}>
                 Remover restrição
               </Button>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Feed de Postagens
+          </CardTitle>
+          <CardDescription>
+            Selecione qual ministério pode criar postagens no feed da igreja.
+            Membros desse ministério (e admins) poderão publicar no /feed.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Ministério responsável pelo Feed</label>
+            <Select value={feedMinisterioId} onValueChange={setFeedMinisterioId}>
+              <SelectTrigger className="w-full max-w-sm">
+                <SelectValue placeholder="Selecione um ministério" />
+              </SelectTrigger>
+              <SelectContent>
+                {ativos.map((m: any) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    {m.icone} {m.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={handleSaveFeed} disabled={!!saving || !feedMinisterioId}>
+            {saving === "feed" ? "Salvando..." : "Salvar"}
+          </Button>
         </CardContent>
       </Card>
     </div>
