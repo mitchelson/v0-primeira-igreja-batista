@@ -13,8 +13,8 @@ export function BottomTabBar() {
   const showAdmin = role === "admin" || role === "lider" || role === "supervisor"
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-50 bg-white border-t md:hidden">
-      <div className="flex justify-around items-center h-[52px]">
+    <nav className="fixed bottom-0 inset-x-0 z-50 bg-white border-t md:hidden pb-[env(safe-area-inset-bottom)]">
+      <div className="flex justify-around items-center h-[64px]">
         <Link href="/feed" className={`flex flex-col items-center gap-0.5 text-[11px] ${pathname.startsWith("/feed") ? "text-black font-semibold" : "text-gray-400"}`}>
           <Newspaper className={`h-5 w-5 ${pathname.startsWith("/feed") ? "text-black" : "text-gray-400"}`} />
           Feed
