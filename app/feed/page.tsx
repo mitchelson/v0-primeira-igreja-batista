@@ -27,6 +27,30 @@ function timeAgo(date: string) {
   return new Date(date).toLocaleDateString("pt-BR")
 }
 
+function PostMencoes({ ministerioIds, userIds }: { ministerioIds?: string[]; userIds?: string[] }) {
+  const { data: ministerios } = useSWR("/api/ministerios", fetcher)
+  const ids = typeof ministerioIds === "string" ? JSON.parse(ministerioIds) : ministerioIds
+  const uids = typeof userIds === "string" ? JSON.parse(userIds) : userIds
+
+  return (
+    <div className="px-4 pb-3 flex flex-wrap gap-1.5">
+      {ids?.map((id: string) => {
+        const m = ministerios?.find((x: any) => x.id === id)
+        return m ? (
+          <span key={id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-xs text-blue-600 font-medium">
+            {m.icone} {m.nome}
+          </span>
+        ) : null
+      })}
+      {uids?.map((id: string) => (
+        <span key={id} className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-xs text-gray-600 font-medium">
+          @mencionado
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function PostCard({ post, session, mutate }: { post: any; session: any; mutate: () => void }) {
   const [showComments, setShowComments] = useState(false)
   const [comment, setComment] = useState("")
@@ -96,6 +120,9 @@ function PostCard({ post, session, mutate }: { post: any; session: any; mutate: 
         <a href={post.link} target="_blank" rel="noopener noreferrer" className="mx-4 mb-3 flex items-center gap-2 text-sm text-blue-600 bg-blue-50 rounded-lg px-3 py-2 hover:bg-blue-100 transition-colors truncate">
           🔗 {post.link.replace(/^https?:\/\//, "").split("/")[0]}
         </a>
+      )}
+      {(post.mencoes_ministerios || post.mencoes_users) && (
+        <PostMencoes ministerioIds={post.mencoes_ministerios} userIds={post.mencoes_users} />
       )}
       {post.imagem_url && (
         <div className="relative w-full aspect-video">

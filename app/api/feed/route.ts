@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
 
   try {
     const rows = await sql`
-      INSERT INTO feed_posts (autor_id, conteudo, imagem_url, link)
-      VALUES (${userId}, ${conteudo || null}, ${imagem_url || null}, ${link || null})
+      INSERT INTO feed_posts (autor_id, conteudo, imagem_url, link, mencoes_ministerios, mencoes_users)
+      VALUES (${userId}, ${conteudo || null}, ${imagem_url || null}, ${link || null}, ${ministerio_ids?.length > 0 ? JSON.stringify(ministerio_ids) : null}, ${user_ids?.length > 0 ? JSON.stringify(user_ids) : null})
       RETURNING *
     `
     const postId = rows[0].id
