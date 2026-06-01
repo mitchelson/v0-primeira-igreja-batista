@@ -1,18 +1,31 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
+import { auth } from "@/lib/auth"
 import { requireMinisterioAccess } from "@/lib/authorization"
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const session = await auth()
+  if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
 
-  // Busca o ministério da escala para verificar permissão
-  const escala = await sql`SELECT ministerio_id FROM escalas WHERE id = ${id}`
+  const escala = await sql`SELECT ministerio_id, user_id FROM escalas WHERE id = ${id}`
   if (escala.length === 0) return NextResponse.json({ error: "não encontrado" }, { status: 404 })
 
-  const check = await requireMinisterioAccess(escala[0].ministerio_id)
-  if (!check.authorized) return check.response
+  // Próprio usuário pode atualizar status da sua escala
+  const isOwner = escala[0].user_id === session.user.id
+  if (!isOwner) {
+    const check = await requireMinisterioAccess(escala[0].ministerio_id)
+    if (!check.authorized) return check.response
+  }
 
   const { status, funcao } = await req.json()
+
+  // Membro comum só pode alterar status (não funcao)
+  if (isOwner && session.user.role === "membro") {
+    const rows = await sql`UPDATE escalas SET status = ${status} WHERE id = ${id} RETURNING *`
+    return NextResponse.json(rows[0])
+  }
+
   const rows = await sql`
     UPDATE escalas SET
       status = COALESCE(${status}, status),
