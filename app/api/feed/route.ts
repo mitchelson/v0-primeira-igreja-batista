@@ -61,9 +61,12 @@ export async function POST(request: NextRequest) {
   if (!conteudo && !imagem_url) return NextResponse.json({ error: "Conteúdo ou imagem obrigatório" }, { status: 400 })
 
   try {
+    const mencoesMin = ministerio_ids?.length > 0 ? JSON.stringify(ministerio_ids) : null
+    const mencoesUsers = user_ids?.length > 0 ? JSON.stringify(user_ids) : null
+
     const rows = await sql`
       INSERT INTO feed_posts (autor_id, conteudo, imagem_url, link, mencoes_ministerios, mencoes_users)
-      VALUES (${userId}, ${conteudo || null}, ${imagem_url || null}, ${link || null}, ${ministerio_ids?.length > 0 ? JSON.stringify(ministerio_ids) : null}, ${user_ids?.length > 0 ? JSON.stringify(user_ids) : null})
+      VALUES (${userId}, ${conteudo || null}, ${imagem_url || null}, ${link || null}, ${mencoesMin}::jsonb, ${mencoesUsers}::jsonb)
       RETURNING *
     `
     const postId = rows[0].id
