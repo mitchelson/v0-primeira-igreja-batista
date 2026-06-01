@@ -7,25 +7,43 @@ export async function GET(request: NextRequest) {
   const limit = 20
   const offset = (page - 1) * limit
 
-  // Busca o user_id do viewer para saber se curtiu
   const session = await auth()
   const userId = session?.user?.id || null
 
-  const posts = await sql`
-    SELECT p.*, u.nome as autor_nome, u.foto_url as autor_foto,
-      (SELECT count(*)::int FROM feed_likes WHERE post_id = p.id) as likes_count,
-      (SELECT count(*)::int FROM feed_comments WHERE post_id = p.id) as comments_count,
-      ${userId ? sql`(SELECT count(*)::int > 0 FROM feed_likes WHERE post_id = p.id AND user_id = ${userId})` : sql`false`} as liked
-    FROM feed_posts p
-    JOIN users u ON u.id = p.autor_id
-    WHERE p.ativo = true
-    ORDER BY p.fixado DESC, p.criado_em DESC
-    LIMIT ${limit} OFFSET ${offset}
-  `
+  try {
+    let posts
+    if (userId) {
+      posts = await sql`
+        SELECT p.*, u.nome as autor_nome, u.foto_url as autor_foto,
+          (SELECT count(*)::int FROM feed_likes WHERE post_id = p.id) as likes_count,
+          (SELECT count(*)::int FROM feed_comments WHERE post_id = p.id) as comments_count,
+          EXISTS(SELECT 1 FROM feed_likes WHERE post_id = p.id AND user_id = ${userId}) as liked
+        FROM feed_posts p
+        JOIN users u ON u.id = p.autor_id
+        WHERE p.ativo = true
+        ORDER BY p.fixado DESC, p.criado_em DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `
+    } else {
+      posts = await sql`
+        SELECT p.*, u.nome as autor_nome, u.foto_url as autor_foto,
+          (SELECT count(*)::int FROM feed_likes WHERE post_id = p.id) as likes_count,
+          (SELECT count(*)::int FROM feed_comments WHERE post_id = p.id) as comments_count,
+          false as liked
+        FROM feed_posts p
+        JOIN users u ON u.id = p.autor_id
+        WHERE p.ativo = true
+        ORDER BY p.fixado DESC, p.criado_em DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `
+    }
 
-  const total = await sql`SELECT count(*)::int as total FROM feed_posts WHERE ativo = true`
-
-  return NextResponse.json({ posts, total: total[0].total, page, pages: Math.ceil(total[0].total / limit) })
+    const total = await sql`SELECT count(*)::int as total FROM feed_posts WHERE ativo = true`
+    return NextResponse.json({ posts, total: total[0].total, page, pages: Math.ceil(total[0].total / limit) })
+  } catch (error: any) {
+    console.error("Erro ao buscar feed:", error)
+    return NextResponse.json({ posts: [], total: 0, page: 1, pages: 0 })
+  }
 }
 
 export async function POST(request: NextRequest) {
