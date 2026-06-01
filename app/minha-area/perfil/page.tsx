@@ -128,13 +128,13 @@ export default function PerfilPage() {
               <Textarea value={p.bio || ""} onChange={(e) => setForm({ ...p, bio: e.target.value })} placeholder="Conte sobre você..." className="resize-none h-20" />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div>
+              <div className="min-w-0">
                 <Label className="text-xs">Nascimento</Label>
-                <Input type="date" value={p.nascimento?.split("T")[0] || ""} onChange={(e) => setForm({ ...p, nascimento: e.target.value })} className="text-sm" />
+                <Input type="date" value={p.nascimento?.split("T")[0] || ""} onChange={(e) => setForm({ ...p, nascimento: e.target.value })} className="text-sm w-full" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <Label className="text-xs">Batismo</Label>
-                <Input type="date" value={p.data_batismo?.split("T")[0] || ""} onChange={(e) => setForm({ ...p, data_batismo: e.target.value })} className="text-sm" />
+                <Input type="date" value={p.data_batismo?.split("T")[0] || ""} onChange={(e) => setForm({ ...p, data_batismo: e.target.value })} className="text-sm w-full" />
               </div>
             </div>
             <Button onClick={handleSave} disabled={saving} className="w-full">
