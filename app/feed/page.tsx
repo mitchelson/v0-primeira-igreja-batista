@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 import { BottomTabBar } from "@/components/bottom-tab-bar"
+import { NotificationsButton } from "@/components/notifications-button"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -241,7 +242,7 @@ export default function FeedPage() {
           </Link>
           <h1 className="font-semibold">Feed</h1>
           {session ? (
-            <Link href="/minha-area" className="text-sm text-[#c9a84c] font-semibold">Minha Área</Link>
+            <NotificationsButton />
           ) : (
             <Link href="/login" className="text-sm text-[#c9a84c] font-semibold">Entrar</Link>
           )}

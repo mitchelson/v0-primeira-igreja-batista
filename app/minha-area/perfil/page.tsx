@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/components/ui/use-toast"
-import { Camera, Loader2, Pencil, X, Calendar, Sparkles } from "lucide-react"
+import { Camera, Loader2, Pencil, X, Calendar, Sparkles, CalendarOff, Plus, Trash2 } from "lucide-react"
 import { signOut } from "next-auth/react"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -203,11 +203,96 @@ export default function PerfilPage() {
           </section>
         )}
 
+        {/* Indisponibilidades */}
+        <IndisponibilidadesSection />
+
         {/* Sair */}
         <Button variant="outline" className="w-full text-red-500 border-red-200" onClick={() => signOut({ callbackUrl: "/" })}>
           Sair da conta
         </Button>
       </div>
     </div>
+  )
+}
+
+function IndisponibilidadesSection() {
+  const { data: items, mutate } = useSWR("/api/users/me/indisponibilidades", fetcher)
+  const [adding, setAdding] = useState(false)
+  const [dataInicio, setDataInicio] = useState("")
+  const [dataFim, setDataFim] = useState("")
+  const [motivo, setMotivo] = useState("")
+  const [saving, setSaving] = useState(false)
+
+  const handleAdd = async () => {
+    if (!dataInicio || !dataFim) return
+    setSaving(true)
+    await fetch("/api/users/me/indisponibilidades", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data_inicio: dataInicio, data_fim: dataFim, motivo: motivo || null }),
+    })
+    setAdding(false); setDataInicio(""); setDataFim(""); setMotivo("")
+    setSaving(false); mutate()
+  }
+
+  const handleDelete = async (id: string) => {
+    await fetch("/api/users/me/indisponibilidades", {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    })
+    mutate()
+  }
+
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <CalendarOff className="h-3 w-3 inline mr-1" />Indisponibilidades
+        </h3>
+        <button onClick={() => setAdding(!adding)} className="text-gray-400 hover:text-black">
+          {adding ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+        </button>
+      </div>
+
+      {adding && (
+        <div className="bg-gray-50 rounded-lg p-3 mb-3 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-xs">De</Label>
+              <Input type="date" value={dataInicio} onChange={(e) => { setDataInicio(e.target.value); if (!dataFim) setDataFim(e.target.value) }} className="text-sm" />
+            </div>
+            <div>
+              <Label className="text-xs">Até</Label>
+              <Input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} className="text-sm" />
+            </div>
+          </div>
+          <Input placeholder="Motivo (opcional)" value={motivo} onChange={(e) => setMotivo(e.target.value)} className="text-sm" />
+          <Button size="sm" onClick={handleAdd} disabled={saving || !dataInicio || !dataFim} className="w-full">
+            {saving ? "Salvando..." : "Adicionar"}
+          </Button>
+        </div>
+      )}
+
+      {items?.length > 0 ? (
+        <div className="space-y-2">
+          {items.map((item: any) => (
+            <div key={item.id} className="flex items-center gap-2 bg-red-50 rounded-lg px-3 py-2">
+              <CalendarOff className="h-4 w-4 text-red-400 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">
+                  {new Date(item.data_inicio).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" })}
+                  {item.data_inicio !== item.data_fim && ` — ${new Date(item.data_fim).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" })}`}
+                </p>
+                {item.motivo && <p className="text-xs text-gray-500 truncate">{item.motivo}</p>}
+              </div>
+              <button onClick={() => handleDelete(item.id)} className="text-gray-400 hover:text-red-500">
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : !adding ? (
+        <p className="text-xs text-gray-400">Nenhuma indisponibilidade registrada</p>
+      ) : null}
+    </section>
   )
 }

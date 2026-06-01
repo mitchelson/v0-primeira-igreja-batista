@@ -32,6 +32,15 @@ export async function POST(request: NextRequest) {
         RETURNING *
       `
 
+  // Notifica quando aceito no ministério
+  if (hasPendente && body.pendente === false) {
+    const min = await sql`SELECT nome FROM ministerios WHERE id = ${ministerio_id}`
+    await sql`
+      INSERT INTO notifications (user_id, tipo, titulo, mensagem, link)
+      VALUES (${user_id}, 'ministerio', '✅ Solicitação aceita!', ${`Você foi aceito no ministério ${min[0]?.nome}`}, '/minha-area/perfil')
+    `
+  }
+
   return NextResponse.json(rows[0] ?? { user_id, ministerio_id }, { status: 201 })
 }
 

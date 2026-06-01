@@ -67,6 +67,19 @@ export async function POST(request: NextRequest) {
   const evento = await sql`SELECT data FROM eventos WHERE id = ${evento_id}`
   if (evento.length === 0) return NextResponse.json({ error: "evento não encontrado" }, { status: 404 })
 
+  // 1.5 Verifica indisponibilidade do usuário
+  const indisponivel = await sql`
+    SELECT id, motivo FROM user_indisponibilidades
+    WHERE user_id = ${user_id} AND data_inicio <= ${evento[0].data} AND data_fim >= ${evento[0].data}
+    LIMIT 1
+  `
+  if (indisponivel.length > 0) {
+    return NextResponse.json({
+      error: "Usuário indisponível",
+      message: `Usuário marcou indisponibilidade para esta data${indisponivel[0].motivo ? `: ${indisponivel[0].motivo}` : "."}`,
+    }, { status: 409 })
+  }
+
   // 2. Verifica conflito: user já escalado em outro ministério na mesma data
   const conflitos = await sql`
     SELECT e.id, m.nome as ministerio_nome, e.funcao
@@ -107,6 +120,14 @@ export async function POST(request: NextRequest) {
     const min = await sql`SELECT nome FROM ministerios WHERE id = ${ministerio_id}`
     const ev = await sql`SELECT titulo, data FROM eventos WHERE id = ${evento_id}`
     const dataFormatada = new Date(ev[0].data).toLocaleDateString("pt-BR", { timeZone: "UTC" })
+
+    // Notificação in-app
+    await sql`
+      INSERT INTO notifications (user_id, tipo, titulo, mensagem, link)
+      VALUES (${user_id}, 'escala', '📋 Você foi escalado!', ${`${min[0]?.nome} — ${ev[0]?.titulo} (${dataFormatada})`}, '/minha-area')
+    `
+
+    // Push notification
     sendPushToUser(user_id, {
       title: "📋 Você foi escalado!",
       body: `${min[0]?.nome} — ${ev[0]?.titulo} (${dataFormatada})`,
