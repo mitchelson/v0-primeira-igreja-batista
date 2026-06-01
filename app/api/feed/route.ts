@@ -42,10 +42,15 @@ export async function POST(request: NextRequest) {
   const { conteudo, imagem_url, link } = await request.json()
   if (!conteudo && !imagem_url) return NextResponse.json({ error: "Conteúdo ou imagem obrigatório" }, { status: 400 })
 
-  const rows = await sql`
-    INSERT INTO feed_posts (autor_id, conteudo, imagem_url, link)
-    VALUES (${userId}, ${conteudo || null}, ${imagem_url || null}, ${link || null})
-    RETURNING *
-  `
-  return NextResponse.json(rows[0], { status: 201 })
+  try {
+    const rows = await sql`
+      INSERT INTO feed_posts (autor_id, conteudo, imagem_url, link)
+      VALUES (${userId}, ${conteudo || null}, ${imagem_url || null}, ${link || null})
+      RETURNING *
+    `
+    return NextResponse.json(rows[0], { status: 201 })
+  } catch (error: any) {
+    console.error("Erro ao criar post:", error)
+    return NextResponse.json({ error: error.message || "Erro ao criar post" }, { status: 500 })
+  }
 }
