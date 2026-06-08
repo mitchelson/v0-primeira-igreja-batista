@@ -34,6 +34,7 @@ export const revalidate = 3600
 export default async function HomeLanding() {
   const videos = await getVideos()
   const eventos = await sql`SELECT titulo, data, horario, descricao, tipo FROM eventos WHERE data >= CURRENT_DATE ORDER BY data ASC LIMIT 6`
+  const ministerios = await sql`SELECT nome, descricao, icone FROM ministerios WHERE ativo = true ORDER BY ordem ASC, nome ASC`
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white">
       {/* ── Navbar ── */}
@@ -190,23 +191,12 @@ export default async function HomeLanding() {
               Há um espaço para você servir e crescer no que Deus está fazendo em nossa casa.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { title: "Louvor & Adoração", desc: "Música que eleva corações e transforma atmosferas", img: "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?w=600&q=80", emoji: "🎵" },
-              { title: "Ministério Infantil", desc: "Formando a próxima geração com criatividade e amor", img: "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=600&q=80", emoji: "👶" },
-              { title: "Jovens", desc: "Conexão, propósito e crescimento para a juventude", img: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&q=80", emoji: "🔥" },
-              { title: "Integração & Comunhão", desc: "Acolhimento e acompanhamento de novos visitantes", img: "https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=600&q=80", emoji: "🤝" },
-              { title: "Ação Social", desc: "Projetos de amor que transformam nossa comunidade", img: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=600&q=80", emoji: "❤️" },
-              { title: "Intercessão", desc: "Oração que move o coração de Deus pela nossa cidade", img: "https://images.unsplash.com/photo-1545232979-8bf68ee9b1af?w=600&q=80", emoji: "🙏" },
-            ].map((m) => (
-              <div key={m.title} className="group relative rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer">
-                <Image src={m.img} alt={m.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-                <div className="absolute bottom-0 inset-x-0 p-6">
-                  <span className="text-2xl mb-2 block">{m.emoji}</span>
-                  <h3 className="text-lg font-bold mb-1">{m.title}</h3>
-                  <p className="text-sm text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">{m.desc}</p>
-                </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {ministerios.map((m: any) => (
+              <div key={m.nome} className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-center hover:border-[#c9a84c]/30 hover:bg-white/[0.04] transition-all group">
+                <span className="text-3xl mb-3 block">{m.icone || "⛪"}</span>
+                <h3 className="text-sm font-bold mb-1 group-hover:text-[#c9a84c] transition-colors">{m.nome}</h3>
+                {m.descricao && <p className="text-xs text-gray-500 line-clamp-2">{m.descricao}</p>}
               </div>
             ))}
           </div>
