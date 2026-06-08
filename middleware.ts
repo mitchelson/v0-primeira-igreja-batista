@@ -53,8 +53,10 @@ export default auth((req) => {
       return NextResponse.next()
     }
 
-    // Dashboard é permitido
-    if (pathname === "/admin") return NextResponse.next()
+    // Dashboard, visitantes e mensagens são permitidos
+    if (pathname === "/admin" || pathname.startsWith("/admin/visitantes") || pathname.startsWith("/admin/mensagens")) {
+      return NextResponse.next()
+    }
 
     // Qualquer outra página admin é bloqueada para líder/supervisor
     return NextResponse.redirect(new URL("/admin", req.url))
