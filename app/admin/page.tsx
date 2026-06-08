@@ -61,6 +61,33 @@ export default async function AdminDashboard() {
         </div>
       </section>
 
+      {/* Visitantes e Mensagens — visível para admin, lider e supervisor */}
+      <section>
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Gestão</h2>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Link href="/admin/visitantes">
+            <div className="flex items-center gap-3 bg-white rounded-xl border p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors">
+              <Users className="h-5 w-5 text-gray-600 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">Visitantes</p>
+                <p className="text-xs text-gray-500 truncate">{visitantesCount[0].total} nos últimos 30 dias</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-gray-400" />
+            </div>
+          </Link>
+          <Link href="/admin/mensagens">
+            <div className="flex items-center gap-3 bg-white rounded-xl border p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors">
+              <MessageSquare className="h-5 w-5 text-gray-600 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">Mensagens</p>
+                <p className="text-xs text-gray-500 truncate">Enviar e gerenciar</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-gray-400" />
+            </div>
+          </Link>
+        </div>
+      </section>
+
       {/* Menu admin (só para admin) */}
       {role === "admin" && (
         <section>
