@@ -372,10 +372,10 @@ export default async function HomeLanding() {
           <div>
             <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">Redes Sociais</h4>
             <div className="flex gap-3">
-              <a href="#" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:border-[#c9a84c] hover:text-[#c9a84c] transition-colors" aria-label="Instagram">
+              <a href="https://www.instagram.com/pibroraimaoficial/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:border-[#c9a84c] hover:text-[#c9a84c] transition-colors" aria-label="Instagram">
                 <Instagram className="h-4 w-4" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:border-[#c9a84c] hover:text-[#c9a84c] transition-colors" aria-label="YouTube">
+              <a href="https://www.youtube.com/@primeiraigrejabatistarorai8230" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:border-[#c9a84c] hover:text-[#c9a84c] transition-colors" aria-label="YouTube">
                 <Youtube className="h-4 w-4" />
               </a>
               <a href="https://wa.me/5595999999999" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:border-[#c9a84c] hover:text-[#c9a84c] transition-colors" aria-label="WhatsApp">
