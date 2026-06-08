@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Play, MapPin, Clock, ChevronRight, Instagram, Youtube, Phone, Menu } from "lucide-react";
+import { sql } from "@/lib/neon";
 
 const NAV_LINKS = [
   { href: "/sobre", label: "Quem Somos" },
@@ -28,8 +29,11 @@ async function getVideos() {
   } catch { return [] }
 }
 
+export const revalidate = 3600
+
 export default async function HomeLanding() {
   const videos = await getVideos()
+  const eventos = await sql`SELECT titulo, data, horario, descricao, tipo FROM eventos WHERE data >= CURRENT_DATE ORDER BY data ASC LIMIT 6`
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white">
       {/* ── Navbar ── */}
@@ -221,24 +225,48 @@ export default async function HomeLanding() {
             <p className="text-[#c9a84c] uppercase tracking-[0.3em] text-xs font-semibold mb-3">Programação</p>
             <h2 className="text-3xl md:text-5xl font-bold">Próximos Eventos</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { day: "DOM", title: "Culto de Celebração", time: "19h", desc: "Adoração, palavra e comunhão" },
-              { day: "QUA", title: "Culto de Oração", time: "19h30", desc: "Busca pela presença de Deus" },
-              { day: "SÁB", title: "Encontro de Jovens", time: "18h", desc: "Conexão e crescimento espiritual" },
-            ].map((ev) => (
-              <div key={ev.title} className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 hover:border-[#c9a84c]/30 hover:bg-white/[0.04] transition-all group">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="bg-[#c9a84c] text-black text-xs font-bold px-3 py-1 rounded-full">{ev.day}</span>
-                  <span className="flex items-center gap-1 text-sm text-gray-400">
-                    <Clock className="h-3.5 w-3.5" /> {ev.time}
-                  </span>
+          {eventos.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {eventos.map((ev: any, i: number) => {
+                const date = new Date(ev.data)
+                const dia = date.toLocaleDateString("pt-BR", { weekday: "short", timeZone: "UTC" }).replace(".", "").toUpperCase()
+                return (
+                  <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 hover:border-[#c9a84c]/30 hover:bg-white/[0.04] transition-all group">
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="bg-[#c9a84c] text-black text-xs font-bold px-3 py-1 rounded-full">{dia}</span>
+                      {ev.horario && (
+                        <span className="flex items-center gap-1 text-sm text-gray-400">
+                          <Clock className="h-3.5 w-3.5" /> {ev.horario}
+                        </span>
+                      )}
+                      {ev.tipo && <span className="text-xs text-gray-500 ml-auto">{ev.tipo}</span>}
+                    </div>
+                    <h3 className="text-xl font-bold mb-2 group-hover:text-[#c9a84c] transition-colors">{ev.titulo}</h3>
+                    <p className="text-gray-400 text-sm">{ev.descricao || date.toLocaleDateString("pt-BR", { day: "numeric", month: "long", timeZone: "UTC" })}</p>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { day: "DOM", title: "Culto de Celebração", time: "19h", desc: "Adoração, palavra e comunhão" },
+                { day: "QUA", title: "Culto de Oração", time: "19h30", desc: "Busca pela presença de Deus" },
+                { day: "SÁB", title: "Encontro de Jovens", time: "18h", desc: "Conexão e crescimento espiritual" },
+              ].map((ev) => (
+                <div key={ev.title} className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 hover:border-[#c9a84c]/30 hover:bg-white/[0.04] transition-all group">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="bg-[#c9a84c] text-black text-xs font-bold px-3 py-1 rounded-full">{ev.day}</span>
+                    <span className="flex items-center gap-1 text-sm text-gray-400">
+                      <Clock className="h-3.5 w-3.5" /> {ev.time}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-bold mb-2 group-hover:text-[#c9a84c] transition-colors">{ev.title}</h3>
+                  <p className="text-gray-400 text-sm">{ev.desc}</p>
                 </div>
-                <h3 className="text-xl font-bold mb-2 group-hover:text-[#c9a84c] transition-colors">{ev.title}</h3>
-                <p className="text-gray-400 text-sm">{ev.desc}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
           <div className="text-center mt-10">
             <Link href="/eventos" className="bg-[#c9a84c] text-black font-bold px-8 py-4 rounded-full hover:bg-[#d4b85c] transition-all text-sm uppercase tracking-wider inline-block">
               Confira a Programação Completa
