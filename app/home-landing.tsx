@@ -11,7 +11,25 @@ const NAV_LINKS = [
   { href: "/contato", label: "Contato" },
 ];
 
-export default function HomeLanding() {
+const CHANNEL_ID = "UCIbxja1EbdUKBsB9xizP4GA"
+const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`
+
+async function getVideos() {
+  try {
+    const res = await fetch(RSS_URL, { next: { revalidate: 3600 } })
+    const xml = await res.text()
+    return [...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)].slice(0, 4).map((m) => {
+      const entry = m[1]
+      const id = entry.match(/<yt:videoId>(.*?)<\/yt:videoId>/)?.[1] ?? ""
+      const title = entry.match(/<title>(.*?)<\/title>/)?.[1] ?? ""
+      const published = entry.match(/<published>(.*?)<\/published>/)?.[1] ?? ""
+      return { id, title, published, thumbnail: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`, url: `https://www.youtube.com/watch?v=${id}` }
+    })
+  } catch { return [] }
+}
+
+export default async function HomeLanding() {
+  const videos = await getVideos()
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white">
       {/* ── Navbar ── */}
@@ -78,24 +96,52 @@ export default function HomeLanding() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-[#c9a84c] uppercase tracking-[0.3em] text-xs font-semibold mb-3">Pregações</p>
-            <h2 className="text-3xl md:text-5xl font-bold">Assista a Última Mensagem</h2>
+            <h2 className="text-3xl md:text-5xl font-bold">Últimas Mensagens</h2>
           </div>
-          <div className="relative aspect-video rounded-2xl overflow-hidden bg-black/50 border border-white/5 max-w-4xl mx-auto group">
-            <Image
-              src="https://images.unsplash.com/photo-1478147427282-58a87a120781?w=1200&q=80"
-              alt="Última pregação"
-              fill
-              className="object-cover opacity-60 group-hover:opacity-40 transition-opacity"
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Link href="/sermoes" className="bg-[#c9a84c] rounded-full p-5 hover:scale-110 transition-transform shadow-2xl">
-                <Play className="h-8 w-8 text-black fill-black" />
-              </Link>
+          {videos.length > 0 ? (
+            <>
+              {/* Vídeo principal */}
+              <div className="relative aspect-video rounded-2xl overflow-hidden bg-black/50 border border-white/5 max-w-4xl mx-auto mb-8">
+                <iframe
+                  src={`https://www.youtube.com/embed/${videos[0].id}`}
+                  title={videos[0].title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="absolute inset-0 w-full h-full"
+                />
+              </div>
+              {/* Grid de vídeos recentes */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                {videos.slice(1).map((v) => (
+                  <a key={v.id} href={v.url} target="_blank" rel="noopener noreferrer" className="group rounded-xl overflow-hidden border border-white/5 hover:border-[#c9a84c]/30 transition-all">
+                    <div className="relative aspect-video">
+                      <Image src={v.thumbnail} alt={v.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Play className="h-8 w-8 text-white" />
+                      </div>
+                    </div>
+                    <div className="p-3 bg-[#0a0a0a]">
+                      <p className="text-sm font-medium text-white line-clamp-2">{v.title}</p>
+                      <p className="text-xs text-gray-500 mt-1">{new Date(v.published).toLocaleDateString("pt-BR")}</p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="relative aspect-video rounded-2xl overflow-hidden bg-black/50 border border-white/5 max-w-4xl mx-auto group">
+              <Image src="https://images.unsplash.com/photo-1478147427282-58a87a120781?w=1200&q=80" alt="Última pregação" fill className="object-cover opacity-60" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Link href="/sermoes" className="bg-[#c9a84c] rounded-full p-5 hover:scale-110 transition-transform shadow-2xl">
+                  <Play className="h-8 w-8 text-black fill-black" />
+                </Link>
+              </div>
             </div>
-            <div className="absolute bottom-0 inset-x-0 p-6 bg-gradient-to-t from-black/80">
-              <p className="text-sm text-[#c9a84c] font-semibold">Última Pregação</p>
-              <p className="text-lg font-bold">Acesse nossas pregações e séries</p>
-            </div>
+          )}
+          <div className="text-center mt-8">
+            <a href="https://www.youtube.com/@primeiraigrejabatistarorai8230" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-[#c9a84c] font-semibold hover:gap-3 transition-all">
+              Ver todas no YouTube <ChevronRight className="h-4 w-4" />
+            </a>
           </div>
         </div>
       </section>
