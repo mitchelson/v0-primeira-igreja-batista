@@ -10,6 +10,7 @@ import { EscalaCard } from "./escala-card";
 import { PullToRefresh } from "@/components/pull-to-refresh";
 import { PushNotificationRegister } from "@/components/push-notification-register";
 import { TrocasPendentes } from "./trocas-pendentes";
+import { PendenciasMensagens } from "./pendencias-mensagens";
 
 export default async function MinhaAreaPage() {
   const session = await auth();
@@ -66,6 +67,8 @@ export default async function MinhaAreaPage() {
           <PushNotificationRegister />
 
           <TrocasPendentes />
+
+          <PendenciasMensagens />
 
           {pendentes > 0 && (
             <p className="text-[13px] text-gray-500">
