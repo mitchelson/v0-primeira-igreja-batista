@@ -71,7 +71,7 @@ export function AdminSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              {role === "admin" && adminOnlyFixedItems.map((item) => (
+              {adminOnlyFixedItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild isActive={pathname === item.href}>
                     <Link href={item.href} onClick={closeMobile}>
