@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { SignJWT } from "jose"
 import { sql } from "@/lib/neon"
 import { verifyAppleIdentityToken } from "@/lib/apple-auth"
+import { verifyGoogleIdToken } from "@/lib/google-auth"
 import { resolveMobileAuthUser, type MobileAuthProfile } from "@/lib/mobile-auth-user"
 
 const secret = new TextEncoder().encode(
@@ -10,46 +11,6 @@ const secret = new TextEncoder().encode(
     process.env.NEXTAUTH_SECRET ??
     "fallback-secret"
 )
-
-function getValidGoogleAudiences() {
-  return [
-    process.env.AUTH_GOOGLE_ID,
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS,
-    process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID,
-    process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB,
-  ].filter(Boolean)
-}
-
-async function verifyGoogleIdToken(idToken: string) {
-  const res = await fetch(
-    `https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`
-  )
-  if (!res.ok) throw new Error("Token inválido")
-  const payload = await res.json()
-
-  const validAudiences = getValidGoogleAudiences()
-  if (validAudiences.length === 0) {
-    throw new Error("Google Client ID não configurado no servidor")
-  }
-
-  if (!validAudiences.includes(payload.aud)) {
-    console.error(
-      "[/api/auth/mobile] Audience rejeitado:",
-      payload.aud,
-      "esperado um de:",
-      validAudiences
-    )
-    throw new Error("Audience inválido")
-  }
-
-  return {
-    googleId: payload.sub as string,
-    email: payload.email as string,
-    name: payload.name as string,
-    picture: payload.picture as string,
-  }
-}
 
 function buildAppleName(fullName?: {
   givenName?: string | null
@@ -61,10 +22,7 @@ function buildAppleName(fullName?: {
 }
 
 async function profileFromBody(body: Record<string, unknown>): Promise<MobileAuthProfile> {
-  const provider =
-    body.provider === "apple" ? "apple" : body.provider === "google" ? "google" : null
-
-  if (provider === "apple" || body.identityToken) {
+  if (body.provider === "apple" || body.identityToken) {
     const identityToken = body.identityToken as string | undefined
     if (!identityToken) {
       throw new Error("identityToken obrigatório")

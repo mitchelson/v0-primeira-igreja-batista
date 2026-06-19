@@ -43,7 +43,7 @@ async function findPending(profile: MobileAuthProfile) {
   if (!profile.email && !profile.name) return []
   return sql`
     SELECT id, role, ativo FROM users
-    WHERE google_id IS NULL AND apple_id IS NULL
+    WHERE google_id IS NULL
       AND (
         (${profile.email ?? null}::text IS NOT NULL AND email = ${profile.email ?? null})
         OR (${profile.name ?? null}::text IS NOT NULL AND nome = ${profile.name ?? null})
