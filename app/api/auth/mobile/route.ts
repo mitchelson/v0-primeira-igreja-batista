@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { SignJWT } from "jose"
 import { sql } from "@/lib/neon"
+import { verifyAppleIdentityToken } from "@/lib/apple-auth"
+import { resolveMobileAuthUser, type MobileAuthProfile } from "@/lib/mobile-auth-user"
 
 const secret = new TextEncoder().encode(
   process.env.AUTH_MOBILE_SECRET ??
@@ -20,7 +22,6 @@ function getValidGoogleAudiences() {
 }
 
 async function verifyGoogleIdToken(idToken: string) {
-  // Valida o id_token do Google via endpoint público
   const res = await fetch(
     `https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`
   )
@@ -28,13 +29,17 @@ async function verifyGoogleIdToken(idToken: string) {
   const payload = await res.json()
 
   const validAudiences = getValidGoogleAudiences()
-
   if (validAudiences.length === 0) {
     throw new Error("Google Client ID não configurado no servidor")
   }
 
   if (!validAudiences.includes(payload.aud)) {
-    console.error("[/api/auth/mobile] Audience rejeitado:", payload.aud, "esperado um de:", validAudiences)
+    console.error(
+      "[/api/auth/mobile] Audience rejeitado:",
+      payload.aud,
+      "esperado um de:",
+      validAudiences
+    )
     throw new Error("Audience inválido")
   }
 
@@ -46,99 +51,103 @@ async function verifyGoogleIdToken(idToken: string) {
   }
 }
 
+function buildAppleName(fullName?: {
+  givenName?: string | null
+  familyName?: string | null
+}) {
+  if (!fullName) return null
+  const parts = [fullName.givenName, fullName.familyName].filter(Boolean)
+  return parts.length > 0 ? parts.join(" ") : null
+}
+
+async function profileFromBody(body: Record<string, unknown>): Promise<MobileAuthProfile> {
+  const provider =
+    body.provider === "apple" ? "apple" : body.provider === "google" ? "google" : null
+
+  if (provider === "apple" || body.identityToken) {
+    const identityToken = body.identityToken as string | undefined
+    if (!identityToken) {
+      throw new Error("identityToken obrigatório")
+    }
+    const apple = await verifyAppleIdentityToken(identityToken)
+    const clientEmail =
+      typeof body.email === "string" && body.email.trim() ? body.email.trim() : null
+    const fullName = body.fullName as
+      | { givenName?: string | null; familyName?: string | null }
+      | undefined
+
+    return {
+      provider: "apple",
+      providerAccountId: apple.appleId,
+      email: apple.email ?? clientEmail,
+      name: buildAppleName(fullName),
+      picture: null,
+    }
+  }
+
+  const idToken = body.idToken as string | undefined
+  if (!idToken) {
+    throw new Error("idToken obrigatório")
+  }
+
+  const google = await verifyGoogleIdToken(idToken)
+  return {
+    provider: "google",
+    providerAccountId: google.googleId,
+    email: google.email,
+    name: google.name,
+    picture: google.picture,
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { idToken } = await request.json()
-    if (!idToken) {
-      return NextResponse.json({ error: "idToken obrigatório" }, { status: 400 })
+    const body = await request.json()
+    const profile = await profileFromBody(body)
+    const resolved = await resolveMobileAuthUser(profile)
+
+    if (resolved.blocked) {
+      return NextResponse.json({ error: "Conta bloqueada" }, { status: 403 })
     }
 
-    const google = await verifyGoogleIdToken(idToken)
-
-    // Busca ou cria o usuário (mesma lógica do signIn callback do NextAuth)
-    const existing = await sql`
-      SELECT id, role, ativo, nome, foto_url, email FROM users
-      WHERE google_id = ${google.googleId} LIMIT 1
-    `
-
-    let userId: string
-    let role: string
-
-    if (existing.length > 0) {
-      if (!existing[0].ativo) {
-        return NextResponse.json({ error: "Conta bloqueada" }, { status: 403 })
-      }
-      userId = existing[0].id
-      role = existing[0].role
-
-      // Atualiza last login + foto
-      await sql`
-        UPDATE users SET ultimo_login_em = now(), foto_url = ${google.picture}, nome = ${google.name}
-        WHERE id = ${userId}
-      `
-    } else {
-      // Verifica se existe usuário pendente (migrado) com mesmo email
-      const pendente = await sql`
-        SELECT id FROM users WHERE google_id IS NULL AND (email = ${google.email} OR nome = ${google.name}) LIMIT 1
-      `
-
-      if (pendente.length > 0) {
-        await sql`
-          UPDATE users SET google_id = ${google.googleId}, email = ${google.email},
-            nome = ${google.name}, foto_url = ${google.picture}, ultimo_login_em = now()
-          WHERE id = ${pendente[0].id}
-        `
-        const updated = await sql`SELECT id, role FROM users WHERE id = ${pendente[0].id}`
-        userId = updated[0].id
-        role = updated[0].role
-      } else {
-        // Novo usuário — primeiro vira admin, demais viram membro
-        const count = await sql`SELECT count(*)::int as total FROM users`
-        role = count[0].total === 0 ? "admin" : "membro"
-
-        const inserted = await sql`
-          INSERT INTO users (google_id, email, nome, foto_url, role)
-          VALUES (${google.googleId}, ${google.email}, ${google.name}, ${google.picture}, ${role})
-          RETURNING id
-        `
-        userId = inserted[0].id
-      }
-    }
-
-    // Busca ministérios do usuário
     const ministerioRows = await sql`
-      SELECT ministerio_id FROM ministerio_membros WHERE user_id = ${userId}
+      SELECT ministerio_id FROM ministerio_membros WHERE user_id = ${resolved.userId}
     `
     const ministerioIds = ministerioRows.map((r: any) => r.ministerio_id)
 
-    // Busca dados completos do user
     const userRow = await sql`
-      SELECT id, nome, email, foto_url, role FROM users WHERE id = ${userId}
+      SELECT id, nome, email, foto_url, role FROM users WHERE id = ${resolved.userId}
     `
 
+    const row = userRow[0]
+    if (!row) {
+      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 })
+    }
+
     const user = {
-      id: userRow[0].id,
-      name: userRow[0].nome,
-      email: userRow[0].email,
-      image: userRow[0].foto_url,
-      role: userRow[0].role,
+      id: row.id,
+      name: row.nome,
+      email: row.email,
+      image: row.foto_url,
+      role: row.role,
       ministerioIds,
     }
 
-    // Gera JWT com expiração de 30 dias
-    const token = await new SignJWT({ userId, role, ministerioIds })
+    const token = await new SignJWT({
+      userId: resolved.userId,
+      role: user.role,
+      ministerioIds,
+    })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
       .setExpirationTime("30d")
-      .setSubject(userId)
+      .setSubject(resolved.userId)
       .sign(secret)
 
     return NextResponse.json({ token, user })
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Erro interno"
     console.error("[/api/auth/mobile]", err)
-    return NextResponse.json(
-      { error: err.message ?? "Erro interno" },
-      { status: 401 }
-    )
+    return NextResponse.json({ error: message }, { status: 401 })
   }
 }

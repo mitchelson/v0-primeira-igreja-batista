@@ -48,7 +48,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       // Novo user — verifica se é o primeiro (vira admin)
       const count = await sql`SELECT count(*)::int as total FROM users`
-      const role = count[0].total === 0 ? "admin" : "membro"
+      const role = count[0].total === 0 ? "admin" : "visitor"
 
       await sql`
         INSERT INTO users (google_id, email, nome, foto_url, role)
