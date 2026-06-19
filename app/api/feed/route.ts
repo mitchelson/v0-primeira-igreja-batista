@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
-import { auth } from "@/lib/auth"
+import { getSession } from "@/lib/mobile-auth"
 
 export async function GET(request: NextRequest) {
   const page = parseInt(request.nextUrl.searchParams.get("page") || "1")
   const limit = 20
   const offset = (page - 1) * limit
 
-  const session = await auth()
-  const userId = session?.user?.id || null
+  const session = await getSession(request)
+  const userId = session?.userId || null
 
   try {
     let posts
@@ -47,16 +47,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth()
+  const session = await getSession(request)
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
 
-  // Apenas admin, lider ou supervisor podem postar
-  const role = session.user.role
+  const role = session.role
   if (role !== "admin" && role !== "lider" && role !== "supervisor") {
     return NextResponse.json({ error: "Sem permissão para postar" }, { status: 403 })
   }
 
-  const userId = session.user.id
+  const userId = session.userId
   const { conteudo, imagem_url, link, ministerio_ids, user_ids } = await request.json()
   if (!conteudo && !imagem_url) return NextResponse.json({ error: "Conteúdo ou imagem obrigatório" }, { status: 400 })
 
@@ -71,7 +70,6 @@ export async function POST(request: NextRequest) {
     `
     const postId = rows[0].id
 
-    // Notificar ministérios mencionados
     if (ministerio_ids?.length > 0) {
       for (const minId of ministerio_ids) {
         const membros = await sql`
@@ -89,7 +87,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Notificar usuários mencionados
     if (user_ids?.length > 0) {
       const msg = conteudo?.substring(0, 80) || "Nova postagem"
       for (const uid of user_ids) {
