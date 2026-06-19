@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
-import { auth } from "@/lib/auth"
+import { getSession } from "@/lib/mobile-auth"
 
-export async function GET() {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  if (!["admin", "supervisor"].includes(session.user.role ?? "")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+export async function GET(request: NextRequest) {
+  const session = await getSession(request)
+  if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
+  if (session.role !== "admin" && session.role !== "supervisor") {
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
   }
 
   const rows = await sql`
