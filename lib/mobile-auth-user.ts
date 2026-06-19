@@ -40,16 +40,25 @@ async function findByEmail(email: string) {
 }
 
 async function findPending(profile: MobileAuthProfile) {
-  if (!profile.email && !profile.name) return []
-  return sql`
-    SELECT id, role, ativo FROM users
-    WHERE google_id IS NULL
-      AND (
-        (${profile.email ?? null}::text IS NOT NULL AND email = ${profile.email ?? null})
-        OR (${profile.name ?? null}::text IS NOT NULL AND nome = ${profile.name ?? null})
-      )
-    LIMIT 1
-  `
+  if (profile.email) {
+    const byEmail = await sql`
+      SELECT id, role, ativo FROM users
+      WHERE google_id IS NULL AND email = ${profile.email}
+      LIMIT 1
+    `
+    if (byEmail.length > 0) return byEmail
+  }
+
+  if (profile.name) {
+    const byName = await sql`
+      SELECT id, role, ativo FROM users
+      WHERE google_id IS NULL AND nome = ${profile.name}
+      LIMIT 1
+    `
+    if (byName.length > 0) return byName
+  }
+
+  return []
 }
 
 async function linkProvider(userId: string, profile: MobileAuthProfile) {
@@ -67,17 +76,17 @@ async function linkProvider(userId: string, profile: MobileAuthProfile) {
 }
 
 async function updateProfileOnLogin(userId: string, profile: MobileAuthProfile) {
-  await sql`
-    UPDATE users SET
-      ultimo_login_em = now(),
-      nome = COALESCE(${profile.name ?? null}, nome),
-      email = COALESCE(${profile.email ?? null}, email),
-      foto_url = CASE
-        WHEN ${profile.picture ?? null} IS NOT NULL THEN ${profile.picture ?? null}
-        ELSE foto_url
-      END
-    WHERE id = ${userId}
-  `
+  await sql`UPDATE users SET ultimo_login_em = now() WHERE id = ${userId}`
+
+  if (profile.name) {
+    await sql`UPDATE users SET nome = ${profile.name} WHERE id = ${userId}`
+  }
+  if (profile.email) {
+    await sql`UPDATE users SET email = ${profile.email} WHERE id = ${userId}`
+  }
+  if (profile.picture) {
+    await sql`UPDATE users SET foto_url = ${profile.picture} WHERE id = ${userId}`
+  }
 }
 
 async function createUser(profile: MobileAuthProfile, role: string) {
@@ -86,9 +95,9 @@ async function createUser(profile: MobileAuthProfile, role: string) {
       INSERT INTO users (google_id, email, nome, foto_url, role)
       VALUES (
         ${profile.providerAccountId},
-        ${profile.email ?? null},
-        ${profile.name ?? null},
-        ${profile.picture ?? null},
+        ${profile.email || null},
+        ${profile.name || null},
+        ${profile.picture || null},
         ${role}
       )
       RETURNING id
@@ -100,9 +109,9 @@ async function createUser(profile: MobileAuthProfile, role: string) {
     INSERT INTO users (apple_id, email, nome, foto_url, role)
     VALUES (
       ${profile.providerAccountId},
-      ${profile.email ?? null},
-      ${profile.name ?? null},
-      ${profile.picture ?? null},
+      ${profile.email || null},
+      ${profile.name || null},
+      ${profile.picture || null},
       ${role}
     )
     RETURNING id
@@ -144,14 +153,7 @@ export async function resolveMobileAuthUser(
       return { userId: user.id, role: user.role, blocked: true }
     }
     await linkProvider(user.id, profile)
-    await sql`
-      UPDATE users SET
-        email = COALESCE(${profile.email ?? null}, email),
-        nome = COALESCE(${profile.name ?? null}, nome),
-        foto_url = COALESCE(${profile.picture ?? null}, foto_url),
-        ultimo_login_em = now()
-      WHERE id = ${user.id}
-    `
+    await updateProfileOnLogin(user.id, profile)
     const updated = await sql`SELECT role FROM users WHERE id = ${user.id}`
     return { userId: user.id, role: updated[0].role, blocked: false }
   }
