@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
-import { auth } from "@/lib/auth"
+import { getSession } from "@/lib/mobile-auth"
+import { sendPushToUser } from "@/lib/push"
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth()
+  const session = await getSession(req)
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
 
   const { id } = await params
@@ -19,17 +20,22 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const t = troca[0]
 
   // Só o destinatário pode aceitar/recusar
-  if (t.destinatario_id !== session.user.id) {
+  if (t.destinatario_id !== session.userId) {
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
   }
 
   if (status === "recusada") {
     await sql`UPDATE escala_trocas SET status = 'recusada' WHERE id = ${id}`
-    // Notifica solicitante
+    // Notifica solicitante (in-app + push)
     await sql`
       INSERT INTO notifications (user_id, tipo, titulo, mensagem, link)
       VALUES (${t.solicitante_id}, 'troca_escala', ${"❌ Troca recusada"}, ${"Sua solicitação de troca foi recusada"}, '/minha-area')
     `
+    sendPushToUser(t.solicitante_id, {
+      title: "❌ Troca recusada",
+      body: "Sua solicitação de troca foi recusada",
+      url: "/minha-area",
+    }).catch(() => {})
     return NextResponse.json({ ok: true, status: "recusada" })
   }
 
@@ -62,11 +68,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   await sql`UPDATE escalas SET user_id = ${t.solicitante_id} WHERE id = ${t.escala_destinatario_id}`
   await sql`UPDATE escala_trocas SET status = 'aceita' WHERE id = ${id}`
 
-  // Notifica solicitante
+  // Notifica solicitante (in-app + push)
   await sql`
     INSERT INTO notifications (user_id, tipo, titulo, mensagem, link)
     VALUES (${t.solicitante_id}, 'troca_escala', ${"✅ Troca aceita!"}, ${"Sua troca de escala foi aceita"}, '/minha-area')
   `
+  sendPushToUser(t.solicitante_id, {
+    title: "✅ Troca aceita!",
+    body: "Sua troca de escala foi aceita",
+    url: "/minha-area",
+  }).catch(() => {})
 
   return NextResponse.json({ ok: true, status: "aceita" })
 }

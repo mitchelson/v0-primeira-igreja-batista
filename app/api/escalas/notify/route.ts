@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { getSession } from "@/lib/mobile-auth"
 import { sql } from "@/lib/neon"
 import { sendPushToUser } from "@/lib/push"
 
 export async function POST(request: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
+  const session = await getSession(request)
+  if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
+  if (session.role !== "admin" && session.role !== "lider" && session.role !== "supervisor") {
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
+  }
 
   const { evento_id, ministerio_id } = await request.json()
   if (!evento_id || !ministerio_id) {

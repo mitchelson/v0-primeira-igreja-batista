@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { sql } from "@/lib/neon"
-import { requireAdmin } from "@/lib/authorization"
+import { requireAdminUniversal } from "@/lib/mobile-auth"
 
-export async function GET() {
-  const check = await requireAdmin()
-  if (!check.authorized) return check.response
+export async function GET(request: NextRequest) {
+  const check = await requireAdminUniversal(request)
+  if (!check.authorized) {
+    return NextResponse.json({ error: check.error }, { status: check.status })
+  }
 
   const rows = await sql`
     SELECT u.*, 
@@ -21,8 +22,10 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
-  const session = await auth()
-  if (!session || session.user.role !== "admin") return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
+  const check = await requireAdminUniversal(request)
+  if (!check.authorized) {
+    return NextResponse.json({ error: check.error }, { status: check.status })
+  }
 
   const body = await request.json()
   const { id, role, ativo, permite_escala_multipla, telefone, nome } = body
@@ -42,13 +45,17 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const session = await auth()
-  if (!session || session.user.role !== "admin") return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
+  const check = await requireAdminUniversal(request)
+  if (!check.authorized) {
+    return NextResponse.json({ error: check.error }, { status: check.status })
+  }
 
   const { id } = await request.json()
   if (!id) return NextResponse.json({ error: "id obrigatório" }, { status: 400 })
 
-  if (id === session.user.id) return NextResponse.json({ error: "Você não pode deletar a si mesmo" }, { status: 400 })
+  if (id === check.session.userId) {
+    return NextResponse.json({ error: "Você não pode deletar a si mesmo" }, { status: 400 })
+  }
 
   await sql`DELETE FROM users WHERE id = ${id}`
   return NextResponse.json({ ok: true })

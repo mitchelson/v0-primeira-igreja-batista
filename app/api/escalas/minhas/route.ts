@@ -1,6 +1,6 @@
 /**
  * GET /api/escalas/minhas
- * Retorna as próximas escalas do usuário autenticado (web + mobile).
+ * Retorna todos os eventos futuros, indicando se o usuário está escalado (web + mobile).
  */
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/mobile-auth"
@@ -14,17 +14,17 @@ export async function GET(request: NextRequest) {
 
   const eventos = await sql`
     SELECT e.id, e.titulo, e.data, e.horario, e.observacoes,
-           true as is_escalado,
+           CASE WHEN es.user_id IS NOT NULL THEN true ELSE false END as is_escalado,
            es.id as escala_id, es.funcao as minha_funcao, es.status as meu_status,
            es.observacao as minha_observacao, es.ministerio_id as ministerio_id,
-           m.nome as ministerio, m.icone, m.cor
-    FROM escalas es
-    JOIN eventos e ON e.id = es.evento_id
+           m.nome as ministerio, m.icone, m.cor,
+           (SELECT count(*)::int FROM escalas WHERE evento_id = e.id) as total_escalados
+    FROM eventos e
+    LEFT JOIN escalas es ON es.evento_id = e.id AND es.user_id = ${userId}
     LEFT JOIN ministerios m ON m.id = es.ministerio_id
-    WHERE es.user_id = ${userId}
-      AND e.data >= CURRENT_DATE
+    WHERE e.data >= CURRENT_DATE
     ORDER BY e.data ASC
-    LIMIT 15
+    LIMIT 20
   `
 
   return NextResponse.json(eventos)

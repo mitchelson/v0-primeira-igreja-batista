@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
-import { auth } from "@/lib/auth"
+import { getSession } from "@/lib/mobile-auth"
+import { sendPushToUser } from "@/lib/push"
 
 // GET — listar trocas pendentes do usuário (como solicitante ou destinatário)
-export async function GET() {
-  const session = await auth()
+export async function GET(request: NextRequest) {
+  const session = await getSession(request)
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
 
-  const userId = session.user.id
+  const userId = session.userId
   const rows = await sql`
     SELECT t.*,
       sol.nome as solicitante_nome, sol.foto_url as solicitante_foto,
@@ -33,7 +34,7 @@ export async function GET() {
 
 // POST — solicitar troca
 export async function POST(request: NextRequest) {
-  const session = await auth()
+  const session = await getSession(request)
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
 
   const { escala_solicitante_id, escala_destinatario_id } = await request.json()
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "IDs das escalas obrigatórios" }, { status: 400 })
   }
 
-  const userId = session.user.id
+  const userId = session.userId
 
   // Verifica que a escala do solicitante pertence a ele
   const minha = await sql`SELECT * FROM escalas WHERE id = ${escala_solicitante_id} AND user_id = ${userId}`
@@ -67,12 +68,20 @@ export async function POST(request: NextRequest) {
     RETURNING *
   `
 
-  // Notifica o destinatário
-  const solNome = session.user.name || "Alguém"
+  // Busca nome do solicitante
+  const solUser = await sql`SELECT nome FROM users WHERE id = ${userId} LIMIT 1`
+  const solNome = solUser[0]?.nome || "Alguém"
+
+  // Notifica o destinatário (in-app + push)
   await sql`
     INSERT INTO notifications (user_id, tipo, titulo, mensagem, link)
     VALUES (${outra[0].user_id}, 'troca_escala', ${"🔄 Solicitação de troca"}, ${`${solNome} quer trocar de escala com você`}, '/minha-area')
   `
+  sendPushToUser(outra[0].user_id, {
+    title: "🔄 Solicitação de troca",
+    body: `${solNome} quer trocar de escala com você`,
+    url: "/minha-area",
+  }).catch(() => {})
 
   return NextResponse.json(rows[0], { status: 201 })
 }

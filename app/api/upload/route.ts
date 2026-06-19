@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { put } from "@vercel/blob"
-import { auth } from "@/lib/auth"
+import { getSession } from "@/lib/mobile-auth"
 
 export async function POST(request: NextRequest) {
-  const session = await auth()
+  const session = await getSession(request)
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
 
   const formData = await request.formData()
