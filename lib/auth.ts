@@ -27,9 +27,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return true
       }
 
+      // Mesmo e-mail de conta existente (ex.: criada via Apple) — vincula Google
+      const byEmail = await sql`
+        SELECT id, role, ativo FROM users
+        WHERE lower(trim(email)) = lower(trim(${email}))
+        LIMIT 1
+      `
+
+      if (byEmail.length > 0) {
+        if (!byEmail[0].ativo) return false
+        await sql`
+          UPDATE users SET
+            google_id = COALESCE(google_id, ${account.providerAccountId}),
+            email = ${email},
+            nome = ${name},
+            foto_url = ${image},
+            ultimo_login_em = now()
+          WHERE id = ${byEmail[0].id}
+        `
+        return true
+      }
+
       // Verifica se existe user pendente (migrado de responsáveis) com mesmo email ou nome
       const pendente = await sql`
-        SELECT id FROM users WHERE google_id IS NULL AND (email = ${email} OR nome = ${name}) LIMIT 1
+        SELECT id FROM users
+        WHERE google_id IS NULL
+          AND apple_id IS NULL
+          AND (lower(trim(email)) = lower(trim(${email})) OR nome = ${name})
+        LIMIT 1
       `
 
       if (pendente.length > 0) {
