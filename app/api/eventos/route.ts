@@ -8,7 +8,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const check = await requireAdmin()
+  const check = await requireAdmin(request)
   if (!check.authorized) return check.response
 
   try {

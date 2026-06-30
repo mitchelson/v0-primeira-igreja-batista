@@ -10,7 +10,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const check = await requireMinisterioAccess(id)
+  const check = await requireMinisterioAccess(id, req)
   if (!check.authorized) return check.response
 
   const { nome } = await req.json()
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const check = await requireMinisterioAccess(id)
+  const check = await requireMinisterioAccess(id, req)
   if (!check.authorized) return check.response
 
   const { funcao_id } = await req.json()

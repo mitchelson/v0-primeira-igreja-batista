@@ -3,7 +3,7 @@ import { sql } from "@/lib/neon"
 import { requireAdmin } from "@/lib/authorization"
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const check = await requireAdmin()
+  const check = await requireAdmin(req)
   if (!check.authorized) return check.response
 
   const { id } = await params
@@ -24,8 +24,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   return NextResponse.json(rows[0])
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const check = await requireAdmin()
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const check = await requireAdmin(req)
   if (!check.authorized) return check.response
 
   const { id } = await params

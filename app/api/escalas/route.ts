@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
   }
 
   const rows = await sql`
-    SELECT e.*, u.nome as user_nome, ev.titulo as evento_titulo, ev.data as evento_data, m.nome as ministerio_nome
+    SELECT e.*, u.nome as user_nome, u.foto_url, ev.titulo as evento_titulo, ev.data as evento_data, m.nome as ministerio_nome
     FROM escalas e
     JOIN users u ON u.id = e.user_id
     JOIN eventos ev ON ev.id = e.evento_id
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "evento_id, ministerio_id e user_id obrigatórios" }, { status: 400 })
   }
 
-  const check = await requireMinisterioAccess(ministerio_id)
+  const check = await requireMinisterioAccess(ministerio_id, request)
   if (!check.authorized) return check.response
 
   // 1. Busca data do evento

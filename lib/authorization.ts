@@ -1,33 +1,73 @@
-import { auth } from "@/lib/auth"
+import { NextRequest, NextResponse } from "next/server"
+import { getSession, type MobileSession } from "@/lib/mobile-auth"
 import { sql } from "@/lib/neon"
-import { NextResponse } from "next/server"
 
 type AuthResult =
-  | { authorized: true; session: any }
+  | {
+      authorized: true
+      session: {
+        user: { id: string; role: string }
+        userId: string
+        role: string
+      }
+    }
   | { authorized: false; response: NextResponse }
 
-/** Verifica se o usuário é admin */
-export async function requireAdmin(): Promise<AuthResult> {
-  const session = await auth()
-  if (!session) return { authorized: false, response: NextResponse.json({ error: "Não autenticado" }, { status: 401 }) }
-  if (session.user.role !== "admin") return { authorized: false, response: NextResponse.json({ error: "Sem permissão" }, { status: 403 }) }
-  return { authorized: true, session }
+function toSession(session: MobileSession) {
+  return {
+    user: { id: session.userId, role: session.role },
+    userId: session.userId,
+    role: session.role,
+  }
 }
 
-/** Verifica se o usuário é admin OU líder/supervisor daquele ministério */
-export async function requireMinisterioAccess(ministerioId: string): Promise<AuthResult> {
-  const session = await auth()
-  if (!session) return { authorized: false, response: NextResponse.json({ error: "Não autenticado" }, { status: 401 }) }
-  if (session.user.role === "admin") return { authorized: true, session }
+/** Web (NextAuth cookie) + mobile (Bearer JWT) */
+export async function requireAdmin(request: NextRequest): Promise<AuthResult> {
+  const session = await getSession(request)
+  if (!session) {
+    return {
+      authorized: false,
+      response: NextResponse.json({ error: "Não autenticado" }, { status: 401 }),
+    }
+  }
+  if (session.role !== "admin") {
+    return {
+      authorized: false,
+      response: NextResponse.json({ error: "Sem permissão" }, { status: 403 }),
+    }
+  }
+  return { authorized: true, session: toSession(session) }
+}
 
-  if (session.user.role === "lider" || session.user.role === "supervisor") {
-    const rows = await sql`
-      SELECT 1 FROM ministerio_membros
-      WHERE user_id = ${session.user.id} AND ministerio_id = ${ministerioId}
-        AND (is_lider = true OR ${session.user.role} = 'supervisor')
-    `
-    if (rows.length > 0) return { authorized: true, session }
+/** Admin ou líder/supervisor do ministério — web + mobile */
+export async function requireMinisterioAccess(
+  ministerioId: string,
+  request: NextRequest
+): Promise<AuthResult> {
+  const session = await getSession(request)
+  if (!session) {
+    return {
+      authorized: false,
+      response: NextResponse.json({ error: "Não autenticado" }, { status: 401 }),
+    }
+  }
+  if (session.role === "admin") {
+    return { authorized: true, session: toSession(session) }
   }
 
-  return { authorized: false, response: NextResponse.json({ error: "Sem permissão" }, { status: 403 }) }
+  if (session.role === "lider" || session.role === "supervisor") {
+    const rows = await sql`
+      SELECT 1 FROM ministerio_membros
+      WHERE user_id = ${session.userId} AND ministerio_id = ${ministerioId}
+        AND (is_lider = true OR ${session.role} = 'supervisor')
+    `
+    if (rows.length > 0) {
+      return { authorized: true, session: toSession(session) }
+    }
+  }
+
+  return {
+    authorized: false,
+    response: NextResponse.json({ error: "Sem permissão" }, { status: 403 }),
+  }
 }

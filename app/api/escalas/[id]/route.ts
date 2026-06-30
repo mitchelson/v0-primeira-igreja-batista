@@ -14,7 +14,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   // Próprio usuário pode atualizar status da sua escala
   const isOwner = escala[0].user_id === session.userId
   if (!isOwner) {
-    const check = await requireMinisterioAccess(escala[0].ministerio_id)
+    const check = await requireMinisterioAccess(escala[0].ministerio_id, req)
     if (!check.authorized) return check.response
   }
 
@@ -36,13 +36,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   return NextResponse.json(rows[0])
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
   const escala = await sql`SELECT ministerio_id FROM escalas WHERE id = ${id}`
   if (escala.length === 0) return NextResponse.json({ error: "não encontrado" }, { status: 404 })
 
-  const check = await requireMinisterioAccess(escala[0].ministerio_id)
+  const check = await requireMinisterioAccess(escala[0].ministerio_id, req)
   if (!check.authorized) return check.response
 
   await sql`DELETE FROM escalas WHERE id = ${id}`

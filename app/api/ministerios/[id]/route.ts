@@ -20,7 +20,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const check = await requireMinisterioAccess(id)
+  const check = await requireMinisterioAccess(id, req)
   if (!check.authorized) return check.response
 
   const { nome, descricao, cor, icone, ativo, ordem, form_obrigatorio } = await req.json()
@@ -42,9 +42,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   return NextResponse.json(rows[0])
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const check = await requireAdmin()
+  const check = await requireAdmin(req)
   if (!check.authorized) return check.response
 
   await sql`DELETE FROM ministerios WHERE id = ${id}`

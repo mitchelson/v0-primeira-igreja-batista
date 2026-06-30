@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json()
   const { user_id, ministerio_id } = body
 
-  const check = await requireMinisterioAccess(ministerio_id)
+  const check = await requireMinisterioAccess(ministerio_id, request)
   if (!check.authorized) return check.response
 
   const hasLider = "is_lider" in body
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const { user_id, ministerio_id } = await request.json()
 
-  const check = await requireMinisterioAccess(ministerio_id)
+  const check = await requireMinisterioAccess(ministerio_id, request)
   if (!check.authorized) return check.response
 
   await sql`DELETE FROM ministerio_membros WHERE user_id = ${user_id} AND ministerio_id = ${ministerio_id}`
