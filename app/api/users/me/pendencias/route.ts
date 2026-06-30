@@ -1,21 +1,21 @@
-import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { NextRequest, NextResponse } from "next/server"
+import { getSession } from "@/lib/mobile-auth"
 import { sql } from "@/lib/neon"
 
-export async function GET() {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
+export async function GET(request: NextRequest) {
+  const session = await getSession(request)
+  if (!session?.userId) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
+  }
 
-  const userId = session.user.id
+  const userId = session.userId
 
-  // Total de categorias ativas
   const cats = await sql`SELECT count(*)::int as total FROM mensagem_categorias WHERE ativa = true`
   const totalCategorias = cats[0].total
   if (totalCategorias === 0) return NextResponse.json([])
 
-  // Visitantes deste responsável com mensagens pendentes
   const pendencias = await sql`
-    SELECT v.id, v.nome, v.celular, v.data_cadastro,
+    SELECT v.id, v.nome, v.celular, v.data_cadastro, v.sexo,
       count(vme.id)::int as enviadas
     FROM visitantes v
     LEFT JOIN visitante_mensagens_enviadas vme ON vme.visitante_id = v.id
