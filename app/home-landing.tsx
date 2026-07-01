@@ -332,7 +332,7 @@ export default async function HomeLanding() {
 
       {/* ── Footer ── */}
       <footer className="bg-[#050505] border-t border-white/5 pt-16 pb-24 md:pb-12 px-4">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-10">
           <div>
             <Link href="/">
               <Image src="/pib-logo-white.png" alt="PIB Roraima" width={120} height={40} className="h-8 w-auto" />
@@ -360,6 +360,14 @@ export default async function HomeLanding() {
             </ul>
           </div>
           <div>
+            <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">Legal</h4>
+            <ul className="space-y-2">
+              <li><Link href="/privacidade" className="text-sm text-gray-500 hover:text-[#c9a84c] transition-colors">Privacidade</Link></li>
+              <li><Link href="/termos" className="text-sm text-gray-500 hover:text-[#c9a84c] transition-colors">Termos de Uso</Link></li>
+              <li><Link href="/suporte" className="text-sm text-gray-500 hover:text-[#c9a84c] transition-colors">Suporte</Link></li>
+            </ul>
+          </div>
+          <div>
             <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">Redes Sociais</h4>
             <div className="flex gap-3">
               <a href="https://www.instagram.com/pibroraimaoficial/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:border-[#c9a84c] hover:text-[#c9a84c] transition-colors" aria-label="Instagram">
@@ -375,7 +383,14 @@ export default async function HomeLanding() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-12 pt-8 border-t border-white/5 text-center">
-          <p className="text-xs text-gray-600">© 2025 Primeira Igreja Batista de Roraima. Todos os direitos reservados.</p>
+          <p className="text-xs text-gray-600">© {new Date().getFullYear()} Primeira Igreja Batista de Roraima. Todos os direitos reservados.</p>
+          <p className="mt-2 text-xs text-gray-600">
+            <Link href="/privacidade" className="hover:text-[#c9a84c]">Privacidade</Link>
+            {" · "}
+            <Link href="/termos" className="hover:text-[#c9a84c]">Termos</Link>
+            {" · "}
+            <Link href="/suporte" className="hover:text-[#c9a84c]">Suporte</Link>
+          </p>
         </div>
       </footer>
 
