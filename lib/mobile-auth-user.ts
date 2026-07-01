@@ -1,6 +1,6 @@
 import { sql } from "@/lib/neon"
 
-export type MobileProvider = "google" | "apple"
+export type MobileProvider = "google" | "apple" | "firebase"
 
 export interface MobileAuthProfile {
   provider: MobileProvider
@@ -16,6 +16,7 @@ type UserRow = {
   ativo: boolean
   google_id?: string | null
   apple_id?: string | null
+  firebase_uid?: string | null
   email?: string | null
 }
 
@@ -41,21 +42,28 @@ function normalizeEmail(email?: string | null) {
 async function findByProvider(profile: MobileAuthProfile) {
   if (profile.provider === "google") {
     return sql`
-      SELECT id, role, ativo, google_id, apple_id, email FROM users
+      SELECT id, role, ativo, google_id, apple_id, firebase_uid, email FROM users
       WHERE google_id = ${profile.providerAccountId}
       LIMIT 1
     `
   }
+  if (profile.provider === "apple") {
+    return sql`
+      SELECT id, role, ativo, google_id, apple_id, firebase_uid, email FROM users
+      WHERE apple_id = ${profile.providerAccountId}
+      LIMIT 1
+    `
+  }
   return sql`
-    SELECT id, role, ativo, google_id, apple_id, email FROM users
-    WHERE apple_id = ${profile.providerAccountId}
+    SELECT id, role, ativo, google_id, apple_id, firebase_uid, email FROM users
+    WHERE firebase_uid = ${profile.providerAccountId}
     LIMIT 1
   `
 }
 
 async function findByEmail(email: string) {
   return sql`
-    SELECT id, role, ativo, google_id, apple_id, email FROM users
+    SELECT id, role, ativo, google_id, apple_id, firebase_uid, email FROM users
     WHERE lower(trim(email)) = ${email}
     LIMIT 1
   `
@@ -64,9 +72,10 @@ async function findByEmail(email: string) {
 async function findPending(profile: MobileAuthProfile, normalizedEmail: string | null) {
   if (normalizedEmail) {
     const byEmail = await sql`
-      SELECT id, role, ativo, google_id, apple_id, email FROM users
+      SELECT id, role, ativo, google_id, apple_id, firebase_uid, email FROM users
       WHERE google_id IS NULL
         AND apple_id IS NULL
+        AND firebase_uid IS NULL
         AND lower(trim(email)) = ${normalizedEmail}
       LIMIT 1
     `
@@ -75,9 +84,10 @@ async function findPending(profile: MobileAuthProfile, normalizedEmail: string |
 
   if (profile.name) {
     const byName = await sql`
-      SELECT id, role, ativo, google_id, apple_id, email FROM users
+      SELECT id, role, ativo, google_id, apple_id, firebase_uid, email FROM users
       WHERE google_id IS NULL
         AND apple_id IS NULL
+        AND firebase_uid IS NULL
         AND nome = ${profile.name}
       LIMIT 1
     `
@@ -100,9 +110,14 @@ async function linkProvider(userId: string, profile: MobileAuthProfile) {
       UPDATE users SET google_id = COALESCE(google_id, ${profile.providerAccountId})
       WHERE id = ${userId}
     `
-  } else {
+  } else if (profile.provider === "apple") {
     await sql`
       UPDATE users SET apple_id = COALESCE(apple_id, ${profile.providerAccountId})
+      WHERE id = ${userId}
+    `
+  } else {
+    await sql`
+      UPDATE users SET firebase_uid = COALESCE(firebase_uid, ${profile.providerAccountId})
       WHERE id = ${userId}
     `
   }
@@ -126,7 +141,7 @@ async function mergeUsers(canonicalId: string, duplicateId: string) {
   if (canonicalId === duplicateId) return
 
   const rows = await sql`
-    SELECT id, google_id, apple_id, nome, foto_url, email FROM users
+    SELECT id, google_id, apple_id, firebase_uid, nome, foto_url, email FROM users
     WHERE id IN (${canonicalId}, ${duplicateId})
   `
 
@@ -138,6 +153,7 @@ async function mergeUsers(canonicalId: string, duplicateId: string) {
     UPDATE users SET
       google_id = COALESCE(google_id, ${duplicate.google_id}),
       apple_id = COALESCE(apple_id, ${duplicate.apple_id}),
+      firebase_uid = COALESCE(firebase_uid, ${duplicate.firebase_uid}),
       nome = COALESCE(NULLIF(trim(nome), ''), ${duplicate.nome}),
       foto_url = COALESCE(foto_url, ${duplicate.foto_url}),
       email = COALESCE(email, ${duplicate.email})
@@ -260,8 +276,23 @@ async function createUser(profile: MobileAuthProfile, role: string) {
     return inserted[0].id as string
   }
 
+  if (profile.provider === "apple") {
+    const inserted = await sql`
+      INSERT INTO users (apple_id, email, nome, foto_url, role)
+      VALUES (
+        ${profile.providerAccountId},
+        ${profile.email || null},
+        ${profile.name || null},
+        ${profile.picture || null},
+        ${role}
+      )
+      RETURNING id
+    `
+    return inserted[0].id as string
+  }
+
   const inserted = await sql`
-    INSERT INTO users (apple_id, email, nome, foto_url, role)
+    INSERT INTO users (firebase_uid, email, nome, foto_url, role)
     VALUES (
       ${profile.providerAccountId},
       ${profile.email || null},

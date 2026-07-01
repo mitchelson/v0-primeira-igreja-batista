@@ -42,9 +42,9 @@ const FAQ = [
       "Câmera/galeria: foto de perfil e feed. Calendário: adicionar eventos. Notificações: avisos de escalas e comunicados. Você pode revogar nas configurações do celular.",
   },
   {
-    pergunta: "Como solicito exclusão dos meus dados?",
+    pergunta: "Como solicito exclusão da minha conta e dos meus dados?",
     resposta:
-      "Envie e-mail para contato@pibr.org.br informando seu nome e e-mail cadastrado. Consulte também nossa Política de Privacidade.",
+      "Acesse a página Excluir conta (/excluir-conta) com o passo a passo completo ou envie e-mail para contato@pibr.org.br. O Google Play exige esse link para solicitação de exclusão.",
   },
 ];
 
@@ -169,6 +169,9 @@ export default function SuportePage() {
         </li>
         <li>
           <Link href="/termos">Termos de Uso</Link>
+        </li>
+        <li>
+          <Link href="/excluir-conta">Exclusão de conta e dados (app)</Link>
         </li>
       </ul>
 

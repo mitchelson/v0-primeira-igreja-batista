@@ -165,7 +165,8 @@ export default function PrivacidadePage() {
       </ul>
       <p>
         Para exercer seus direitos, envie e-mail para{" "}
-        <a href="mailto:contato@pibr.org.br">contato@pibr.org.br</a> ou acesse{" "}
+        <a href="mailto:contato@pibr.org.br">contato@pibr.org.br</a>, acesse{" "}
+        <Link href="/excluir-conta">a página de exclusão de conta</Link> ou{" "}
         <Link href="/suporte">/suporte</Link>. Responderemos em prazo razoável.
       </p>
 

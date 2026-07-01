@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { SignJWT } from "jose"
 import { sql } from "@/lib/neon"
 import { verifyAppleIdentityToken } from "@/lib/apple-auth"
+import { verifyFirebaseIdToken } from "@/lib/firebase-auth"
 import { verifyGoogleIdToken } from "@/lib/google-auth"
 import { resolveMobileAuthUser, type MobileAuthProfile } from "@/lib/mobile-auth-user"
 
@@ -46,6 +47,17 @@ async function profileFromBody(body: Record<string, unknown>): Promise<MobileAut
   const idToken = body.idToken as string | undefined
   if (!idToken) {
     throw new Error("idToken obrigatório")
+  }
+
+  if (body.provider === "firebase") {
+    const firebase = await verifyFirebaseIdToken(idToken)
+    return {
+      provider: "firebase",
+      providerAccountId: firebase.firebaseUid,
+      email: firebase.email,
+      name: firebase.name,
+      picture: firebase.picture,
+    }
   }
 
   const google = await verifyGoogleIdToken(idToken)

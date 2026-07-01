@@ -365,6 +365,7 @@ export default async function HomeLanding() {
               <li><Link href="/privacidade" className="text-sm text-gray-500 hover:text-[#c9a84c] transition-colors">Privacidade</Link></li>
               <li><Link href="/termos" className="text-sm text-gray-500 hover:text-[#c9a84c] transition-colors">Termos de Uso</Link></li>
               <li><Link href="/suporte" className="text-sm text-gray-500 hover:text-[#c9a84c] transition-colors">Suporte</Link></li>
+              <li><Link href="/excluir-conta" className="text-sm text-gray-500 hover:text-[#c9a84c] transition-colors">Excluir conta</Link></li>
             </ul>
           </div>
           <div>
@@ -390,6 +391,8 @@ export default async function HomeLanding() {
             <Link href="/termos" className="hover:text-[#c9a84c]">Termos</Link>
             {" · "}
             <Link href="/suporte" className="hover:text-[#c9a84c]">Suporte</Link>
+            {" · "}
+            <Link href="/excluir-conta" className="hover:text-[#c9a84c]">Excluir conta</Link>
           </p>
         </div>
       </footer>

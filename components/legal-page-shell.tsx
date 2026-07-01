@@ -6,6 +6,7 @@ const LEGAL_LINKS = [
   { href: "/privacidade", label: "Privacidade" },
   { href: "/termos", label: "Termos de Uso" },
   { href: "/suporte", label: "Suporte" },
+  { href: "/excluir-conta", label: "Excluir conta" },
   { href: "/contato", label: "Contato" },
 ];
 
