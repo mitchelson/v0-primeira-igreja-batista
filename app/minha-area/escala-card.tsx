@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Clock, ChevronRight, ChevronDown } from "lucide-react";
+import { MinistryIcon } from "@/components/ministry-icon";
 import { EscalaActions } from "./escala-actions";
 import {
   Collapsible,
@@ -129,7 +130,7 @@ export function EscalaCard({
                 )}
                 {isEscalado && evento.ministerio && (
                   <span className="flex items-center gap-1">
-                    <span>{evento.icone || ""}</span>
+                    <MinistryIcon name={evento.icone} ministryName={evento.ministerio} size={14} />
                     {evento.ministerio}
                   </span>
                 )}

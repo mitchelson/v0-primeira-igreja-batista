@@ -24,6 +24,7 @@ import {
 import { AlertCircle, Plus, Trash2, Check, X } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { SearchableSelect } from "@/components/searchable-select";
+import { MinistryIcon } from "@/components/ministry-icon";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -99,7 +100,7 @@ export default function EscalasAdminPage() {
 
     if (res.ok) {
       const data = await res.json();
-      if (data.warning) toast({ title: "⚠️ Aviso", description: data.warning });
+      if (data.warning) toast({ title: "Aviso", description: data.warning });
       else toast({ title: "Membro escalado" });
       mutate();
       setAddOpen(false);
@@ -196,8 +197,9 @@ export default function EscalasAdminPage() {
                   <TabsList className="flex-wrap h-auto">
                     <TabsTrigger value="all">Todos ({escalas.length})</TabsTrigger>
                     {activeMinisterios.map(([id, v]: any) => (
-                      <TabsTrigger key={id} value={id}>
-                        {v.icone} {v.nome} ({v.escalas.length})
+                      <TabsTrigger key={id} value={id} className="inline-flex items-center gap-1.5">
+                        <MinistryIcon name={v.icone} ministryName={v.nome} size={14} />
+                        {v.nome} ({v.escalas.length})
                       </TabsTrigger>
                     ))}
                   </TabsList>
@@ -264,7 +266,10 @@ export default function EscalasAdminPage() {
                 <SelectContent>
                   {ministerios?.map((m: any) => (
                     <SelectItem key={m.id} value={m.id}>
-                      {m.icone} {m.nome}
+                      <span className="inline-flex items-center gap-2">
+                        <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={16} />
+                        {m.nome}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -279,7 +284,8 @@ export default function EscalasAdminPage() {
                   placeholder="Buscar membro..."
                   options={minDetail.membros.map((mb: any) => ({
                     value: mb.user_id,
-                    label: `${mb.nome}${mb.is_lider ? " ★" : ""}`,
+                    label: mb.nome,
+                    sublabel: mb.is_lider ? "Líder" : undefined,
                   }))}
                 />
               </div>

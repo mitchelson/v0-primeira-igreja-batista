@@ -1,32 +1,33 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Sparkles, Heart, Star, Flame, type LucideIcon } from "lucide-react";
 
 export default function SobrePage() {
-  const valores = [
+  const valores: { titulo: string; descricao: string; Icon: LucideIcon }[] = [
     {
       titulo: "Presença de Deus",
       descricao:
         "Buscamos e valorizamos a presença manifesta do Espírito Santo em tudo que fazemos.",
-      icon: "✨",
+      Icon: Sparkles,
     },
     {
       titulo: "Família",
       descricao:
         "Somos uma família que se ama, se cuida e caminha junta rumo ao propósito de Deus.",
-      icon: "❤️",
+      Icon: Heart,
     },
     {
       titulo: "Excelência",
       descricao:
         "Fazemos tudo com excelência, como para o Senhor, honrando Seu nome.",
-      icon: "⭐",
+      Icon: Star,
     },
     {
       titulo: "Transformação",
       descricao:
         "Cremos no poder transformador do evangelho que muda vidas, famílias e comunidades.",
-      icon: "🔥",
+      Icon: Flame,
     },
   ];
 
@@ -181,18 +182,23 @@ export default function SobrePage() {
             Nossos Valores
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {valores.map((valor, index) => (
+            {valores.map((valor, index) => {
+              const ValorIcon = valor.Icon
+              return (
               <div
                 key={index}
                 className="bg-[#F5F1E8] p-6 rounded-lg text-center"
               >
-                <div className="text-5xl mb-4">{valor.icon}</div>
+                <div className="mb-4 flex justify-center">
+                  <ValorIcon className="h-12 w-12 text-[#c9a84c]" aria-hidden />
+                </div>
                 <h4 className="text-xl font-bold text-black mb-3 font-montserrat">
                   {valor.titulo}
                 </h4>
                 <p className="text-gray-700">{valor.descricao}</p>
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>

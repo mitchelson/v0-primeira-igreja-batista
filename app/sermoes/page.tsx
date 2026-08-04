@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Play, Video, Headphones } from "lucide-react";
 
 export default function SermoesPage() {
   const [categoriaSelecionada, setCategoriaSelecionada] = useState("todos");
@@ -180,8 +181,8 @@ export default function SermoesPage() {
                     className="object-cover group-hover:scale-110 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="bg-white text-black rounded-full p-4 hover:scale-110 transition-transform">
-                      ▶️
+                    <button className="bg-white text-black rounded-full p-4 hover:scale-110 transition-transform" aria-label="Reproduzir">
+                      <Play className="h-6 w-6 fill-current" aria-hidden />
                     </button>
                   </div>
                   <div className="absolute top-4 right-4 bg-[#D4C5B0] text-black px-3 py-1 rounded-full text-xs font-semibold">
@@ -200,15 +201,17 @@ export default function SermoesPage() {
                   <div className="flex gap-2">
                     <a
                       href={sermao.videoUrl}
-                      className="flex-1 text-center bg-black text-white font-semibold px-4 py-2 rounded-lg hover:bg-[#D4C5B0] hover:text-black transition-all text-sm"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 bg-black text-white font-semibold px-4 py-2 rounded-lg hover:bg-[#D4C5B0] hover:text-black transition-all text-sm"
                     >
-                      🎥 Vídeo
+                      <Video className="h-4 w-4" aria-hidden />
+                      Vídeo
                     </a>
                     <a
                       href={sermao.audioUrl}
-                      className="flex-1 text-center bg-white border-2 border-black text-black font-semibold px-4 py-2 rounded-lg hover:bg-black hover:text-white transition-all text-sm"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 bg-white border-2 border-black text-black font-semibold px-4 py-2 rounded-lg hover:bg-black hover:text-white transition-all text-sm"
                     >
-                      🎧 Áudio
+                      <Headphones className="h-4 w-4" aria-hidden />
+                      Áudio
                     </a>
                   </div>
                 </div>

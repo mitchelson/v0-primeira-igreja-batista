@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
 import { requireAdminUniversal } from "@/lib/mobile-auth"
+import {
+  assignAccountRole,
+  ensureAccountExists,
+  fetchAccountRolesBatch,
+  fromLegacyRole,
+  syncLegacyPrimaryRole,
+} from "@/lib/account-roles"
 
 export async function GET(request: NextRequest) {
   const check = await requireAdminUniversal(request)
@@ -18,7 +25,16 @@ export async function GET(request: NextRequest) {
     GROUP BY u.id
     ORDER BY u.nome ASC
   `
-  return NextResponse.json(rows)
+
+  const ids = rows.map((u: any) => u.id as string)
+  const rolesMap = await fetchAccountRolesBatch(ids)
+
+  const enriched = rows.map((u: any) => ({
+    ...u,
+    roles: rolesMap[u.id] || [],
+  }))
+
+  return NextResponse.json(enriched)
 }
 
 export async function PUT(request: NextRequest) {
@@ -41,6 +57,18 @@ export async function PUT(request: NextRequest) {
     WHERE id = ${id}
     RETURNING *
   `
+
+  // Dual-write global role into account_roles when role changes
+  if (role) {
+    try {
+      await ensureAccountExists(id)
+      await assignAccountRole(id, fromLegacyRole(role), null, check.session.userId)
+      await syncLegacyPrimaryRole(id)
+    } catch (e) {
+      console.error("dual-write role failed:", e)
+    }
+  }
+
   return NextResponse.json(rows[0])
 }
 
@@ -58,5 +86,6 @@ export async function DELETE(request: NextRequest) {
   }
 
   await sql`DELETE FROM users WHERE id = ${id}`
+  await sql`DELETE FROM accounts WHERE id = ${id}::uuid`.catch(() => {})
   return NextResponse.json({ ok: true })
 }

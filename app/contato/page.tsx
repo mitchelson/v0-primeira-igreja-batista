@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { MapPin, Phone, Mail, Clock, Bus, Car, Accessibility, Instagram, ThumbsUp, Youtube, MessageCircle, type LucideIcon } from "lucide-react";
 
 export default function ContatoPage() {
   const [formData, setFormData] = useState({
@@ -41,27 +42,27 @@ export default function ContatoPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const informacoes = [
+  const informacoes: { titulo: string; conteudo: string; Icon: LucideIcon }[] = [
     {
       titulo: "Endereço",
       conteudo: "Av. Principal, 1234\nCentro, Boa Vista/RR\nCEP: 69301-000",
-      icon: "📍",
+      Icon: MapPin,
     },
     {
       titulo: "Telefone",
       conteudo: "(95) 99999-9999\n(95) 3333-3333",
-      icon: "📞",
+      Icon: Phone,
     },
     {
       titulo: "Email",
       conteudo: "contato@pibr.org.br\nmidia@pibr.org.br",
-      icon: "✉️",
+      Icon: Mail,
     },
     {
       titulo: "Horários de Culto",
       conteudo:
         "Domingo: 19:00\nQuarta: 20:00 (Oração)\nSábado: 18:00 (Jovens)",
-      icon: "🕐",
+      Icon: Clock,
     },
   ];
 
@@ -94,12 +95,16 @@ export default function ContatoPage() {
       <section className="py-16 px-4 bg-[#F5F1E8]">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {informacoes.map((info, index) => (
+            {informacoes.map((info, index) => {
+              const InfoIcon = info.Icon
+              return (
               <div
                 key={index}
                 className="bg-white p-6 rounded-lg shadow-md text-center"
               >
-                <div className="text-4xl mb-4">{info.icon}</div>
+                <div className="mb-4 flex justify-center">
+                  <InfoIcon className="h-10 w-10 text-[#c9a84c]" aria-hidden />
+                </div>
                 <h3 className="text-xl font-bold text-black mb-3 font-montserrat">
                   {info.titulo}
                 </h3>
@@ -107,7 +112,8 @@ export default function ContatoPage() {
                   {info.conteudo}
                 </p>
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>
@@ -234,16 +240,16 @@ export default function ContatoPage() {
                 transporte público e com estacionamento disponível.
               </p>
               <ul className="space-y-2 text-gray-700">
-                <li className="flex items-start">
-                  <span className="mr-2">🚌</span>
+                <li className="flex items-start gap-2">
+                  <Bus className="h-5 w-5 shrink-0 text-[#c9a84c] mt-0.5" aria-hidden />
                   <span>Ônibus: Linhas 101, 202, 303</span>
                 </li>
-                <li className="flex items-start">
-                  <span className="mr-2">🚗</span>
+                <li className="flex items-start gap-2">
+                  <Car className="h-5 w-5 shrink-0 text-[#c9a84c] mt-0.5" aria-hidden />
                   <span>Estacionamento próprio disponível</span>
                 </li>
-                <li className="flex items-start">
-                  <span className="mr-2">♿</span>
+                <li className="flex items-start gap-2">
+                  <Accessibility className="h-5 w-5 shrink-0 text-[#c9a84c] mt-0.5" aria-hidden />
                   <span>Acessibilidade para pessoas com deficiência</span>
                 </li>
               </ul>
@@ -259,28 +265,28 @@ export default function ContatoPage() {
                   className="bg-white text-black p-3 rounded-full hover:bg-black hover:text-white transition-all"
                   aria-label="Instagram"
                 >
-                  📷
+                  <Instagram className="h-5 w-5" aria-hidden />
                 </a>
                 <a
                   href="#"
                   className="bg-white text-black p-3 rounded-full hover:bg-black hover:text-white transition-all"
                   aria-label="Facebook"
                 >
-                  👍
+                  <ThumbsUp className="h-5 w-5" aria-hidden />
                 </a>
                 <a
                   href="#"
                   className="bg-white text-black p-3 rounded-full hover:bg-black hover:text-white transition-all"
                   aria-label="YouTube"
                 >
-                  🎥
+                  <Youtube className="h-5 w-5" aria-hidden />
                 </a>
                 <a
                   href="https://wa.me/5595999999999"
                   className="bg-white text-black p-3 rounded-full hover:bg-black hover:text-white transition-all"
                   aria-label="WhatsApp"
                 >
-                  💬
+                  <MessageCircle className="h-5 w-5" aria-hidden />
                 </a>
               </div>
             </div>

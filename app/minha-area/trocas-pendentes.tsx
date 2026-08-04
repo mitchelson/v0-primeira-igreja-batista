@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeftRight, Check, X, Loader2 } from "lucide-react"
+import { MinistryIcon } from "@/components/ministry-icon"
 import { useState } from "react"
 import { toast } from "@/components/ui/use-toast"
 
@@ -54,7 +55,7 @@ export function TrocasPendentes() {
           return (
             <div key={t.id} className="border rounded-lg p-3 bg-white space-y-2">
               <div className="flex items-center gap-2">
-                <span className="text-sm">{t.ministerio_icone}</span>
+                <MinistryIcon name={t.ministerio_icone} ministryName={t.ministerio} size={18} />
                 <p className="text-sm font-medium flex-1">{t.ministerio}</p>
               </div>
               <p className="text-xs text-gray-600">

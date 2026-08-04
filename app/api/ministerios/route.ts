@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     // Create ministry
     const rows = await sql`
       INSERT INTO ministerios (nome, descricao, cor, icone, ordem)
-      VALUES (${nome}, ${descricao ?? null}, ${cor ?? "#D4C5B0"}, ${icone ?? "⛪"}, ${ordem ?? 0})
+      VALUES (${nome}, ${descricao ?? null}, ${cor ?? "#D4C5B0"}, ${icone ?? "Church"}, ${ordem ?? 0})
       RETURNING *
     `
     

@@ -17,6 +17,7 @@ import { Plus, Trash2, Check, X, AlertCircle, Crown, Users, Tag, CalendarDays, S
 import { toast } from "@/components/ui/use-toast"
 import { SearchableSelect } from "@/components/searchable-select"
 import { UserProfileDialog } from "@/components/user-profile-dialog"
+import { MinistryIcon } from "@/components/ministry-icon"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -96,7 +97,7 @@ export default function MinisterioDetailPage() {
     if (res.status === 409) { setConflictDialog(await res.json()); return }
     if (res.ok) {
       const data = await res.json()
-      if (data.warning) toast({ title: "⚠️ Aviso", description: data.warning })
+      if (data.warning) toast({ title: "Aviso", description: data.warning })
       else toast({ title: "Membro escalado" })
       mutateEscalas(); setAddOpen(false); setAddUser(""); setAddFuncao("")
     }
@@ -117,7 +118,7 @@ export default function MinisterioDetailPage() {
   const handleShareWhatsApp = () => {
     if (!selectedEvento || minEscalas.length === 0) return
     const data = new Date(selectedEvento.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })
-    let text = `📋 *Escala - ${ministerio.nome}*\n📅 ${selectedEvento.titulo} — ${data}${selectedEvento.horario ? ` às ${selectedEvento.horario}` : ""}\n\n`
+    let text = `*Escala - ${ministerio.nome}*\n${selectedEvento.titulo} — ${data}${selectedEvento.horario ? ` às ${selectedEvento.horario}` : ""}\n\n`
     minEscalas.forEach((e: any) => { text += `• ${e.user_nome}${e.funcao ? ` (${e.funcao})` : ""}\n` })
 
     if (navigator.share) {
@@ -153,7 +154,7 @@ export default function MinisterioDetailPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <span className="text-3xl">{ministerio.icone}</span>
+        <MinistryIcon name={ministerio.icone} ministryName={ministerio.nome} color={ministerio.cor} size={36} />
         <div>
           <h1 className="text-2xl font-bold">{ministerio.nome}</h1>
           {ministerio.descricao && <p className="text-muted-foreground text-sm">{ministerio.descricao}</p>}
@@ -410,7 +411,8 @@ export default function MinisterioDetailPage() {
                 options={membros.map((m: any) => {
                   const last = lastEscalas?.find((l: any) => l.user_id === m.user_id)
                   const lastDate = last ? new Date(last.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" }) : null
-                  return { value: m.user_id, label: `${m.nome}${m.is_lider ? " ★" : ""}`, sublabel: lastDate ? `Última: ${lastDate}` : undefined }
+                  const subParts = [m.is_lider ? "Líder" : null, lastDate ? `Última: ${lastDate}` : null].filter(Boolean)
+                  return { value: m.user_id, label: m.nome, sublabel: subParts.length ? subParts.join(" · ") : undefined }
                 })}
               />
             </div>

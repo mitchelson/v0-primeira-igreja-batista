@@ -1,7 +1,9 @@
 import React from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { User } from "lucide-react"
 import { sql } from "@/lib/neon"
+import { MinistryIcon } from "@/components/ministry-icon"
 
 export const revalidate = 60
 export const dynamic = "force-dynamic"
@@ -52,18 +54,18 @@ export default async function MinisteriosPage() {
               <div key={m.id} className={`grid grid-cols-1 lg:grid-cols-2 gap-8 items-center`}>
                 <div className={index % 2 === 1 ? "lg:order-2" : ""}>
                   <div className="relative h-[300px] rounded-lg overflow-hidden shadow-xl bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                    <span className="text-8xl">{m.icone || "⛪"}</span>
+                    <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={96} />
                   </div>
                 </div>
                 <div className={index % 2 === 1 ? "lg:order-1" : ""}>
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="text-5xl">{m.icone || "⛪"}</span>
+                    <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={48} />
                     <h3 className="text-3xl font-bold text-black font-montserrat">{m.nome}</h3>
                   </div>
                   <p className="text-gray-600 mb-4 text-lg">{m.descricao || "Ministério da nossa igreja."}</p>
                   <div className="space-y-2 mb-6">
-                    <div className="flex items-start">
-                      <span className="text-[#D4C5B0] mr-2 font-bold">👤</span>
+                    <div className="flex items-center">
+                      <User className="h-4 w-4 text-[#D4C5B0] mr-2" />
                       <span className="text-gray-700">{liderNome}</span>
                     </div>
                   </div>

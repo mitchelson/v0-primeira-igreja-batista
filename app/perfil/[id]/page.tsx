@@ -3,8 +3,10 @@
 import { useParams } from "next/navigation"
 import useSWR from "swr"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Calendar, Sparkles } from "lucide-react"
+import { Calendar, Sparkles, Crown } from "lucide-react"
 import Link from "next/link"
+import { MinistryIcon } from "@/components/ministry-icon"
+import { RoleBadges } from "@/components/role-badges"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -47,6 +49,7 @@ export default function PublicProfilePage() {
 
         <div>
           <p className="font-semibold text-sm">{profile.nome}</p>
+          <RoleBadges roles={profile.roles} legacyRole={profile.role} size="xs" className="mt-1.5" />
           {profile.bio && <p className="text-sm text-gray-700 mt-1">{profile.bio}</p>}
         </div>
 
@@ -56,9 +59,9 @@ export default function PublicProfilePage() {
             <div className="flex flex-wrap gap-2">
               {profile.ministerios.map((m: any) => (
                 <span key={m.nome} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gray-100 text-sm">
-                  <span>{m.icone || "⛪"}</span>
+                  <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={14} />
                   <span>{m.nome}</span>
-                  {m.is_lider && <span className="text-amber-500 text-xs">★</span>}
+                  {m.is_lider && <Crown className="h-3 w-3 text-amber-500" />}
                 </span>
               ))}
             </div>
@@ -90,7 +93,7 @@ export default function PublicProfilePage() {
             <div className="space-y-2">
               {profile.proximas_escalas.map((e: any, i: number) => (
                 <div key={i} className="flex items-center gap-3 border rounded-lg p-3">
-                  <span className="text-lg">{e.icone || "📋"}</span>
+                  <MinistryIcon name={e.icone} ministryName={e.ministerio} size={20} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{e.titulo}</p>
                     <p className="text-xs text-gray-500">{e.ministerio}{e.funcao ? ` · ${e.funcao}` : ""}</p>

@@ -75,10 +75,10 @@ export async function POST(request: NextRequest) {
   // Notifica o destinatário (in-app + push)
   await sql`
     INSERT INTO notifications (user_id, tipo, titulo, mensagem, link)
-    VALUES (${outra[0].user_id}, 'troca_escala', ${"🔄 Solicitação de troca"}, ${`${solNome} quer trocar de escala com você`}, '/minha-area')
+    VALUES (${outra[0].user_id}, 'troca_escala', ${"Solicitação de troca"}, ${`${solNome} quer trocar de escala com você`}, '/minha-area')
   `
   sendPushToUser(outra[0].user_id, {
-    title: "🔄 Solicitação de troca",
+    title: "Solicitação de troca",
     body: `${solNome} quer trocar de escala com você`,
     url: "/minha-area",
   }).catch(() => {})

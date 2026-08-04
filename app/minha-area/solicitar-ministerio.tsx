@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { toast } from "@/components/ui/use-toast"
 import { Check, Loader2 } from "lucide-react"
+import { MinistryIcon } from "@/components/ministry-icon"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -50,7 +51,7 @@ export function SolicitarMinisterio() {
           {ministerios?.map((m: any) => (
             <button key={m.id} onClick={() => setSelected(m.id)}
               className={`flex items-center gap-3 rounded-lg border p-3 text-left transition-colors ${selected === m.id ? "border-primary bg-primary/5" : "hover:bg-muted/50"}`}>
-              <span className="text-xl">{m.icone || "⛪"}</span>
+              <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={22} />
               <span className="text-sm font-medium">{m.nome}</span>
             </button>
           ))}

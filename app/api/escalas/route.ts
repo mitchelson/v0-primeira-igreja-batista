@@ -124,12 +124,12 @@ export async function POST(request: NextRequest) {
     // Notificação in-app
     await sql`
       INSERT INTO notifications (user_id, tipo, titulo, mensagem, link)
-      VALUES (${user_id}, 'escala', '📋 Você foi escalado!', ${`${min[0]?.nome} — ${ev[0]?.titulo} (${dataFormatada})`}, '/minha-area')
+      VALUES (${user_id}, 'escala', 'Você foi escalado!', ${`${min[0]?.nome} — ${ev[0]?.titulo} (${dataFormatada})`}, '/minha-area')
     `
 
     // Push notification
     sendPushToUser(user_id, {
-      title: "📋 Você foi escalado!",
+      title: "Você foi escalado!",
       body: `${min[0]?.nome} — ${ev[0]?.titulo} (${dataFormatada})`,
       url: "/minha-area",
     }).catch((err) => console.error("Push error:", err))

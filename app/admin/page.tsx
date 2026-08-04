@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Calendar, Music, ClipboardList, MessageSquare, UserCog, Settings, Sparkles, BookOpen, ChevronRight } from "lucide-react"
 import Link from "next/link"
+import { MinistryIcon } from "@/components/ministry-icon"
 
 export const dynamic = "force-dynamic"
 
@@ -43,7 +44,7 @@ export default async function AdminDashboard() {
           {visibleMinisterios.map((m: any) => (
             <Link key={m.id} href={`/admin/ministerios/${m.id}`}>
               <div className="flex items-center gap-3 bg-white rounded-xl border p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors">
-                <span className="text-xl">{m.icone || "⛪"}</span>
+                <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={22} />
                 <span className="flex-1 font-medium text-sm">{m.nome}</span>
                 <ChevronRight className="h-4 w-4 text-gray-400" />
               </div>

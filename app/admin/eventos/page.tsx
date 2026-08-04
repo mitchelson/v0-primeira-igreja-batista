@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Pencil, Trash2, Settings2, X, BookmarkPlus } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
+import { MinistryIcon } from "@/components/ministry-icon"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 const tipos = ["Culto", "Conferência", "Especial", "Reunião", "Outro"]
@@ -198,7 +199,14 @@ export default function EventosAdminPage() {
                   <Select value={form.repertorio_ministerio_id} onValueChange={v => setForm({ ...form, repertorio_ministerio_id: v, repertorio_funcao: "" })}>
                     <SelectTrigger><SelectValue placeholder="Ministério responsável (opcional)" /></SelectTrigger>
                     <SelectContent>
-                      {ministerios?.map((m: any) => <SelectItem key={m.id} value={m.id}>{m.icone} {m.nome}</SelectItem>)}
+                      {ministerios?.map((m: any) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          <span className="inline-flex items-center gap-2">
+                            <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={16} />
+                            {m.nome}
+                          </span>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   {form.repertorio_ministerio_id && repFuncoes?.length > 0 && (
@@ -281,7 +289,10 @@ export default function EventosAdminPage() {
                       const min = ministerios?.find((m: any) => m.id === p.ministerio_id)
                       return (
                         <div key={i} className="flex items-center gap-2 text-sm border rounded p-2">
-                          <span className="flex-1 truncate">{min?.icone} {min?.nome} — {p.funcao} (x{p.quantidade})</span>
+                          <span className="flex-1 truncate inline-flex items-center gap-1.5 min-w-0">
+                            <MinistryIcon name={min?.icone} ministryName={min?.nome} color={min?.cor} size={14} className="shrink-0" />
+                            <span className="truncate">{min?.nome} — {p.funcao} (x{p.quantidade})</span>
+                          </span>
                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setModeloPosicoes(ps => ps.filter((_, j) => j !== i))}><X className="h-3 w-3" /></Button>
                         </div>
                       )
@@ -315,8 +326,9 @@ export default function EventosAdminPage() {
                   {m.posicoes?.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">
                       {m.posicoes.map((p: any) => (
-                        <Badge key={p.id} variant="outline" className="text-[10px]">
-                          {p.ministerio_icone} {p.funcao} x{p.quantidade}
+                        <Badge key={p.id} variant="outline" className="text-[10px] gap-1">
+                          <MinistryIcon name={p.ministerio_icone} ministryName={p.ministerio_nome} size={12} />
+                          {p.funcao} x{p.quantidade}
                         </Badge>
                       ))}
                     </div>
@@ -338,7 +350,10 @@ export default function EventosAdminPage() {
               <div className="space-y-2">
                 {eventoPosicoes.map((p: any) => (
                   <div key={p.id} className="flex items-center justify-between text-sm border rounded p-2 gap-2">
-                    <span className="truncate">{p.ministerio_icone} {p.ministerio_nome} — {p.funcao} (x{p.quantidade})</span>
+                    <span className="truncate inline-flex items-center gap-1.5 min-w-0 flex-1">
+                      <MinistryIcon name={p.ministerio_icone} ministryName={p.ministerio_nome} size={14} className="shrink-0" />
+                      <span className="truncate">{p.ministerio_nome} — {p.funcao} (x{p.quantidade})</span>
+                    </span>
                     <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive shrink-0" onClick={() => handleRemovePosicao(p.id)}><Trash2 className="h-3 w-3" /></Button>
                   </div>
                 ))}
@@ -352,7 +367,14 @@ export default function EventosAdminPage() {
               <Select value={posMinId} onValueChange={(v) => { setPosMinId(v); setPosFuncao("") }}>
                 <SelectTrigger><SelectValue placeholder="Ministério" /></SelectTrigger>
                 <SelectContent>
-                  {ministerios?.map((m: any) => <SelectItem key={m.id} value={m.id}>{m.icone} {m.nome}</SelectItem>)}
+                  {ministerios?.map((m: any) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      <span className="inline-flex items-center gap-2">
+                        <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={16} />
+                        {m.nome}
+                      </span>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {posMinId && (
@@ -395,7 +417,14 @@ function ModeloPosicaoAdd({ ministerios, onAdd }: { ministerios: any[]; onAdd: (
       <Select value={minId} onValueChange={(v) => { setMinId(v); setFuncao("") }}>
         <SelectTrigger><SelectValue placeholder="Ministério" /></SelectTrigger>
         <SelectContent>
-          {ministerios?.map((m: any) => <SelectItem key={m.id} value={m.id}>{m.icone} {m.nome}</SelectItem>)}
+          {ministerios?.map((m: any) => (
+            <SelectItem key={m.id} value={m.id}>
+              <span className="inline-flex items-center gap-2">
+                <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={16} />
+                {m.nome}
+              </span>
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
       {minId && (

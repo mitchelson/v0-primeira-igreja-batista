@@ -52,7 +52,7 @@ export function PushNotificationRegister() {
         body: JSON.stringify(sub.toJSON()),
       })
       setSubscribed(true)
-      toast({ title: "Notificações ativadas ✅" })
+      toast({ title: "Notificações ativadas" })
     } catch (e: any) {
       console.error("Push subscribe error:", e)
       const description = e?.message === "sw-timeout"

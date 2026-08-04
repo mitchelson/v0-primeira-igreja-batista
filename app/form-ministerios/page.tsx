@@ -5,7 +5,8 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import Header from "@/components/header"
-import { CheckSquare, Square, Lock } from "lucide-react"
+import { CheckSquare, Square, Lock, CircleCheckBig } from "lucide-react"
+import { MinistryIcon } from "@/components/ministry-icon"
 
 type Ministerio = { id: string; nome: string; icone: string; cor: string; descricao: string | null; form_obrigatorio: boolean; ativo: boolean }
 
@@ -87,7 +88,7 @@ export default function FormMinisteriosPage() {
         <div className="mx-auto max-w-lg px-4 py-6">
           <Card>
             <CardContent className="py-10 text-center space-y-3">
-              <p className="text-4xl">✅</p>
+              <CircleCheckBig className="h-12 w-12 mx-auto text-green-600" aria-hidden />
               <p className="text-lg font-semibold text-green-800">Resposta enviada com sucesso!</p>
               <p className="text-sm text-muted-foreground">
                 Você selecionou {selected.length} ministério{selected.length !== 1 ? "s" : ""}.
@@ -154,10 +155,10 @@ export default function FormMinisteriosPage() {
                     }
                   </div>
                   <div
-                    className="shrink-0 flex items-center justify-center text-xl w-9 h-9 rounded-full"
+                    className="shrink-0 flex items-center justify-center w-9 h-9 rounded-full"
                     style={{ backgroundColor: m.cor ? `${m.cor}20` : "#f3f4f6" }}
                   >
-                    {m.icone || "⛪"}
+                    <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={22} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`font-medium text-sm ${isSelected || isObrigatorio ? "text-primary" : "text-gray-900"}`}>

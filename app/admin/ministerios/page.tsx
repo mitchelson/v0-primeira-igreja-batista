@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge"
 import { Plus, Pencil, Trash2, Users } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
+import { MinistryIcon, MinistryIconPicker } from "@/components/ministry-icon"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -17,11 +18,11 @@ export default function MinisteriosAdminPage() {
   const { data: ministerios, mutate } = useSWR("/api/ministerios", fetcher)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<any>(null)
-  const [form, setForm] = useState({ nome: "", descricao: "", cor: "#D4C5B0", icone: "⛪", ordem: 0 })
+  const [form, setForm] = useState({ nome: "", descricao: "", cor: "#D4C5B0", icone: "Church", ordem: 0 })
   const [detailId, setDetailId] = useState<string | null>(null)
   const { data: detail } = useSWR(detailId ? `/api/ministerios/${detailId}` : null, fetcher)
 
-  const resetForm = () => { setForm({ nome: "", descricao: "", cor: "#D4C5B0", icone: "⛪", ordem: 0 }); setEditing(null) }
+  const resetForm = () => { setForm({ nome: "", descricao: "", cor: "#D4C5B0", icone: "Church", ordem: 0 }); setEditing(null) }
 
   const handleSave = async () => {
     const method = editing ? "PUT" : "POST"
@@ -40,7 +41,7 @@ export default function MinisteriosAdminPage() {
   }
 
   const openEdit = (m: any) => {
-    setForm({ nome: m.nome, descricao: m.descricao || "", cor: m.cor, icone: m.icone || "⛪", ordem: m.ordem })
+    setForm({ nome: m.nome, descricao: m.descricao || "", cor: m.cor, icone: m.icone || "Church", ordem: m.ordem })
     setEditing(m); setOpen(true)
   }
 
@@ -52,15 +53,18 @@ export default function MinisteriosAdminPage() {
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-1" />Novo</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{editing ? "Editar" : "Novo"} Ministério</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div><Label>Nome</Label><Input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} /></div>
               <div><Label>Descrição</Label><Input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} /></div>
               <div className="flex flex-wrap gap-4">
                 <div className="flex-1 min-w-[100px]"><Label>Cor</Label><Input type="color" value={form.cor} onChange={e => setForm({ ...form, cor: e.target.value })} /></div>
-                <div className="flex-1 min-w-[100px]"><Label>Ícone</Label><Input value={form.icone} onChange={e => setForm({ ...form, icone: e.target.value })} /></div>
                 <div className="w-20"><Label>Ordem</Label><Input type="number" value={form.ordem} onChange={e => setForm({ ...form, ordem: Number(e.target.value) })} /></div>
+              </div>
+              <div>
+                <Label className="mb-2 block">Ícone</Label>
+                <MinistryIconPicker value={form.icone} onChange={(icone) => setForm({ ...form, icone })} />
               </div>
               <Button className="w-full" onClick={handleSave}>Salvar</Button>
             </div>
@@ -74,7 +78,7 @@ export default function MinisteriosAdminPage() {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <span className="text-xl">{m.icone}</span>
+                  <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={22} />
                   <span>{m.nome}</span>
                 </CardTitle>
                 <div className="flex gap-1">

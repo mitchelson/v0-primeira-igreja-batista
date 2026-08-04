@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Home, Users, MessageSquare, UserCog, Calendar, ClipboardList, Plus, Settings, BookOpen, Sparkles } from "lucide-react"
+import { MinistryIcon } from "@/components/ministry-icon"
+import { RoleBadges } from "@/components/role-badges"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -37,6 +39,8 @@ export function AdminSidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
   const { data: ministerios } = useSWR("/api/ministerios", fetcher, { refreshInterval: 30000 })
+  const userId = session?.user?.id
+  const { data: rolesData } = useSWR(userId ? `/api/accounts/${userId}/roles` : null, fetcher)
   const { setOpenMobile } = useSidebar()
   const role = session?.user?.role
   const ministerioIds: string[] = (session?.user as any)?.ministerioIds || []
@@ -94,7 +98,7 @@ export function AdminSidebar() {
                 <SidebarMenuItem key={m.id}>
                   <SidebarMenuButton asChild isActive={pathname === `/admin/ministerios/${m.id}`}>
                     <Link href={`/admin/ministerios/${m.id}`} onClick={closeMobile}>
-                      <span className="text-base leading-none">{m.icone || "⛪"}</span>
+                      <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={16} />
                       <span>{m.nome}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -143,9 +147,9 @@ export function AdminSidebar() {
               <AvatarImage src={session.user.image ?? undefined} />
               <AvatarFallback>{session.user.name?.[0] ?? "U"}</AvatarFallback>
             </Avatar>
-            <div className="flex flex-col text-sm leading-tight">
+            <div className="flex flex-col text-sm leading-tight min-w-0">
               <span className="font-medium truncate">{session.user.name}</span>
-              <span className="text-xs text-muted-foreground capitalize">{session.user.role}</span>
+              <RoleBadges roles={rolesData?.roles} legacyRole={session.user.role} size="xs" className="mt-0.5" />
             </div>
           </div>
         </SidebarFooter>

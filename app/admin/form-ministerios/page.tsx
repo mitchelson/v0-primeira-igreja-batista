@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { ClipboardList, Lock } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
+import { MinistryIcon } from "@/components/ministry-icon"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -59,10 +60,10 @@ export default function AdminFormMinisteriosPage() {
               className={`flex items-center gap-3 rounded-xl border p-3 transition-colors ${m.form_obrigatorio ? "border-primary/30 bg-primary/5" : "border-gray-200"}`}
             >
               <div
-                className="flex items-center justify-center text-xl w-9 h-9 rounded-full shrink-0"
+                className="flex items-center justify-center w-9 h-9 rounded-full shrink-0"
                 style={{ backgroundColor: m.cor ? `${m.cor}20` : "#f3f4f6" }}
               >
-                {m.icone || "⛪"}
+                <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={22} />
               </div>
               <p className="flex-1 text-sm font-medium truncate">{m.nome}</p>
               <Switch
@@ -84,10 +85,10 @@ export default function AdminFormMinisteriosPage() {
               <Card key={m.id} className="rounded-xl">
                 <CardContent className="p-4 flex items-center gap-3">
                   <div
-                    className="flex items-center justify-center text-xl w-10 h-10 rounded-full shrink-0"
+                    className="flex items-center justify-center w-10 h-10 rounded-full shrink-0"
                     style={{ backgroundColor: m.cor ? `${m.cor}20` : "#f3f4f6" }}
                   >
-                    {m.icone || "⛪"}
+                    <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={24} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{m.nome}</p>
@@ -134,7 +135,8 @@ export default function AdminFormMinisteriosPage() {
                       if (!min) return null
                       return (
                         <span key={minId} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium border border-gray-200 bg-gray-50">
-                          {min.icone} {min.nome}
+                          <MinistryIcon name={min.icone} ministryName={min.nome} color={min.cor} size={12} />
+                          {min.nome}
                         </span>
                       )
                     })}

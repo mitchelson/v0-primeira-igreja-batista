@@ -3,19 +3,28 @@
 import { useState } from "react"
 import useSWR from "swr"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Search, Plus, X, Crown, Trash2 } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
+import { RoleBadges, type RoleBadgeItem } from "@/components/role-badges"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
+
+const GLOBAL_ROLES = [
+  { value: "admin", label: "Administrador" },
+  { value: "supervisor", label: "Supervisor" },
+  { value: "membro", label: "Membro" },
+  { value: "congregado", label: "Congregado" },
+  { value: "visitante", label: "Visitante" },
+]
 
 export default function MembrosAdminPage() {
   const { data: users, mutate } = useSWR("/api/users", fetcher)
@@ -25,6 +34,8 @@ export default function MembrosAdminPage() {
   const [editUser, setEditUser] = useState<any>(null)
   const [addMinId, setAddMinId] = useState("")
   const [editNome, setEditNome] = useState("")
+  const [addRoleName, setAddRoleName] = useState("membro")
+  const [addRoleMinistry, setAddRoleMinistry] = useState<string>("")
 
   const filtered = users?.filter((u: any) => {
     const matchSearch = !search || u.nome.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase())
@@ -34,20 +45,32 @@ export default function MembrosAdminPage() {
     return matchSearch && matchMin
   })
 
+  const refreshEditUser = async (id: string) => {
+    await mutate()
+    const res = await fetch("/api/users")
+    const list = await res.json()
+    const fresh = list.find((u: any) => u.id === id)
+    if (fresh) setEditUser(fresh)
+  }
+
   const handleUpdate = async (id: string, data: any) => {
     await fetch("/api/users", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, ...data }) })
-    toast({ title: "Usuário atualizado" }); mutate()
+    toast({ title: "Usuário atualizado" })
+    await refreshEditUser(id)
   }
 
   const handleAddMinisterio = async (userId: string) => {
     if (!addMinId) return
     await fetch("/api/users/ministerios", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: userId, ministerio_id: addMinId }) })
-    toast({ title: "Ministério vinculado" }); mutate(); setAddMinId("")
+    toast({ title: "Ministério vinculado" })
+    setAddMinId("")
+    await refreshEditUser(userId)
   }
 
   const handleRemoveMinisterio = async (userId: string, ministerioId: string) => {
     await fetch("/api/users/ministerios", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: userId, ministerio_id: ministerioId }) })
-    toast({ title: "Ministério desvinculado" }); mutate()
+    toast({ title: "Ministério desvinculado" })
+    await refreshEditUser(userId)
   }
 
   const handleDelete = async (id: string) => {
@@ -57,10 +80,53 @@ export default function MembrosAdminPage() {
 
   const handleToggleLider = async (userId: string, ministerioId: string, isLider: boolean) => {
     await fetch("/api/users/ministerios", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: userId, ministerio_id: ministerioId, is_lider: !isLider }) })
-    toast({ title: isLider ? "Removido como líder" : "Promovido a líder" }); mutate()
+    toast({ title: isLider ? "Removido como líder" : "Promovido a líder" })
+    await refreshEditUser(userId)
   }
 
-  const roleColor = (role: string) => role === "admin" ? "bg-red-100 text-red-700" : role === "supervisor" ? "bg-purple-100 text-purple-700" : role === "lider" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"
+  const handleAddRole = async (userId: string) => {
+    const isContextual = addRoleName === "lider" && addRoleMinistry
+    const body: any = { role_name: addRoleName }
+    if (isContextual) body.ministerio_id = addRoleMinistry
+
+    const res = await fetch(`/api/accounts/${userId}/roles`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      toast({ title: "Erro ao adicionar papel", description: err.error || err.message, variant: "destructive" })
+      return
+    }
+    toast({ title: "Papel adicionado" })
+    setAddRoleName("membro")
+    setAddRoleMinistry("")
+    await refreshEditUser(userId)
+  }
+
+  const handleRemoveRole = async (userId: string, role: RoleBadgeItem) => {
+    const body: any = {
+      role_name: role.role_name,
+      context_id: role.context_id || null,
+    }
+    if (role.context_type === "ministry" && role.context_id) {
+      // resolve ministry id from contexts via name match in ministerios list when needed
+      const min = ministerios?.find((m: any) => m.nome === role.context_name)
+      if (min) body.ministerio_id = min.id
+    }
+    const res = await fetch(`/api/accounts/${userId}/roles`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+    if (!res.ok) {
+      toast({ title: "Erro ao remover papel", variant: "destructive" })
+      return
+    }
+    toast({ title: "Papel removido" })
+    await refreshEditUser(userId)
+  }
 
   return (
     <div className="space-y-6">
@@ -97,17 +163,20 @@ export default function MembrosAdminPage() {
                 <AvatarImage src={u.foto_url} />
                 <AvatarFallback>{u.nome?.[0]}</AvatarFallback>
               </Avatar>
-              <div>
+              <div className="w-full">
                 <p className="font-medium text-sm truncate max-w-full">{u.nome}</p>
                 <p className="text-[11px] text-muted-foreground truncate max-w-full">{u.email}</p>
-                <span className={`text-xs px-1.5 py-0.5 rounded ${roleColor(u.role)}`}>{u.role}</span>
-                {!u.ativo && <Badge variant="destructive" className="text-xs ml-1">Inativo</Badge>}
+                <div className="mt-1 flex justify-center">
+                  <RoleBadges roles={u.roles} legacyRole={u.role} size="xs" className="justify-center" />
+                </div>
+                {!u.ativo && <Badge variant="destructive" className="text-xs mt-1">Inativo</Badge>}
               </div>
               {u.ministerios?.length > 0 && (
                 <div className="flex gap-1 flex-wrap justify-center">
                   {u.ministerios.map((m: any) => (
-                    <Badge key={m.ministerio_id} variant="outline" className="text-[10px]">
-                      {m.nome}{m.is_lider ? " ★" : ""}
+                    <Badge key={m.ministerio_id} variant="outline" className="text-[10px] gap-1">
+                      {m.nome}
+                      {m.is_lider && <Crown className="h-3 w-3 text-amber-500" />}
                     </Badge>
                   ))}
                 </div>
@@ -118,7 +187,7 @@ export default function MembrosAdminPage() {
       </div>
 
       <Dialog open={!!editUser} onOpenChange={(v) => { if (!v) setEditUser(null) }}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar membro</DialogTitle>
             {editUser?.email && <p className="text-sm text-muted-foreground">{editUser.email}</p>}
@@ -134,18 +203,55 @@ export default function MembrosAdminPage() {
                   </Button>
                 </div>
               </div>
+
               <div>
-                <Label>Papel</Label>
-                <Select value={editUser.role} onValueChange={v => { handleUpdate(editUser.id, { role: v }); setEditUser({ ...editUser, role: v }) }}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="supervisor">Supervisor</SelectItem>
-                    <SelectItem value="lider">Líder</SelectItem>
-                    <SelectItem value="membro">Membro</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Papéis</Label>
+                <div className="space-y-2 mt-2">
+                  {(editUser.roles?.length ? editUser.roles : [{ role_name: editUser.role }]).map((role: RoleBadgeItem, idx: number) => (
+                    <div key={`${role.role_name}-${role.context_id || "g"}-${idx}`} className="flex items-center justify-between text-sm border rounded p-2 gap-2">
+                      <RoleBadges roles={[role]} size="xs" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive shrink-0"
+                        onClick={() => handleRemoveRole(editUser.id, role)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-col gap-2 mt-3">
+                  <div className="flex gap-2">
+                    <Select value={addRoleName} onValueChange={(v) => { setAddRoleName(v); if (v !== "lider") setAddRoleMinistry("") }}>
+                      <SelectTrigger className="flex-1"><SelectValue placeholder="Papel" /></SelectTrigger>
+                      <SelectContent>
+                        {GLOBAL_ROLES.map((r) => (
+                          <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                        ))}
+                        <SelectItem value="lider">Líder (com ministério)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button size="sm" onClick={() => handleAddRole(editUser.id)} disabled={addRoleName === "lider" && !addRoleMinistry}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {addRoleName === "lider" && (
+                    <Select value={addRoleMinistry} onValueChange={setAddRoleMinistry}>
+                      <SelectTrigger><SelectValue placeholder="Ministério do líder" /></SelectTrigger>
+                      <SelectContent>
+                        {ministerios?.map((m: any) => (
+                          <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <p className="text-[11px] text-muted-foreground">
+                    Papéis globais (admin, membro…) aplicam em todo o sistema. Líder exige um ministério.
+                  </p>
+                </div>
               </div>
+
               <div className="flex items-center justify-between">
                 <Label>Ativo</Label>
                 <Switch checked={editUser.ativo} onCheckedChange={v => { handleUpdate(editUser.id, { ativo: v }); setEditUser({ ...editUser, ativo: v }) }} />

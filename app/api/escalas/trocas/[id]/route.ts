@@ -29,10 +29,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     // Notifica solicitante (in-app + push)
     await sql`
       INSERT INTO notifications (user_id, tipo, titulo, mensagem, link)
-      VALUES (${t.solicitante_id}, 'troca_escala', ${"❌ Troca recusada"}, ${"Sua solicitação de troca foi recusada"}, '/minha-area')
+      VALUES (${t.solicitante_id}, 'troca_escala', ${"Troca recusada"}, ${"Sua solicitação de troca foi recusada"}, '/minha-area')
     `
     sendPushToUser(t.solicitante_id, {
-      title: "❌ Troca recusada",
+      title: "Troca recusada",
       body: "Sua solicitação de troca foi recusada",
       url: "/minha-area",
     }).catch(() => {})
@@ -71,10 +71,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   // Notifica solicitante (in-app + push)
   await sql`
     INSERT INTO notifications (user_id, tipo, titulo, mensagem, link)
-    VALUES (${t.solicitante_id}, 'troca_escala', ${"✅ Troca aceita!"}, ${"Sua troca de escala foi aceita"}, '/minha-area')
+    VALUES (${t.solicitante_id}, 'troca_escala', ${"Troca aceita!"}, ${"Sua troca de escala foi aceita"}, '/minha-area')
   `
   sendPushToUser(t.solicitante_id, {
-    title: "✅ Troca aceita!",
+    title: "Troca aceita!",
     body: "Sua troca de escala foi aceita",
     url: "/minha-area",
   }).catch(() => {})

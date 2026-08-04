@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/use-toast"
 import { Settings } from "lucide-react"
+import { MinistryIcon } from "@/components/ministry-icon"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -110,7 +111,10 @@ export default function ConfiguracoesPage() {
               <SelectContent>
                 {ativos.map((m: any) => (
                   <SelectItem key={m.id} value={m.id}>
-                    {m.icone} {m.nome}
+                    <span className="inline-flex items-center gap-2">
+                      <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={16} />
+                      {m.nome}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -150,7 +154,10 @@ export default function ConfiguracoesPage() {
               <SelectContent>
                 {ativos.map((m: any) => (
                   <SelectItem key={m.id} value={m.id}>
-                    {m.icone} {m.nome}
+                    <span className="inline-flex items-center gap-2">
+                      <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={16} />
+                      {m.nome}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>

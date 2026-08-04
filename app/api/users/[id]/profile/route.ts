@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
+import { fetchAccountRoles } from "@/lib/account-roles"
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
   const user = await sql`
-    SELECT id, nome, foto_url, bio, nascimento, data_batismo, criado_em
+    SELECT id, nome, foto_url, bio, nascimento, data_batismo, criado_em, role
     FROM users WHERE id = ${id} AND ativo = true
   `
   if (user.length === 0) return NextResponse.json({ error: "Não encontrado" }, { status: 404 })
@@ -30,8 +31,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     LIMIT 3
   `
 
+  const roles = await fetchAccountRoles(id)
+
   return NextResponse.json({
     ...user[0],
+    roles,
     ministerios,
     dons: gifts[0]?.results || null,
     proximas_escalas: escalas,

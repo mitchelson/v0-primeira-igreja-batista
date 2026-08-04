@@ -5,7 +5,8 @@ import Link from "next/link"
 import Image from "next/image"
 import useSWR from "swr"
 import { useSession } from "next-auth/react"
-import { Heart, MessageCircle, Send, Trash2, ImagePlus, Loader2, Pin } from "lucide-react"
+import { Heart, MessageCircle, Send, Trash2, ImagePlus, Loader2, Pin, Link2 } from "lucide-react"
+import { MinistryIcon } from "@/components/ministry-icon"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -39,7 +40,8 @@ function PostMencoes({ ministerioIds, userIds }: { ministerioIds?: string[]; use
         const m = ministerios?.find((x: any) => x.id === id)
         return m ? (
           <span key={id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-xs text-blue-600 font-medium">
-            {m.icone} {m.nome}
+            <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={12} />
+            {m.nome}
           </span>
         ) : null
       })}
@@ -123,7 +125,8 @@ function PostCard({ post, session, mutate }: { post: any; session: any; mutate: 
       {post.conteudo && <p className="px-4 pb-3 text-sm whitespace-pre-wrap">{post.conteudo}</p>}
       {post.link && (
         <a href={post.link} target="_blank" rel="noopener noreferrer" className="mx-4 mb-3 flex items-center gap-2 text-sm text-blue-600 bg-blue-50 rounded-lg px-3 py-2 hover:bg-blue-100 transition-colors truncate">
-          🔗 {post.link.replace(/^https?:\/\//, "").split("/")[0]}
+          <Link2 className="h-4 w-4 shrink-0" aria-hidden />
+          {post.link.replace(/^https?:\/\//, "").split("/")[0]}
         </a>
       )}
       {(post.mencoes_ministerios || post.mencoes_users) && (
@@ -293,7 +296,8 @@ function NewPostForm({ mutate }: { mutate: () => void }) {
             const m = ministerios?.find((x: any) => x.id === id)
             return m ? (
               <span key={id} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-xs text-blue-700">
-                {m.icone} {m.nome}
+                <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={12} />
+                {m.nome}
                 <button onClick={() => setSelectedMinisterios(s => s.filter(x => x !== id))} className="text-blue-400 hover:text-blue-700">×</button>
               </span>
             ) : null
@@ -320,9 +324,10 @@ function NewPostForm({ mutate }: { mutate: () => void }) {
                 <button
                   key={m.id}
                   onClick={() => setSelectedMinisterios(s => s.includes(m.id) ? s.filter(x => x !== m.id) : [...s, m.id])}
-                  className={`px-2 py-1 rounded-full text-xs border ${selectedMinisterios.includes(m.id) ? "bg-blue-100 border-blue-300 text-blue-700" : "bg-white border-gray-200"}`}
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border ${selectedMinisterios.includes(m.id) ? "bg-blue-100 border-blue-300 text-blue-700" : "bg-white border-gray-200"}`}
                 >
-                  {m.icone} {m.nome}
+                  <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={12} />
+                  {m.nome}
                 </button>
               ))}
             </div>

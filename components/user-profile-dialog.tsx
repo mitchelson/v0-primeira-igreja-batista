@@ -6,7 +6,8 @@ import Link from "next/link"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Sparkles, Calendar } from "lucide-react"
+import { Sparkles, Calendar, Crown } from "lucide-react"
+import { MinistryIcon } from "@/components/ministry-icon"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -43,8 +44,9 @@ export function UserProfileDialog({ children, userId }: { children: React.ReactN
                 <div className="flex flex-wrap gap-1.5">
                   {profile.ministerios.map((m: any) => (
                     <span key={m.nome} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-xs">
-                      {m.icone || "⛪"} {m.nome}
-                      {m.is_lider && <span className="text-amber-500">★</span>}
+                      <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={12} />
+                      {m.nome}
+                      {m.is_lider && <Crown className="h-3 w-3 text-amber-500" />}
                     </span>
                   ))}
                 </div>
@@ -71,7 +73,7 @@ export function UserProfileDialog({ children, userId }: { children: React.ReactN
                 <div>
                   <p className="text-xs font-semibold text-gray-500 mb-1.5"><Calendar className="h-3 w-3 inline mr-1" />Próxima escala</p>
                   <div className="flex items-center gap-2 text-sm border rounded-lg p-2">
-                    <span>{profile.proximas_escalas[0].icone || "📋"}</span>
+                    <MinistryIcon name={profile.proximas_escalas[0].icone} ministryName={profile.proximas_escalas[0].ministerio} size={16} />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{profile.proximas_escalas[0].titulo}</p>
                       <p className="text-xs text-gray-500">{profile.proximas_escalas[0].ministerio}</p>

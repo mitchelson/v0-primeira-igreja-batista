@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   await Promise.allSettled(
     escalados.map(async (e: any) => {
       const count = await sendPushToUser(e.user_id, {
-        title: "🔔 Lembrete de Escala",
+        title: "Lembrete de Escala",
         body: `Lembre-se que você está escalado para ${evento[0].titulo} dia ${dataFormatada}`,
         url: "/minha-area",
       })

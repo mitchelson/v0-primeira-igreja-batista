@@ -1,6 +1,7 @@
 import React from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { Calendar, Clock } from "lucide-react"
 import { sql } from "@/lib/neon"
 
 export const revalidate = 60
@@ -49,7 +50,7 @@ export default async function EventosPage() {
               {eventos.map((evento: any) => (
                 <div key={evento.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group">
                   <div className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-800 to-black flex items-center justify-center">
-                    <span className="text-6xl text-white/30">📅</span>
+                    <Calendar className="h-16 w-16 text-white/30" aria-hidden />
                     <div className="absolute top-4 right-4 bg-[#D4C5B0] text-black px-3 py-1 rounded-full text-xs font-semibold">
                       {evento.tipo}
                     </div>
@@ -59,12 +60,12 @@ export default async function EventosPage() {
                     {evento.descricao && <p className="text-gray-600 mb-4 text-sm">{evento.descricao}</p>}
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center text-gray-700">
-                        <span className="mr-2">📅</span>
+                        <Calendar className="mr-2 h-4 w-4 shrink-0 text-gray-500" aria-hidden />
                         <span className="font-semibold">{new Date(evento.data).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" })}</span>
                       </div>
                       {evento.horario && (
                         <div className="flex items-center text-gray-700">
-                          <span className="mr-2">🕐</span>
+                          <Clock className="mr-2 h-4 w-4 shrink-0 text-gray-500" aria-hidden />
                           <span>{evento.horario}</span>
                         </div>
                       )}

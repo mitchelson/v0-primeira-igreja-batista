@@ -1,8 +1,9 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Play, MapPin, Clock, ChevronRight, Instagram, Youtube, Phone, Menu } from "lucide-react";
+import { Play, MapPin, Clock, ChevronRight, Instagram, Youtube, Phone, Menu, Home, Calendar, Users, MessageCircle, User } from "lucide-react";
 import { sql } from "@/lib/neon";
+import { MinistryIcon } from "@/components/ministry-icon";
 
 const NAV_LINKS = [
   { href: "/sobre", label: "Quem Somos" },
@@ -194,7 +195,7 @@ export default async function HomeLanding() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {ministerios.map((m: any) => (
               <div key={m.nome} className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-center hover:border-[#c9a84c]/30 hover:bg-white/[0.04] transition-all group">
-                <span className="text-3xl mb-3 block">{m.icone || "⛪"}</span>
+                <span className="mb-3 flex justify-center"><MinistryIcon name={m.icone} ministryName={m.nome} size={36} className="text-[#c9a84c]" /></span>
                 <h3 className="text-sm font-bold mb-1 group-hover:text-[#c9a84c] transition-colors">{m.nome}</h3>
                 {m.descricao && <p className="text-xs text-gray-500 line-clamp-2">{m.descricao}</p>}
               </div>
@@ -400,14 +401,14 @@ export default async function HomeLanding() {
       {/* ── Bottom Nav Mobile ── */}
       <nav className="fixed bottom-0 inset-x-0 bg-[#0a0a0a]/95 backdrop-blur-md border-t border-white/5 flex justify-around items-center py-2.5 z-50 md:hidden">
         {[
-          { href: "/", icon: "🏠", label: "Início" },
-          { href: "/eventos", icon: "📅", label: "Eventos" },
-          { href: "/ministerios", icon: "👥", label: "Ministérios" },
-          { href: "/contato", icon: "💬", label: "Contato" },
-          { href: "/minha-area", icon: "👤", label: "Minha Área" },
+          { href: "/", Icon: Home, label: "Início" },
+          { href: "/eventos", Icon: Calendar, label: "Eventos" },
+          { href: "/ministerios", Icon: Users, label: "Ministérios" },
+          { href: "/contato", Icon: MessageCircle, label: "Contato" },
+          { href: "/minha-area", Icon: User, label: "Minha Área" },
         ].map((item) => (
           <Link key={item.href} href={item.href} className="flex flex-col items-center gap-0.5 text-gray-400 hover:text-[#c9a84c] transition-colors">
-            <span className="text-lg">{item.icon}</span>
+            <item.Icon className="h-5 w-5" />
             <span className="text-[10px] font-medium">{item.label}</span>
           </Link>
         ))}
