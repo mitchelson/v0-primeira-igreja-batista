@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import Header from "@/components/header"
+import { AppShell } from "@/components/app-shell"
 import { ANSWER_LABELS, TOTAL_QUESTIONS, GIFT_DESCRIPTIONS, getQuestionAtIndex } from "@/lib/dons-espirituais"
 import type { GiftName } from "@/lib/dons-espirituais"
 
@@ -29,7 +29,7 @@ export default function FormDonsEspirituaisPage() {
   }, [status])
 
   if (status === "loading" || loading) {
-    return <div className="min-h-screen bg-muted/30"><Header /><div className="flex justify-center py-20"><p className="text-muted-foreground">Carregando...</p></div></div>
+    return <AppShell><div className="flex justify-center py-20"><p className="text-muted-foreground">Carregando...</p></div></AppShell>
   }
 
   // Not logged in — show login buttons
@@ -39,8 +39,7 @@ export default function FormDonsEspirituaisPage() {
       signIn("google", { callbackUrl: "/form-dons-espirituais" })
     }
     return (
-      <div className="min-h-screen bg-muted/30">
-        <Header />
+      <AppShell showTabs={false}>
         <div className="mx-auto max-w-md px-4 py-12">
           <Card>
             <CardHeader className="text-center">
@@ -53,15 +52,14 @@ export default function FormDonsEspirituaisPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </AppShell>
     )
   }
 
   // Show results
   if (results && !started) {
     return (
-      <div className="min-h-screen bg-muted/30">
-        <Header />
+      <AppShell>
         <div className="mx-auto max-w-lg px-4 py-6 space-y-4">
           <Card>
             <CardHeader>
@@ -86,20 +84,19 @@ export default function FormDonsEspirituaisPage() {
                 Refazer o teste
               </Button>
               <a href="/minha-area" className="block text-center text-sm text-primary underline mt-3">
-                Ir para Minha Área
+                Ir para Escalas
               </a>
             </CardContent>
           </Card>
         </div>
-      </div>
+      </AppShell>
     )
   }
 
   // Intro screen
   if (!started) {
     return (
-      <div className="min-h-screen bg-muted/30">
-        <Header />
+      <AppShell>
         <div className="mx-auto max-w-lg px-4 py-6">
           <Card>
             <CardHeader>
@@ -116,7 +113,7 @@ export default function FormDonsEspirituaisPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </AppShell>
     )
   }
 
@@ -151,8 +148,7 @@ export default function FormDonsEspirituaisPage() {
   const isLast = current === TOTAL_QUESTIONS - 1
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <Header />
+    <AppShell>
       <div className="mx-auto max-w-lg px-4 py-6 space-y-4">
         <div className="space-y-1">
           <div className="flex justify-between text-xs text-muted-foreground">
@@ -190,6 +186,6 @@ export default function FormDonsEspirituaisPage() {
           )}
         </div>
       </div>
-    </div>
+    </AppShell>
   )
 }

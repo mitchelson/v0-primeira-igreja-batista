@@ -4,7 +4,7 @@ import { useSession, signIn } from "next-auth/react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import Header from "@/components/header"
+import { AppShell } from "@/components/app-shell"
 import { CheckSquare, Square, Lock, CircleCheckBig } from "lucide-react"
 import { MinistryIcon } from "@/components/ministry-icon"
 
@@ -48,12 +48,11 @@ export default function FormMinisteriosPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-muted/30">
-        <Header />
+      <AppShell>
         <div className="flex justify-center py-20">
           <p className="text-muted-foreground">Carregando...</p>
         </div>
-      </div>
+      </AppShell>
     )
   }
 
@@ -63,8 +62,7 @@ export default function FormMinisteriosPage() {
       signIn("google", { callbackUrl: "/form-ministerios" })
     }
     return (
-      <div className="min-h-screen bg-muted/30">
-        <Header />
+      <AppShell showTabs={false}>
         <div className="mx-auto max-w-md px-4 py-12">
           <Card>
             <CardHeader className="text-center">
@@ -77,14 +75,13 @@ export default function FormMinisteriosPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </AppShell>
     )
   }
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-muted/30">
-        <Header />
+      <AppShell>
         <div className="mx-auto max-w-lg px-4 py-6">
           <Card>
             <CardContent className="py-10 text-center space-y-3">
@@ -94,12 +91,12 @@ export default function FormMinisteriosPage() {
                 Você selecionou {selected.length} ministério{selected.length !== 1 ? "s" : ""}.
               </p>
               <a href="/minha-area" className="block text-center text-sm text-primary underline mt-3">
-                Ir para Minha Área
+                Ir para Escalas
               </a>
             </CardContent>
           </Card>
         </div>
-      </div>
+      </AppShell>
     )
   }
 
@@ -121,8 +118,7 @@ export default function FormMinisteriosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <Header />
+    <AppShell>
       <div className="mx-auto max-w-lg px-4 py-6 space-y-4">
         <Card>
           <CardHeader>
@@ -187,6 +183,6 @@ export default function FormMinisteriosPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AppShell>
   )
 }

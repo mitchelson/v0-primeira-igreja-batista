@@ -53,8 +53,12 @@ export default auth((req) => {
       return NextResponse.next()
     }
 
-    // Dashboard, visitantes e mensagens são permitidos
-    if (pathname === "/admin" || pathname.startsWith("/admin/visitantes") || pathname.startsWith("/admin/mensagens")) {
+    // Dashboard, acolhimento (visitantes/mensagens) — líderes e supervisores
+    if (
+      pathname === "/admin" ||
+      pathname.startsWith("/admin/visitantes") ||
+      pathname.startsWith("/admin/mensagens")
+    ) {
       return NextResponse.next()
     }
 

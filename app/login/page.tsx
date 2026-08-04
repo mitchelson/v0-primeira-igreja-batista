@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import Header from "@/components/header"
+import { SiteShell } from "@/components/site-shell"
 import { Suspense } from "react"
 
 function LoginContent() {
@@ -46,14 +46,13 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <SiteShell>
       <div className="container mx-auto max-w-md px-4 py-12 flex flex-col items-center">
         <Image src="/pib-logo-black.png" alt="PIB Roraima" width={160} height={53} className="h-12 w-auto mb-8" />
         <Suspense>
           <LoginContent />
         </Suspense>
       </div>
-    </div>
+    </SiteShell>
   )
 }

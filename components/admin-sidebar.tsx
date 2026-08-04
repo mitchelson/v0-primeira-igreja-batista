@@ -11,29 +11,13 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Home, Users, MessageSquare, UserCog, Calendar, ClipboardList, Plus, Settings, BookOpen, Sparkles } from "lucide-react"
+import { Plus } from "lucide-react"
 import { MinistryIcon } from "@/components/ministry-icon"
 import { RoleBadges } from "@/components/role-badges"
+import { ADMIN_NAV_GROUPS, filterAdminItems } from "@/lib/nav-config"
+import { CHURCH_INFO } from "@/lib/constants"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
-
-const fixedItems = [
-  { title: "Dashboard", href: "/admin", icon: Home },
-]
-
-const adminOnlyFixedItems = [
-  { title: "Visitantes", href: "/admin/visitantes", icon: Users },
-  { title: "Mensagens", href: "/admin/mensagens", icon: MessageSquare },
-]
-
-const adminOnlyItems = [
-  { title: "Membros", href: "/admin/membros", icon: UserCog },
-  { title: "Eventos", href: "/admin/eventos", icon: Calendar },
-  { title: "Escalas", href: "/admin/escalas", icon: ClipboardList },
-  { title: "Dons Espirituais", href: "/admin/dons-espirituais", icon: Sparkles },
-  { title: "Form. Ministérios", href: "/admin/form-ministerios", icon: BookOpen },
-  { title: "Configurações", href: "/admin/configuracoes", icon: Settings },
-]
 
 export function AdminSidebar() {
   const pathname = usePathname()
@@ -56,40 +40,34 @@ export function AdminSidebar() {
     <Sidebar>
       <SidebarHeader className="p-4">
         <Link href="/">
-          <Image src="/pib-logo-black.png" alt="PIB Roraima" width={120} height={40} className="h-8 w-auto" />
+          <Image src="/pib-logo-black.png" alt={CHURCH_INFO.SHORT_NAME} width={120} height={40} className="h-8 w-auto" />
         </Link>
       </SidebarHeader>
       <SidebarContent>
-        {/* Navegação principal */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Principal</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {fixedItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={pathname === item.href}>
-                    <Link href={item.href} onClick={closeMobile}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-              {adminOnlyFixedItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={pathname === item.href}>
-                    <Link href={item.href} onClick={closeMobile}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {ADMIN_NAV_GROUPS.map((group) => {
+          const items = filterAdminItems(group.items, role)
+          if (items.length === 0) return null
+          return (
+            <SidebarGroup key={group.id}>
+              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {items.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild isActive={pathname === item.href}>
+                        <Link href={item.href} onClick={closeMobile}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )
+        })}
 
-        {/* Ministérios dinâmicos */}
         <SidebarGroup>
           <SidebarGroupLabel>Ministérios</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -117,27 +95,6 @@ export function AdminSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* Admin only */}
-        {role === "admin" && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Administração</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {adminOnlyItems.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild isActive={pathname === item.href}>
-                      <Link href={item.href} onClick={closeMobile}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
       </SidebarContent>
 
       {session?.user && (

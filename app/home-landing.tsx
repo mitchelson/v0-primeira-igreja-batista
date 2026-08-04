@@ -1,27 +1,20 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Play, MapPin, Clock, ChevronRight, Instagram, Youtube, Phone, Menu, Home, Calendar, Users, MessageCircle, User } from "lucide-react";
+import { Play, MapPin, Clock, ChevronRight } from "lucide-react";
 import { sql } from "@/lib/neon";
 import { MinistryIcon } from "@/components/ministry-icon";
+import { SiteShell } from "@/components/site-shell";
+import { CHURCH_INFO } from "@/lib/constants";
 
-const NAV_LINKS = [
-  { href: "/sobre", label: "Quem Somos" },
-  { href: "/ministerios", label: "Ministérios" },
-  { href: "/eventos", label: "Eventos" },
-  { href: "/sermoes", label: "Pregações" },
-  { href: "/contato", label: "Contato" },
-];
-
-const CHANNEL_ID = "UCIbxja1EbdUKBsB9xizP4GA"
-const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`
+const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHURCH_INFO.YOUTUBE_CHANNEL_ID}`
 
 async function getVideos() {
   try {
     const res = await fetch(RSS_URL, { next: { revalidate: 3600 } })
     const xml = await res.text()
     return [...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)].slice(0, 4).map((m) => {
-      const entry = m[1]
+      const entry = m[1] ?? ""
       const id = entry.match(/<yt:videoId>(.*?)<\/yt:videoId>/)?.[1] ?? ""
       const title = entry.match(/<title>(.*?)<\/title>/)?.[1] ?? ""
       const published = entry.match(/<published>(.*?)<\/published>/)?.[1] ?? ""
@@ -37,27 +30,7 @@ export default async function HomeLanding() {
   const eventos = await sql`SELECT titulo, data, horario, descricao, tipo FROM eventos WHERE data >= CURRENT_DATE ORDER BY data ASC LIMIT 6`
   const ministerios = await sql`SELECT nome, descricao, icone FROM ministerios WHERE ativo = true ORDER BY ordem ASC, nome ASC`
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white">
-      {/* ── Navbar ── */}
-      <nav className="fixed top-0 inset-x-0 z-50 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/">
-            <Image src="/pib-logo-white.png" alt="PIB Roraima" width={120} height={40} className="h-8 w-auto" />
-          </Link>
-          <div className="hidden md:flex items-center gap-8">
-            {NAV_LINKS.map((l) => (
-              <Link key={l.href} href={l.href} className="text-sm text-gray-300 hover:text-white transition-colors">
-                {l.label}
-              </Link>
-            ))}
-            <Link href="/cadastro" className="text-sm bg-[#c9a84c] text-black font-semibold px-5 py-2 rounded-full hover:bg-[#d4b85c] transition-colors">
-              Sou Visitante
-            </Link>
-          </div>
-          {/* Mobile: links via bottom nav */}
-        </div>
-      </nav>
-
+    <SiteShell variant="dark">
       {/* ── Hero ── */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <Image
@@ -69,19 +42,19 @@ export default async function HomeLanding() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/70 via-[#0a0a0a]/50 to-[#0a0a0a]" />
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto pt-16">
-          <p className="text-[#c9a84c] uppercase tracking-[0.35em] text-xs md:text-sm font-semibold mb-6">
-            Primeira Igreja Batista de Roraima
+          <p className="text-primary uppercase tracking-[0.35em] text-xs md:text-sm font-semibold mb-6">
+            {CHURCH_INFO.NAME}
           </p>
           <h1 className="text-5xl md:text-8xl font-extrabold leading-[0.95] mb-8 tracking-tight">
             VENHA VIVER
             <br />
-            <span className="text-[#c9a84c]">O EXTRAORDINÁRIO</span>
+            <span className="text-primary">O EXTRAORDINÁRIO</span>
           </h1>
           <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed">
             Uma comunidade apaixonada por Jesus, onde vidas são transformadas e famílias restauradas.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/eventos" className="bg-[#c9a84c] text-black font-bold px-8 py-4 rounded-full hover:bg-[#d4b85c] transition-all text-sm uppercase tracking-wider">
+            <Link href="/eventos" className="bg-primary text-primary-foreground font-bold px-8 py-4 rounded-full hover:opacity-90 transition-all text-sm uppercase tracking-wider">
               Horários dos Cultos
             </Link>
             <Link href="/sermoes" className="border border-white/30 text-white font-bold px-8 py-4 rounded-full hover:bg-white/10 transition-all text-sm uppercase tracking-wider flex items-center justify-center gap-2">
@@ -89,10 +62,9 @@ export default async function HomeLanding() {
             </Link>
           </div>
         </div>
-        {/* Scroll indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
           <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center pt-2">
-            <div className="w-1 h-2 bg-[#c9a84c] rounded-full" />
+            <div className="w-1 h-2 bg-primary rounded-full" />
           </div>
         </div>
       </section>
@@ -101,12 +73,11 @@ export default async function HomeLanding() {
       <section className="py-20 px-4 bg-[#0f0f0f]">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-[#c9a84c] uppercase tracking-[0.3em] text-xs font-semibold mb-3">Pregações</p>
+            <p className="text-primary uppercase tracking-[0.3em] text-xs font-semibold mb-3">Pregações</p>
             <h2 className="text-3xl md:text-5xl font-bold">Últimas Mensagens</h2>
           </div>
-          {videos.length > 0 ? (
+          {videos.length > 0 && videos[0] ? (
             <>
-              {/* Vídeo principal */}
               <div className="relative aspect-video rounded-2xl overflow-hidden bg-black/50 border border-white/5 max-w-4xl mx-auto mb-8">
                 <iframe
                   src={`https://www.youtube.com/embed/${videos[0].id}`}
@@ -116,10 +87,9 @@ export default async function HomeLanding() {
                   className="absolute inset-0 w-full h-full"
                 />
               </div>
-              {/* Grid de vídeos recentes */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
                 {videos.slice(1).map((v) => (
-                  <a key={v.id} href={v.url} target="_blank" rel="noopener noreferrer" className="group rounded-xl overflow-hidden border border-white/5 hover:border-[#c9a84c]/30 transition-all">
+                  <a key={v.id} href={v.url} target="_blank" rel="noopener noreferrer" className="group rounded-xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all">
                     <div className="relative aspect-video">
                       <Image src={v.thumbnail} alt={v.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
                       <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -138,14 +108,14 @@ export default async function HomeLanding() {
             <div className="relative aspect-video rounded-2xl overflow-hidden bg-black/50 border border-white/5 max-w-4xl mx-auto group">
               <Image src="https://images.unsplash.com/photo-1478147427282-58a87a120781?w=1200&q=80" alt="Última pregação" fill className="object-cover opacity-60" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <Link href="/sermoes" className="bg-[#c9a84c] rounded-full p-5 hover:scale-110 transition-transform shadow-2xl">
-                  <Play className="h-8 w-8 text-black fill-black" />
+                <Link href="/sermoes" className="bg-primary rounded-full p-5 hover:scale-110 transition-transform shadow-2xl">
+                  <Play className="h-8 w-8 text-primary-foreground fill-current" />
                 </Link>
               </div>
             </div>
           )}
           <div className="text-center mt-8">
-            <a href="https://www.youtube.com/@primeiraigrejabatistarorai8230" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-[#c9a84c] font-semibold hover:gap-3 transition-all">
+            <a href={CHURCH_INFO.YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all">
               Ver todas no YouTube <ChevronRight className="h-4 w-4" />
             </a>
           </div>
@@ -156,17 +126,17 @@ export default async function HomeLanding() {
       <section className="py-20 px-4 bg-[#0a0a0a]">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div>
-            <p className="text-[#c9a84c] uppercase tracking-[0.3em] text-xs font-semibold mb-3">Quem Somos</p>
+            <p className="text-primary uppercase tracking-[0.3em] text-xs font-semibold mb-3">Quem Somos</p>
             <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
               Uma igreja que<br />
-              <span className="text-[#c9a84c]">transforma vidas</span>
+              <span className="text-primary">transforma vidas</span>
             </h2>
             <p className="text-gray-400 text-lg leading-relaxed mb-6">
-              Somos uma comunidade de fé em Boa Vista, Roraima, comprometida com o evangelho de Jesus Cristo. 
-              Acreditamos que todo crente foi criado para pertencer a uma família espiritual e caminhar junto 
+              Somos uma comunidade de fé em {CHURCH_INFO.CITY}, comprometida com o evangelho de Jesus Cristo.
+              Acreditamos que todo crente foi criado para pertencer a uma família espiritual e caminhar junto
               em propósito, amor e adoração.
             </p>
-            <Link href="/sobre" className="inline-flex items-center gap-2 text-[#c9a84c] font-semibold hover:gap-3 transition-all">
+            <Link href="/sobre" className="inline-flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all">
               Conheça nossa história <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
@@ -186,7 +156,7 @@ export default async function HomeLanding() {
       <section className="py-20 px-4 bg-[#0f0f0f]">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-[#c9a84c] uppercase tracking-[0.3em] text-xs font-semibold mb-3">Ministérios</p>
+            <p className="text-primary uppercase tracking-[0.3em] text-xs font-semibold mb-3">Ministérios</p>
             <h2 className="text-3xl md:text-5xl font-bold mb-4">Encontre o Seu Lugar</h2>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               Há um espaço para você servir e crescer no que Deus está fazendo em nossa casa.
@@ -194,15 +164,15 @@ export default async function HomeLanding() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {ministerios.map((m: any) => (
-              <div key={m.nome} className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-center hover:border-[#c9a84c]/30 hover:bg-white/[0.04] transition-all group">
-                <span className="mb-3 flex justify-center"><MinistryIcon name={m.icone} ministryName={m.nome} size={36} className="text-[#c9a84c]" /></span>
-                <h3 className="text-sm font-bold mb-1 group-hover:text-[#c9a84c] transition-colors">{m.nome}</h3>
+              <div key={m.nome} className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-center hover:border-primary/30 hover:bg-white/[0.04] transition-all group">
+                <span className="mb-3 flex justify-center"><MinistryIcon name={m.icone} ministryName={m.nome} size={36} className="text-primary" /></span>
+                <h3 className="text-sm font-bold mb-1 group-hover:text-primary transition-colors">{m.nome}</h3>
                 {m.descricao && <p className="text-xs text-gray-500 line-clamp-2">{m.descricao}</p>}
               </div>
             ))}
           </div>
           <div className="text-center mt-10">
-            <Link href="/ministerios" className="inline-flex items-center gap-2 text-[#c9a84c] font-semibold hover:gap-3 transition-all">
+            <Link href="/ministerios" className="inline-flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all">
               Ver todos os ministérios <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
@@ -210,10 +180,10 @@ export default async function HomeLanding() {
       </section>
 
       {/* ── Próximos Eventos ── */}
-      <section className="py-20 px-4 bg-[#0a0a0a]">
+      <section id="programacao" className="py-20 px-4 bg-[#0a0a0a]">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-[#c9a84c] uppercase tracking-[0.3em] text-xs font-semibold mb-3">Programação</p>
+            <p className="text-primary uppercase tracking-[0.3em] text-xs font-semibold mb-3">Programação</p>
             <h2 className="text-3xl md:text-5xl font-bold">Próximos Eventos</h2>
           </div>
           {eventos.length > 0 ? (
@@ -222,9 +192,9 @@ export default async function HomeLanding() {
                 const date = new Date(ev.data)
                 const dia = date.toLocaleDateString("pt-BR", { weekday: "short", timeZone: "UTC" }).replace(".", "").toUpperCase()
                 return (
-                  <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 hover:border-[#c9a84c]/30 hover:bg-white/[0.04] transition-all group">
+                  <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 hover:border-primary/30 hover:bg-white/[0.04] transition-all group">
                     <div className="flex items-center gap-3 mb-4">
-                      <span className="bg-[#c9a84c] text-black text-xs font-bold px-3 py-1 rounded-full">{dia}</span>
+                      <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">{dia}</span>
                       {ev.horario && (
                         <span className="flex items-center gap-1 text-sm text-gray-400">
                           <Clock className="h-3.5 w-3.5" /> {ev.horario}
@@ -232,7 +202,7 @@ export default async function HomeLanding() {
                       )}
                       {ev.tipo && <span className="text-xs text-gray-500 ml-auto">{ev.tipo}</span>}
                     </div>
-                    <h3 className="text-xl font-bold mb-2 group-hover:text-[#c9a84c] transition-colors">{ev.titulo}</h3>
+                    <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{ev.titulo}</h3>
                     <p className="text-gray-400 text-sm">{ev.descricao || date.toLocaleDateString("pt-BR", { day: "numeric", month: "long", timeZone: "UTC" })}</p>
                   </div>
                 )
@@ -240,26 +210,24 @@ export default async function HomeLanding() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { day: "DOM", title: "Culto de Celebração", time: "19h", desc: "Adoração, palavra e comunhão" },
-                { day: "QUA", title: "Culto de Oração", time: "19h30", desc: "Busca pela presença de Deus" },
-                { day: "SÁB", title: "Encontro de Jovens", time: "18h", desc: "Conexão e crescimento espiritual" },
-              ].map((ev) => (
-                <div key={ev.title} className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 hover:border-[#c9a84c]/30 hover:bg-white/[0.04] transition-all group">
+              {CHURCH_INFO.SCHEDULE.map((ev) => (
+                <div key={`${ev.day}-${ev.label}`} className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 hover:border-primary/30 hover:bg-white/[0.04] transition-all group">
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="bg-[#c9a84c] text-black text-xs font-bold px-3 py-1 rounded-full">{ev.day}</span>
+                    <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
+                      {ev.day.slice(0, 3).toUpperCase()}
+                    </span>
                     <span className="flex items-center gap-1 text-sm text-gray-400">
                       <Clock className="h-3.5 w-3.5" /> {ev.time}
                     </span>
                   </div>
-                  <h3 className="text-xl font-bold mb-2 group-hover:text-[#c9a84c] transition-colors">{ev.title}</h3>
-                  <p className="text-gray-400 text-sm">{ev.desc}</p>
+                  <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{ev.label}</h3>
+                  <p className="text-gray-400 text-sm">{ev.day} às {ev.time}</p>
                 </div>
               ))}
             </div>
           )}
           <div className="text-center mt-10">
-            <Link href="/eventos" className="bg-[#c9a84c] text-black font-bold px-8 py-4 rounded-full hover:bg-[#d4b85c] transition-all text-sm uppercase tracking-wider inline-block">
+            <Link href="/eventos" className="bg-primary text-primary-foreground font-bold px-8 py-4 rounded-full hover:opacity-90 transition-all text-sm uppercase tracking-wider inline-block">
               Confira a Programação Completa
             </Link>
           </div>
@@ -277,14 +245,14 @@ export default async function HomeLanding() {
         <div className="absolute inset-0 bg-[#0a0a0a]/80" />
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Deus Tem Algo <span className="text-[#c9a84c]">Extraordinário</span> Para Você
+            Deus Tem Algo <span className="text-primary">Extraordinário</span> Para Você
           </h2>
           <p className="text-lg text-gray-300 mb-10 max-w-2xl mx-auto">
             Precisa de oração? Quer conhecer Jesus? Estamos aqui para caminhar com você.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             {["Conhecer Jesus", "Pedido de Oração", "Aconselhamento", "Quero Ser Batizado"].map((label) => (
-              <Link key={label} href="/contato" className="border border-white/20 text-white font-semibold px-6 py-3 rounded-full hover:bg-[#c9a84c] hover:text-black hover:border-[#c9a84c] transition-all text-sm">
+              <Link key={label} href="/contato" className="border border-white/20 text-white font-semibold px-6 py-3 rounded-full hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all text-sm">
                 {label}
               </Link>
             ))}
@@ -296,25 +264,28 @@ export default async function HomeLanding() {
       <section className="py-20 px-4 bg-[#0f0f0f]">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div>
-            <p className="text-[#c9a84c] uppercase tracking-[0.3em] text-xs font-semibold mb-3">Localização</p>
+            <p className="text-primary uppercase tracking-[0.3em] text-xs font-semibold mb-3">Localização</p>
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Venha Nos Visitar</h2>
             <div className="space-y-4 text-gray-400">
               <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-[#c9a84c] mt-0.5 shrink-0" />
+                <MapPin className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-white font-semibold">Primeira Igreja Batista de Roraima</p>
-                  <p>Boa Vista, RR</p>
+                  <p className="text-white font-semibold">{CHURCH_INFO.NAME}</p>
+                  <p>{CHURCH_INFO.ADDRESS_LINE}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Clock className="h-5 w-5 text-[#c9a84c] mt-0.5 shrink-0" />
+                <Clock className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <p><span className="text-white">Domingo:</span> 19h</p>
-                  <p><span className="text-white">Quarta:</span> 19h30</p>
+                  {CHURCH_INFO.SCHEDULE.map((s) => (
+                    <p key={s.day}>
+                      <span className="text-white">{s.day}:</span> {s.time} ({s.label})
+                    </p>
+                  ))}
                 </div>
               </div>
             </div>
-            <Link href="/contato" className="inline-flex items-center gap-2 text-[#c9a84c] font-semibold mt-6 hover:gap-3 transition-all">
+            <Link href="/contato" className="inline-flex items-center gap-2 text-primary font-semibold mt-6 hover:gap-3 transition-all">
               Como chegar <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
@@ -325,94 +296,11 @@ export default async function HomeLanding() {
               style={{ border: 0, filter: "invert(90%) hue-rotate(180deg)" }}
               allowFullScreen
               loading="lazy"
-              title="Localização PIB Roraima"
+              title={`Localização ${CHURCH_INFO.SHORT_NAME}`}
             />
           </div>
         </div>
       </section>
-
-      {/* ── Footer ── */}
-      <footer className="bg-[#050505] border-t border-white/5 pt-16 pb-24 md:pb-12 px-4">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-10">
-          <div>
-            <Link href="/">
-              <Image src="/pib-logo-white.png" alt="PIB Roraima" width={120} height={40} className="h-8 w-auto" />
-            </Link>
-            <p className="text-sm text-gray-500 mt-3 leading-relaxed">
-              Uma comunidade apaixonada por Jesus, dedicada à transformação de vidas através do evangelho.
-            </p>
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">Navegação</h4>
-            <ul className="space-y-2">
-              {NAV_LINKS.map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-gray-500 hover:text-[#c9a84c] transition-colors">{l.label}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">Recursos</h4>
-            <ul className="space-y-2">
-              <li><Link href="/sermoes" className="text-sm text-gray-500 hover:text-[#c9a84c] transition-colors">Pregações</Link></li>
-              <li><Link href="/cadastro" className="text-sm text-gray-500 hover:text-[#c9a84c] transition-colors">Cadastro de Visitantes</Link></li>
-              <li><Link href="/admin" className="text-sm text-gray-500 hover:text-[#c9a84c] transition-colors">Área Administrativa</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">Legal</h4>
-            <ul className="space-y-2">
-              <li><Link href="/privacidade" className="text-sm text-gray-500 hover:text-[#c9a84c] transition-colors">Privacidade</Link></li>
-              <li><Link href="/termos" className="text-sm text-gray-500 hover:text-[#c9a84c] transition-colors">Termos de Uso</Link></li>
-              <li><Link href="/suporte" className="text-sm text-gray-500 hover:text-[#c9a84c] transition-colors">Suporte</Link></li>
-              <li><Link href="/excluir-conta" className="text-sm text-gray-500 hover:text-[#c9a84c] transition-colors">Excluir conta</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">Redes Sociais</h4>
-            <div className="flex gap-3">
-              <a href="https://www.instagram.com/pibroraimaoficial/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:border-[#c9a84c] hover:text-[#c9a84c] transition-colors" aria-label="Instagram">
-                <Instagram className="h-4 w-4" />
-              </a>
-              <a href="https://www.youtube.com/@primeiraigrejabatistarorai8230" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:border-[#c9a84c] hover:text-[#c9a84c] transition-colors" aria-label="YouTube">
-                <Youtube className="h-4 w-4" />
-              </a>
-              <a href="https://wa.me/5595999999999" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:border-[#c9a84c] hover:text-[#c9a84c] transition-colors" aria-label="WhatsApp">
-                <Phone className="h-4 w-4" />
-              </a>
-            </div>
-          </div>
-        </div>
-        <div className="max-w-6xl mx-auto mt-12 pt-8 border-t border-white/5 text-center">
-          <p className="text-xs text-gray-600">© {new Date().getFullYear()} Primeira Igreja Batista de Roraima. Todos os direitos reservados.</p>
-          <p className="mt-2 text-xs text-gray-600">
-            <Link href="/privacidade" className="hover:text-[#c9a84c]">Privacidade</Link>
-            {" · "}
-            <Link href="/termos" className="hover:text-[#c9a84c]">Termos</Link>
-            {" · "}
-            <Link href="/suporte" className="hover:text-[#c9a84c]">Suporte</Link>
-            {" · "}
-            <Link href="/excluir-conta" className="hover:text-[#c9a84c]">Excluir conta</Link>
-          </p>
-        </div>
-      </footer>
-
-      {/* ── Bottom Nav Mobile ── */}
-      <nav className="fixed bottom-0 inset-x-0 bg-[#0a0a0a]/95 backdrop-blur-md border-t border-white/5 flex justify-around items-center py-2.5 z-50 md:hidden">
-        {[
-          { href: "/", Icon: Home, label: "Início" },
-          { href: "/eventos", Icon: Calendar, label: "Eventos" },
-          { href: "/ministerios", Icon: Users, label: "Ministérios" },
-          { href: "/contato", Icon: MessageCircle, label: "Contato" },
-          { href: "/minha-area", Icon: User, label: "Minha Área" },
-        ].map((item) => (
-          <Link key={item.href} href={item.href} className="flex flex-col items-center gap-0.5 text-gray-400 hover:text-[#c9a84c] transition-colors">
-            <item.Icon className="h-5 w-5" />
-            <span className="text-[10px] font-medium">{item.label}</span>
-          </Link>
-        ))}
-      </nav>
-    </main>
+    </SiteShell>
   );
 }

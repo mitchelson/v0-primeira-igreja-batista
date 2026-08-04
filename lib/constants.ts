@@ -52,5 +52,19 @@ export const CONTACT_INFO = {
 
 export const CHURCH_INFO = {
   NAME: "Primeira Igreja Batista de Roraima",
-  SHORT_NAME: "PIB",
+  SHORT_NAME: "PIB Roraima",
+  CITY: "Boa Vista, RR",
+  ADDRESS_LINE: "Boa Vista, RR",
+  EMAIL: "contato@pibr.org.br",
+  PHONE_DISPLAY: CONTACT_INFO.CAPELANIA_PHONE,
+  WHATSAPP_E164: "559591522392",
+  INSTAGRAM_URL: "https://www.instagram.com/pibroraimaoficial/",
+  YOUTUBE_URL: "https://www.youtube.com/@primeiraigrejabatistarorai8230",
+  YOUTUBE_CHANNEL_ID: "UCIbxja1EbdUKBsB9xizP4GA",
+  SCHEDULE: [
+    { day: "Domingo", time: "19h", label: "Culto" },
+    { day: "Quarta", time: "19h30", label: "Oração" },
+  ],
+  BRAND_GOLD: "#c9a84c",
+  BRAND_GOLD_HOVER: "#d4b85c",
 } as const

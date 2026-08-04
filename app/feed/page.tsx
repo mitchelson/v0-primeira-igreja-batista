@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
-import { BottomTabBar } from "@/components/bottom-tab-bar"
+import { AppShell } from "@/components/app-shell"
 import { NotificationsButton } from "@/components/notifications-button"
 import { UserProfileDialog } from "@/components/user-profile-dialog"
 
@@ -39,7 +39,7 @@ function PostMencoes({ ministerioIds, userIds }: { ministerioIds?: string[]; use
       {ids?.map((id: string) => {
         const m = ministerios?.find((x: any) => x.id === id)
         return m ? (
-          <span key={id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-xs text-blue-600 font-medium">
+          <span key={id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-xs text-foreground font-medium">
             <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={12} />
             {m.nome}
           </span>
@@ -113,7 +113,7 @@ function PostCard({ post, session, mutate }: { post: any; session: any; mutate: 
           </UserProfileDialog>
           <p className="text-xs text-gray-500">{timeAgo(post.criado_em)}</p>
         </div>
-        {post.fixado && <Pin className="h-4 w-4 text-[#c9a84c]" />}
+        {post.fixado && <Pin className="h-4 w-4 text-primary" />}
         {canDelete && (
           <button onClick={handleDelete} className="text-gray-400 hover:text-red-500 p-1">
             <Trash2 className="h-4 w-4" />
@@ -124,7 +124,7 @@ function PostCard({ post, session, mutate }: { post: any; session: any; mutate: 
       {/* Content */}
       {post.conteudo && <p className="px-4 pb-3 text-sm whitespace-pre-wrap">{post.conteudo}</p>}
       {post.link && (
-        <a href={post.link} target="_blank" rel="noopener noreferrer" className="mx-4 mb-3 flex items-center gap-2 text-sm text-blue-600 bg-blue-50 rounded-lg px-3 py-2 hover:bg-blue-100 transition-colors truncate">
+        <a href={post.link} target="_blank" rel="noopener noreferrer" className="mx-4 mb-3 flex items-center gap-2 text-sm text-foreground bg-primary/10 rounded-lg px-3 py-2 hover:bg-primary/15 transition-colors truncate">
           <Link2 className="h-4 w-4 shrink-0" aria-hidden />
           {post.link.replace(/^https?:\/\//, "").split("/")[0]}
         </a>
@@ -362,23 +362,21 @@ export default function FeedPage() {
   const canPost = session?.user?.role === "admin" || session?.user?.role === "lider" || session?.user?.role === "supervisor"
 
   return (
-    <main className="min-h-screen bg-gray-100 pb-16 md:pb-0">
-      {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-40">
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href="/">
-            <Image src="/pib-logo-black.png" alt="PIB Roraima" width={100} height={32} className="h-7 w-auto" />
-          </Link>
-          <h1 className="font-semibold">Feed</h1>
+    <AppShell showTabs={!!session}>
+      <div className="border-b bg-background sticky top-0 z-30 md:static">
+        <div className="mx-auto flex h-12 max-w-2xl items-center justify-between px-4 md:h-auto md:py-4">
+          <h1 className="font-semibold md:text-xl">Feed</h1>
           {session ? (
             <NotificationsButton />
           ) : (
-            <Link href="/login" className="text-sm text-[#c9a84c] font-semibold">Entrar</Link>
+            <Link href="/login" className="text-sm font-semibold text-primary">
+              Entrar
+            </Link>
           )}
         </div>
-      </header>
+      </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+      <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
         {canPost && <NewPostForm mutate={mutate} />}
 
         {data?.posts?.map((post: any) => (
@@ -386,19 +384,23 @@ export default function FeedPage() {
         ))}
 
         {data?.posts?.length === 0 && (
-          <p className="text-center text-gray-500 py-12">Nenhuma postagem ainda.</p>
+          <p className="py-12 text-center text-muted-foreground">Nenhuma postagem ainda.</p>
         )}
 
         {data && data.pages > 1 && (
           <div className="flex justify-center gap-2 pt-4">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Anterior</Button>
-            <span className="text-sm self-center text-gray-500">{page} / {data.pages}</span>
-            <Button variant="outline" size="sm" disabled={page >= data.pages} onClick={() => setPage(p => p + 1)}>Próxima</Button>
+            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+              Anterior
+            </Button>
+            <span className="self-center text-sm text-muted-foreground">
+              {page} / {data.pages}
+            </span>
+            <Button variant="outline" size="sm" disabled={page >= data.pages} onClick={() => setPage((p) => p + 1)}>
+              Próxima
+            </Button>
           </div>
         )}
       </div>
-
-      {session && <BottomTabBar />}
-    </main>
+    </AppShell>
   )
 }

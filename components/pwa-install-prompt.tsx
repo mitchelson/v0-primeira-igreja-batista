@@ -14,7 +14,6 @@ export function PwaInstallPrompt() {
   const [dismissed, setDismissed] = useState(false)
 
   useEffect(() => {
-    // Don't show if already installed (standalone mode)
     if (window.matchMedia("(display-mode: standalone)").matches) return
 
     const handler = (e: Event) => {
@@ -34,15 +33,20 @@ export function PwaInstallPrompt() {
   }
 
   return (
-    <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 flex items-center gap-3">
+    <div className="fixed bottom-20 left-4 right-4 z-40 mx-auto max-w-lg rounded-xl border bg-background p-3 shadow-sm md:bottom-4 flex items-center gap-3">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-blue-900">Instalar App</p>
-        <p className="text-xs text-blue-700">Acesse mais rápido direto da sua tela inicial</p>
+        <p className="text-sm font-semibold">Instalar app</p>
+        <p className="text-xs text-muted-foreground">Acesso rápido na tela inicial</p>
       </div>
-      <Button size="sm" className="shrink-0 bg-blue-600 hover:bg-blue-700" onClick={handleInstall}>
+      <Button size="sm" className="shrink-0" onClick={handleInstall}>
         <Download className="h-4 w-4 mr-1" /> Instalar
       </Button>
-      <button className="shrink-0 text-blue-400 hover:text-blue-600" onClick={() => setDismissed(true)}>
+      <button
+        type="button"
+        className="shrink-0 text-muted-foreground hover:text-foreground"
+        onClick={() => setDismissed(true)}
+        aria-label="Dispensar"
+      >
         <X className="h-4 w-4" />
       </button>
     </div>

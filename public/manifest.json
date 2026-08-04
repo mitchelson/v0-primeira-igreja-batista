@@ -5,7 +5,7 @@
   "start_url": "/minha-area",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#1e40af",
+  "theme_color": "#c9a84c",
   "orientation": "portrait-primary",
   "icons": [
     {

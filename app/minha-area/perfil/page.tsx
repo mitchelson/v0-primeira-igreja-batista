@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { useRouter } from "next/navigation"
 import useSWR from "swr"
 import { useSession } from "next-auth/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -13,7 +12,9 @@ import { toast } from "@/components/ui/use-toast"
 import { Camera, Loader2, Pencil, X, Calendar, Sparkles, CalendarOff, Plus, Trash2, Crown } from "lucide-react"
 import { MinistryIcon } from "@/components/ministry-icon"
 import { RoleBadges } from "@/components/role-badges"
+import { SolicitarMinisterio } from "@/app/minha-area/solicitar-ministerio"
 import { signOut } from "next-auth/react"
+import Link from "next/link"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -152,20 +153,31 @@ export default function PerfilPage() {
         )}
 
         {/* Ministérios */}
-        {profile.ministerios?.length > 0 && (
-          <section>
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Ministérios</h3>
-            <div className="flex flex-wrap gap-2">
+        <section>
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Ministérios</h3>
+          {profile.ministerios?.length > 0 ? (
+            <div className="flex flex-wrap gap-2 mb-3">
               {profile.ministerios.map((m: any) => (
-                <span key={m.nome} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gray-100 text-sm">
+                <span key={m.nome} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted text-sm">
                   <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={14} />
                   <span>{m.nome}</span>
-                  {m.is_lider && <Crown className="h-3 w-3 text-amber-500" />}
+                  {m.is_lider && <Crown className="h-3 w-3 text-primary" />}
                 </span>
               ))}
             </div>
-          </section>
-        )}
+          ) : (
+            <p className="text-sm text-muted-foreground mb-3">Você ainda não participa de um ministério.</p>
+          )}
+          <SolicitarMinisterio />
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/form-ministerios">Interesse em ministérios</Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/form-dons-espirituais">Dons espirituais</Link>
+            </Button>
+          </div>
+        </section>
 
         {/* Dons Espirituais */}
         {profile.dons && (

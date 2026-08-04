@@ -102,7 +102,7 @@ export function MinistryIcon({
         width: size,
         height: size,
         fontSize: Math.max(10, size * 0.4),
-        backgroundColor: color ? `${color}22` : "#D4C5B033",
+        backgroundColor: color ? `${color}22` : "hsl(var(--primary) / 0.15)",
         color: color || "#8B7355",
       }}
       aria-hidden

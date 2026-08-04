@@ -24,6 +24,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { toast } from "@/components/ui/use-toast"
+import { SiteShell } from "@/components/site-shell"
 import { formatarTelefone } from "@/lib/utils"
 import {
   SexoEnum,
@@ -123,25 +124,31 @@ export default function CadastroPage() {
 
   if (success) {
     return (
-      <Card className="max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle>Cadastro Realizado!</CardTitle>
-          <CardDescription>
-            Agradecemos seu interesse na Primeira Igreja Batista de Roraima.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-4">
-            Em breve, um de nossos responsaveis entrara em contato com voce.
-          </p>
-          <Button onClick={() => setSuccess(false)}>Novo Cadastro</Button>
-        </CardContent>
-      </Card>
+      <SiteShell>
+        <div className="py-12 px-4">
+          <Card className="max-w-md mx-auto">
+            <CardHeader>
+              <CardTitle>Cadastro Realizado!</CardTitle>
+              <CardDescription>
+                Agradecemos seu interesse na Primeira Igreja Batista de Roraima.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4">
+                Em breve, um de nossos responsaveis entrara em contato com voce.
+              </p>
+              <Button onClick={() => setSuccess(false)}>Novo Cadastro</Button>
+            </CardContent>
+          </Card>
+        </div>
+      </SiteShell>
     )
   }
 
   return (
-    <Card className="max-w-lg mx-auto">
+    <SiteShell>
+      <div className="py-12 px-4">
+      <Card className="max-w-lg mx-auto">
       <CardHeader className="text-center">
         <CardTitle>Visitante, seja bem vindo!</CardTitle>
         <CardDescription>
@@ -426,5 +433,7 @@ export default function CadastroPage() {
         </Form>
       </CardContent>
     </Card>
+      </div>
+    </SiteShell>
   )
 }

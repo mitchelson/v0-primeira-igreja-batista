@@ -3,6 +3,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { Calendar, Clock } from "lucide-react"
 import { sql } from "@/lib/neon"
+import { SiteShell } from "@/components/site-shell"
+import { CHURCH_INFO } from "@/lib/constants"
 
 export const revalidate = 60
 export const dynamic = "force-dynamic"
@@ -15,63 +17,86 @@ export default async function EventosPage() {
   const tiposUnicos = ["Todos", ...new Set(eventos.map((e: any) => e.tipo).filter(Boolean))]
 
   return (
-    <main className="min-h-screen bg-white">
+    <SiteShell>
       {/* Hero */}
       <section className="relative w-full h-[50vh] bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
         <div className="absolute inset-0 opacity-30">
           <Image src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1920&h=1080&fit=crop" alt="Eventos" fill className="object-cover" />
         </div>
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <p className="text-sm md:text-base uppercase tracking-[0.3em] mb-4 text-[#D4C5B0] font-semibold">CALENDÁRIO</p>
-          <h1 className="text-4xl md:text-6xl font-bold font-montserrat mb-4">Eventos & Cultos</h1>
+          <p className="text-sm md:text-base uppercase tracking-[0.3em] mb-4 text-primary font-semibold">CALENDÁRIO</p>
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">Eventos & Cultos</h1>
           <p className="text-lg md:text-xl">Participe dos momentos que Deus tem preparado para você</p>
         </div>
       </section>
 
-      {/* Filtros visuais (estáticos, mantém o visual) */}
-      <section className="bg-[#F5F1E8] py-8 px-4">
+      {/* Horários fixos */}
+      <section className="bg-muted/40 py-10 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="flex flex-wrap gap-3 justify-center">
-            {tiposUnicos.map((cat) => (
-              <span key={cat as string} className="px-6 py-2 rounded-full bg-white text-black font-semibold border border-gray-300">{cat as string}</span>
+          <h2 className="text-center text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-6">
+            Programação semanal
+          </h2>
+          <div className="flex flex-wrap gap-4 justify-center mb-8">
+            {CHURCH_INFO.SCHEDULE.map((s) => (
+              <div
+                key={`${s.day}-${s.label}`}
+                className="rounded-full border border-border bg-background px-5 py-2 text-sm"
+              >
+                <span className="font-semibold text-foreground">{s.day}</span>
+                <span className="text-muted-foreground"> · {s.time} · {s.label}</span>
+              </div>
             ))}
           </div>
+          {tiposUnicos.length > 1 && (
+            <div className="flex flex-wrap gap-3 justify-center">
+              {tiposUnicos.map((cat) => (
+                <span key={cat as string} className="px-6 py-2 rounded-full bg-background text-foreground font-semibold border border-border">{cat as string}</span>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
       {/* Lista */}
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-black mb-12 text-center font-montserrat">Próximos Eventos</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-12 text-center">Próximos Eventos</h2>
           {eventos.length === 0 ? (
-            <p className="text-center text-gray-600 text-lg">Nenhum evento agendado no momento.</p>
+            <div className="text-center space-y-4">
+              <p className="text-muted-foreground text-lg">Nenhum evento agendado no momento.</p>
+              <Link href="/#programacao" className="inline-block text-primary font-semibold hover:underline">
+                Ver programação semanal
+              </Link>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {eventos.map((evento: any) => (
-                <div key={evento.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group">
+                <div key={evento.id} className="bg-background rounded-lg border border-border overflow-hidden hover:border-primary/40 transition-all duration-300 group">
                   <div className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-800 to-black flex items-center justify-center">
                     <Calendar className="h-16 w-16 text-white/30" aria-hidden />
-                    <div className="absolute top-4 right-4 bg-[#D4C5B0] text-black px-3 py-1 rounded-full text-xs font-semibold">
-                      {evento.tipo}
-                    </div>
+                    {evento.tipo && (
+                      <div className="absolute top-4 right-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold">
+                        {evento.tipo}
+                      </div>
+                    )}
                   </div>
                   <div className="p-6">
-                    <h3 className="font-bold text-xl mb-2 text-black font-montserrat">{evento.titulo}</h3>
-                    {evento.descricao && <p className="text-gray-600 mb-4 text-sm">{evento.descricao}</p>}
+                    <h3 className="font-bold text-xl mb-2 text-foreground">{evento.titulo}</h3>
+                    {evento.descricao && <p className="text-muted-foreground mb-4 text-sm">{evento.descricao}</p>}
                     <div className="space-y-2 text-sm">
-                      <div className="flex items-center text-gray-700">
-                        <Calendar className="mr-2 h-4 w-4 shrink-0 text-gray-500" aria-hidden />
+                      <div className="flex items-center text-foreground">
+                        <Calendar className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
                         <span className="font-semibold">{new Date(evento.data).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" })}</span>
                       </div>
                       {evento.horario && (
-                        <div className="flex items-center text-gray-700">
-                          <Clock className="mr-2 h-4 w-4 shrink-0 text-gray-500" aria-hidden />
+                        <div className="flex items-center text-foreground">
+                          <Clock className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
                           <span>{evento.horario}</span>
                         </div>
                       )}
                     </div>
-                    <Link href="/cadastro" className="mt-4 block text-center bg-black text-white font-semibold px-4 py-2 rounded-lg hover:bg-[#D4C5B0] hover:text-black transition-all">
-                      Confirmar Presença
+                    <Link href="/#programacao" className="mt-4 block text-center bg-foreground text-background font-semibold px-4 py-2 rounded-lg hover:bg-primary hover:text-primary-foreground transition-all">
+                      Ver programação
                     </Link>
                   </div>
                 </div>
@@ -82,19 +107,22 @@ export default async function EventosPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-gradient-to-r from-[#D4C5B0] to-[#C4B5A0] py-16 px-4">
+      <section className="bg-primary py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-black mb-6 font-montserrat">Não perca nenhum evento!</h2>
-          <p className="text-lg text-gray-800 mb-8">Cadastre-se para receber lembretes e atualizações sobre nossos eventos</p>
-          <Link href="/cadastro" className="inline-block bg-black text-white font-semibold px-8 py-4 rounded-lg hover:bg-white hover:text-black transition-all shadow-lg">Cadastrar-se Agora</Link>
+          <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-6">Venha nos visitar!</h2>
+          <p className="text-lg text-primary-foreground/90 mb-8">
+            Primeira vez na igreja? Cadastre-se como visitante e seja bem-vindo à nossa família.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/cadastro" className="inline-block bg-foreground text-background font-semibold px-8 py-4 rounded-lg hover:bg-background hover:text-foreground transition-all">
+              Sou visitante
+            </Link>
+            <Link href="/#programacao" className="inline-block bg-background text-foreground font-semibold px-8 py-4 rounded-lg hover:bg-foreground hover:text-background transition-all">
+              Ver programação
+            </Link>
+          </div>
         </div>
       </section>
-
-      <section className="bg-white py-8 px-4 border-t">
-        <div className="max-w-6xl mx-auto text-center">
-          <Link href="/" className="inline-block text-black font-semibold hover:text-[#D4C5B0] transition-all">← Voltar para Home</Link>
-        </div>
-      </section>
-    </main>
+    </SiteShell>
   )
 }

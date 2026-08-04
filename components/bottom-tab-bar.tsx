@@ -5,32 +5,62 @@ import { usePathname } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Newspaper, ClipboardList, Shield } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { isAdminRole } from "@/lib/nav-config"
+import { cn } from "@/lib/utils"
 
 export function BottomTabBar() {
   const pathname = usePathname()
   const { data: session } = useSession()
-  const role = session?.user?.role
-  const showAdmin = role === "admin" || role === "lider" || role === "supervisor"
+  const showAdmin = isAdminRole(session?.user?.role)
+
+  const feedActive = pathname.startsWith("/feed")
+  const escalasActive = pathname === "/minha-area"
+  const adminActive = pathname.startsWith("/admin")
+  const perfilActive = pathname.startsWith("/minha-area/perfil")
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-50 bg-white border-t md:hidden pb-[env(safe-area-inset-bottom)]">
-      <div className="flex justify-around items-center h-[64px]">
-        <Link href="/feed" className={`flex flex-col items-center gap-0.5 text-[11px] ${pathname.startsWith("/feed") ? "text-black font-semibold" : "text-gray-400"}`}>
-          <Newspaper className={`h-5 w-5 ${pathname.startsWith("/feed") ? "text-black" : "text-gray-400"}`} />
+    <nav className="fixed bottom-0 inset-x-0 z-50 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
+      <div className="flex h-16 items-center justify-around">
+        <Link
+          href="/feed"
+          className={cn(
+            "flex flex-col items-center gap-0.5 text-[11px]",
+            feedActive ? "font-semibold text-foreground" : "text-muted-foreground"
+          )}
+        >
+          <Newspaper className={cn("h-5 w-5", feedActive ? "text-primary" : undefined)} />
           Feed
         </Link>
-        <Link href="/minha-area" className={`flex flex-col items-center gap-0.5 text-[11px] ${pathname === "/minha-area" ? "text-black font-semibold" : "text-gray-400"}`}>
-          <ClipboardList className={`h-5 w-5 ${pathname === "/minha-area" ? "text-black" : "text-gray-400"}`} />
-          Serviço
+        <Link
+          href="/minha-area"
+          className={cn(
+            "flex flex-col items-center gap-0.5 text-[11px]",
+            escalasActive ? "font-semibold text-foreground" : "text-muted-foreground"
+          )}
+        >
+          <ClipboardList className={cn("h-5 w-5", escalasActive ? "text-primary" : undefined)} />
+          Escalas
         </Link>
         {showAdmin && (
-          <Link href="/admin" className={`flex flex-col items-center gap-0.5 text-[11px] ${pathname.startsWith("/admin") ? "text-black font-semibold" : "text-gray-400"}`}>
-            <Shield className={`h-5 w-5 ${pathname.startsWith("/admin") ? "text-black" : "text-gray-400"}`} />
+          <Link
+            href="/admin"
+            className={cn(
+              "flex flex-col items-center gap-0.5 text-[11px]",
+              adminActive ? "font-semibold text-foreground" : "text-muted-foreground"
+            )}
+          >
+            <Shield className={cn("h-5 w-5", adminActive ? "text-primary" : undefined)} />
             Admin
           </Link>
         )}
-        <Link href="/minha-area/perfil" className={`flex flex-col items-center gap-0.5 text-[11px] ${pathname.startsWith("/minha-area/perfil") ? "text-black font-semibold" : "text-gray-400"}`}>
-          <Avatar className={`h-5 w-5 ${pathname.startsWith("/minha-area/perfil") ? "ring-2 ring-black" : ""}`}>
+        <Link
+          href="/minha-area/perfil"
+          className={cn(
+            "flex flex-col items-center gap-0.5 text-[11px]",
+            perfilActive ? "font-semibold text-foreground" : "text-muted-foreground"
+          )}
+        >
+          <Avatar className={cn("h-5 w-5", perfilActive && "ring-2 ring-primary")}>
             <AvatarImage src={session?.user?.image ?? undefined} />
             <AvatarFallback className="text-[8px]">{session?.user?.name?.[0]}</AvatarFallback>
           </Avatar>

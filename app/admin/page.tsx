@@ -1,7 +1,6 @@
 import { sql } from "@/lib/neon"
 import { auth } from "@/lib/auth"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Calendar, Music, ClipboardList, MessageSquare, UserCog, Settings, Sparkles, BookOpen, ChevronRight } from "lucide-react"
+import { Calendar, ClipboardList, MessageSquare, Users, ChevronRight, Music } from "lucide-react"
 import Link from "next/link"
 import { MinistryIcon } from "@/components/ministry-icon"
 
@@ -12,103 +11,124 @@ export default async function AdminDashboard() {
   const role = session?.user?.role
   const ministerioIds: string[] = (session?.user as any)?.ministerioIds || []
 
-  const [visitantesCount, ministerios] = await Promise.all([
-    sql`SELECT count(*)::int as total FROM visitantes WHERE data_cadastro >= now() - interval '30 days'`,
-    sql`SELECT id, nome, icone, cor FROM ministerios WHERE ativo = true ORDER BY ordem ASC, nome ASC`,
-  ])
+  const visitantesCount = await sql`SELECT count(*)::int as total FROM visitantes WHERE data_cadastro >= now() - interval '30 days'`
+  const escalasSemana = await sql`
+    SELECT count(*)::int as total FROM escalas es
+    INNER JOIN eventos e ON e.id = es.evento_id
+    WHERE e.data >= CURRENT_DATE AND e.data < CURRENT_DATE + interval '7 days'
+  `
+  let postsRecentes: any[] = [{ total: 0 }]
+  try {
+    postsRecentes = await sql`SELECT count(*)::int as total FROM feed_posts WHERE criado_em >= now() - interval '7 days'`
+  } catch {
+    postsRecentes = [{ total: 0 }]
+  }
+  const ministerios = await sql`SELECT id, nome, icone, cor FROM ministerios WHERE ativo = true ORDER BY ordem ASC, nome ASC`
 
-  // Líderes/supervisores só veem seus ministérios
+  let pendenciasWhatsapp = 0
+  try {
+    const pend = await sql`
+      SELECT count(*)::int as total FROM visitantes v
+      WHERE v.sem_whatsapp IS NOT TRUE
+        AND EXISTS (
+          SELECT 1 FROM mensagens_categorias c WHERE c.ativo = true
+          AND NOT EXISTS (
+            SELECT 1 FROM mensagens_enviadas me
+            WHERE me.visitante_id = v.id AND me.categoria_id = c.id
+          )
+        )
+    `
+    pendenciasWhatsapp = pend[0]?.total ?? 0
+  } catch {
+    pendenciasWhatsapp = 0
+  }
+
   const visibleMinisterios = role === "admin"
     ? ministerios
     : ministerios.filter((m: any) => ministerioIds.includes(m.id))
 
-  const adminMenus = [
-    { href: "/admin/visitantes", label: "Visitantes", icon: Users, desc: `${visitantesCount[0].total} nos últimos 30 dias` },
-    { href: "/admin/mensagens", label: "Mensagens", icon: MessageSquare, desc: "Enviar e gerenciar" },
-    { href: "/admin/membros", label: "Membros", icon: UserCog, desc: "Gerenciar usuários" },
-    { href: "/admin/eventos", label: "Eventos", icon: Calendar, desc: "Criar e editar eventos" },
-    { href: "/admin/escalas", label: "Escalas", icon: ClipboardList, desc: "Gerenciar escalas" },
-    { href: "/admin/dons-espirituais", label: "Dons Espirituais", icon: Sparkles, desc: "Resultados" },
-    { href: "/admin/form-ministerios", label: "Form. Ministérios", icon: BookOpen, desc: "Respostas" },
-    { href: "/admin/configuracoes", label: "Configurações", icon: Settings, desc: "Sistema" },
-  ]
+  const kpis = [
+    {
+      href: "/admin/visitantes",
+      label: "Visitantes (30d)",
+      value: visitantesCount[0]?.total ?? 0,
+      icon: Users,
+    },
+    {
+      href: "/admin/mensagens",
+      label: "Pendências WhatsApp",
+      value: pendenciasWhatsapp,
+      icon: MessageSquare,
+    },
+    {
+      href: "/admin/escalas",
+      label: "Escalas (7d)",
+      value: escalasSemana[0]?.total ?? 0,
+      icon: ClipboardList,
+      adminOnly: true,
+    },
+    {
+      href: "/feed",
+      label: "Posts (7d)",
+      value: (postsRecentes as any)[0]?.total ?? 0,
+      icon: Calendar,
+    },
+  ].filter((k) => !k.adminOnly || role === "admin")
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-bold">Administração</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-sm text-muted-foreground">
+          Resumo operacional — use o menu para navegar
+        </p>
+      </div>
 
-      {/* Ministérios */}
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {kpis.map((kpi) => (
+          <Link
+            key={kpi.href + kpi.label}
+            href={kpi.href}
+            className="rounded-xl border bg-card p-4 transition-colors hover:bg-muted/40"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <kpi.icon className="h-4 w-4 text-muted-foreground" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <p className="text-2xl font-bold tabular-nums">{kpi.value}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{kpi.label}</p>
+          </Link>
+        ))}
+      </section>
+
       <section>
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Ministérios</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Seus ministérios
+        </h2>
         <div className="grid gap-2">
           {visibleMinisterios.map((m: any) => (
             <Link key={m.id} href={`/admin/ministerios/${m.id}`}>
-              <div className="flex items-center gap-3 bg-white rounded-xl border p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors">
+              <div className="flex items-center gap-3 rounded-xl border bg-card p-3 transition-colors hover:bg-muted/40">
                 <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={22} />
                 <span className="flex-1 font-medium text-sm">{m.nome}</span>
-                <ChevronRight className="h-4 w-4 text-gray-400" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </div>
             </Link>
           ))}
+          {visibleMinisterios.length === 0 && (
+            <p className="text-sm text-muted-foreground py-4">Nenhum ministério vinculado.</p>
+          )}
           {role === "admin" && (
             <Link href="/admin/ministerios">
-              <div className="flex items-center gap-3 bg-white rounded-xl border border-dashed p-3 hover:bg-gray-50 transition-colors">
-                <Music className="h-5 w-5 text-gray-400" />
-                <span className="flex-1 text-sm text-gray-500">Gerenciar ministérios</span>
-                <ChevronRight className="h-4 w-4 text-gray-400" />
+              <div className="flex items-center gap-3 rounded-xl border border-dashed bg-card p-3 transition-colors hover:bg-muted/40">
+                <Music className="h-5 w-5 text-muted-foreground" />
+                <span className="flex-1 text-sm text-muted-foreground">Gerenciar ministérios</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </div>
             </Link>
           )}
         </div>
       </section>
-
-      {/* Visitantes e Mensagens — visível para admin, lider e supervisor */}
-      <section>
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Gestão</h2>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <Link href="/admin/visitantes">
-            <div className="flex items-center gap-3 bg-white rounded-xl border p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors">
-              <Users className="h-5 w-5 text-gray-600 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">Visitantes</p>
-                <p className="text-xs text-gray-500 truncate">{visitantesCount[0].total} nos últimos 30 dias</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-gray-400" />
-            </div>
-          </Link>
-          <Link href="/admin/mensagens">
-            <div className="flex items-center gap-3 bg-white rounded-xl border p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors">
-              <MessageSquare className="h-5 w-5 text-gray-600 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">Mensagens</p>
-                <p className="text-xs text-gray-500 truncate">Enviar e gerenciar</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-gray-400" />
-            </div>
-          </Link>
-        </div>
-      </section>
-
-      {/* Menu admin (só para admin) */}
-      {role === "admin" && (
-        <section>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Sistema</h2>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {adminMenus.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <div className="flex items-center gap-3 bg-white rounded-xl border p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors">
-                  <item.icon className="h-5 w-5 text-gray-600 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm">{item.label}</p>
-                    <p className="text-xs text-gray-500 truncate">{item.desc}</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-gray-400" />
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   )
 }

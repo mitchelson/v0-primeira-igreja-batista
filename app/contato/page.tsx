@@ -1,9 +1,27 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
-import { MapPin, Phone, Mail, Clock, Bus, Car, Accessibility, Instagram, ThumbsUp, Youtube, MessageCircle, type LucideIcon } from "lucide-react";
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Bus,
+  Car,
+  Accessibility,
+  Instagram,
+  Youtube,
+  MessageCircle,
+  type LucideIcon,
+} from "lucide-react";
+import { SiteShell } from "@/components/site-shell";
+import { CHURCH_INFO } from "@/lib/constants";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/use-toast";
 
 export default function ContatoPage() {
   const [formData, setFormData] = useState({
@@ -20,18 +38,38 @@ export default function ContatoPage() {
     e.preventDefault();
     setEnviando(true);
 
-    // Simular envio
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const res = await fetch("/api/contato", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-    alert("Mensagem enviada com sucesso! Entraremos em contato em breve.");
-    setFormData({
-      nome: "",
-      email: "",
-      telefone: "",
-      assunto: "",
-      mensagem: "",
-    });
-    setEnviando(false);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Erro ao enviar");
+      }
+
+      toast({
+        title: "Mensagem enviada!",
+        description: "Entraremos em contato em breve.",
+      });
+      setFormData({
+        nome: "",
+        email: "",
+        telefone: "",
+        assunto: "",
+        mensagem: "",
+      });
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao enviar",
+        description: err.message || "Tente novamente em instantes.",
+      });
+    } finally {
+      setEnviando(false);
+    }
   };
 
   const handleChange = (
@@ -42,33 +80,35 @@ export default function ContatoPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const scheduleText = CHURCH_INFO.SCHEDULE.map(
+    (s) => `${s.day}: ${s.time} (${s.label})`
+  ).join("\n");
+
   const informacoes: { titulo: string; conteudo: string; Icon: LucideIcon }[] = [
     {
       titulo: "Endereço",
-      conteudo: "Av. Principal, 1234\nCentro, Boa Vista/RR\nCEP: 69301-000",
+      conteudo: CHURCH_INFO.ADDRESS_LINE,
       Icon: MapPin,
     },
     {
       titulo: "Telefone",
-      conteudo: "(95) 99999-9999\n(95) 3333-3333",
+      conteudo: CHURCH_INFO.PHONE_DISPLAY,
       Icon: Phone,
     },
     {
       titulo: "Email",
-      conteudo: "contato@pibr.org.br\nmidia@pibr.org.br",
+      conteudo: CHURCH_INFO.EMAIL,
       Icon: Mail,
     },
     {
       titulo: "Horários de Culto",
-      conteudo:
-        "Domingo: 19:00\nQuarta: 20:00 (Oração)\nSábado: 18:00 (Jovens)",
+      conteudo: scheduleText,
       Icon: Clock,
     },
   ];
 
   return (
-    <main className="min-h-screen bg-white">
-      {/* Hero Section */}
+    <SiteShell>
       <section className="relative w-full h-[40vh] bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
         <div className="absolute inset-0 opacity-30">
           <Image
@@ -79,105 +119,93 @@ export default function ContatoPage() {
           />
         </div>
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <p className="text-sm md:text-base uppercase tracking-[0.3em] mb-4 text-[#D4C5B0] font-semibold">
+          <p className="text-sm md:text-base uppercase tracking-[0.3em] mb-4 text-primary font-semibold">
             FALE CONOSCO
           </p>
-          <h1 className="text-4xl md:text-6xl font-bold font-montserrat mb-4">
-            Contato
-          </h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">Contato</h1>
           <p className="text-lg md:text-xl">
             Estamos aqui para você. Entre em contato!
           </p>
         </div>
       </section>
 
-      {/* Informações de Contato */}
-      <section className="py-16 px-4 bg-[#F5F1E8]">
+      <section className="py-16 px-4 bg-muted/40">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {informacoes.map((info, index) => {
-              const InfoIcon = info.Icon
+              const InfoIcon = info.Icon;
               return (
-              <div
-                key={index}
-                className="bg-white p-6 rounded-lg shadow-md text-center"
-              >
-                <div className="mb-4 flex justify-center">
-                  <InfoIcon className="h-10 w-10 text-[#c9a84c]" aria-hidden />
+                <div
+                  key={index}
+                  className="bg-background p-6 rounded-lg border border-border text-center"
+                >
+                  <div className="mb-4 flex justify-center">
+                    <InfoIcon className="h-10 w-10 text-primary" aria-hidden />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground mb-3">
+                    {info.titulo}
+                  </h3>
+                  <p className="text-muted-foreground whitespace-pre-line text-sm">
+                    {info.conteudo}
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold text-black mb-3 font-montserrat">
-                  {info.titulo}
-                </h3>
-                <p className="text-gray-700 whitespace-pre-line text-sm">
-                  {info.conteudo}
-                </p>
-              </div>
-              )
+              );
             })}
           </div>
         </div>
       </section>
 
-      {/* Formulário e Mapa */}
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Formulário */}
           <div>
-            <h2 className="text-3xl font-bold text-black mb-6 font-montserrat">
+            <h2 className="text-3xl font-bold text-foreground mb-6">
               Envie uma Mensagem
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2">
-                  Nome Completo *
-                </label>
-                <input
+              <div className="space-y-2">
+                <Label htmlFor="nome">Nome Completo *</Label>
+                <Input
+                  id="nome"
                   type="text"
                   name="nome"
                   value={formData.nome}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#D4C5B0]"
                   placeholder="Seu nome"
                 />
               </div>
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2">
-                  Email *
-                </label>
-                <input
+              <div className="space-y-2">
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#D4C5B0]"
                   placeholder="seu@email.com"
                 />
               </div>
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2">
-                  Telefone
-                </label>
-                <input
+              <div className="space-y-2">
+                <Label htmlFor="telefone">Telefone</Label>
+                <Input
+                  id="telefone"
                   type="tel"
                   name="telefone"
                   value={formData.telefone}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#D4C5B0]"
                   placeholder="(95) 99999-9999"
                 />
               </div>
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2">
-                  Assunto *
-                </label>
+              <div className="space-y-2">
+                <Label htmlFor="assunto">Assunto *</Label>
                 <select
+                  id="assunto"
                   name="assunto"
                   value={formData.assunto}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#D4C5B0]"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   <option value="">Selecione...</option>
                   <option value="visitante">Primeira Visita</option>
@@ -187,37 +215,30 @@ export default function ContatoPage() {
                   <option value="outro">Outro</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2">
-                  Mensagem *
-                </label>
-                <textarea
+              <div className="space-y-2">
+                <Label htmlFor="mensagem">Mensagem *</Label>
+                <Textarea
+                  id="mensagem"
                   name="mensagem"
                   value={formData.mensagem}
                   onChange={handleChange}
                   required
                   rows={5}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#D4C5B0]"
                   placeholder="Escreva sua mensagem aqui..."
                 />
               </div>
-              <button
-                type="submit"
-                disabled={enviando}
-                className="w-full bg-black text-white font-semibold px-8 py-4 rounded-lg hover:bg-[#D4C5B0] hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <Button type="submit" className="w-full" disabled={enviando}>
                 {enviando ? "Enviando..." : "Enviar Mensagem"}
-              </button>
+              </Button>
             </form>
           </div>
 
-          {/* Mapa e Informações Adicionais */}
           <div>
-            <h2 className="text-3xl font-bold text-black mb-6 font-montserrat">
+            <h2 className="text-3xl font-bold text-foreground mb-6">
               Localização
             </h2>
             <div
-              className="bg-gray-200 rounded-lg overflow-hidden mb-6"
+              className="bg-muted rounded-lg overflow-hidden mb-6 border border-border"
               style={{ height: "300px" }}
             >
               <iframe
@@ -228,62 +249,62 @@ export default function ContatoPage() {
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-              ></iframe>
+                title={`Localização ${CHURCH_INFO.SHORT_NAME}`}
+              />
             </div>
 
-            <div className="bg-[#F5F1E8] p-6 rounded-lg mb-6">
-              <h3 className="text-xl font-bold text-black mb-4 font-montserrat">
+            <div className="bg-muted/40 p-6 rounded-lg mb-6 border border-border">
+              <h3 className="text-xl font-bold text-foreground mb-4">
                 Como Chegar
               </h3>
-              <p className="text-gray-700 mb-4">
-                Estamos localizados no coração de Boa Vista, de fácil acesso por
+              <p className="text-muted-foreground mb-4">
+                Estamos localizados em {CHURCH_INFO.CITY}, de fácil acesso por
                 transporte público e com estacionamento disponível.
               </p>
-              <ul className="space-y-2 text-gray-700">
+              <ul className="space-y-2 text-muted-foreground">
                 <li className="flex items-start gap-2">
-                  <Bus className="h-5 w-5 shrink-0 text-[#c9a84c] mt-0.5" aria-hidden />
+                  <Bus className="h-5 w-5 shrink-0 text-primary mt-0.5" aria-hidden />
                   <span>Ônibus: Linhas 101, 202, 303</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Car className="h-5 w-5 shrink-0 text-[#c9a84c] mt-0.5" aria-hidden />
+                  <Car className="h-5 w-5 shrink-0 text-primary mt-0.5" aria-hidden />
                   <span>Estacionamento próprio disponível</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Accessibility className="h-5 w-5 shrink-0 text-[#c9a84c] mt-0.5" aria-hidden />
+                  <Accessibility className="h-5 w-5 shrink-0 text-primary mt-0.5" aria-hidden />
                   <span>Acessibilidade para pessoas com deficiência</span>
                 </li>
               </ul>
             </div>
 
-            <div className="bg-gradient-to-r from-[#D4C5B0] to-[#C4B5A0] p-6 rounded-lg">
-              <h3 className="text-xl font-bold text-black mb-4 font-montserrat">
+            <div className="bg-primary p-6 rounded-lg">
+              <h3 className="text-xl font-bold text-primary-foreground mb-4">
                 Redes Sociais
               </h3>
               <div className="flex gap-4">
                 <a
-                  href="#"
-                  className="bg-white text-black p-3 rounded-full hover:bg-black hover:text-white transition-all"
+                  href={CHURCH_INFO.INSTAGRAM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-background text-foreground p-3 rounded-full hover:bg-foreground hover:text-background transition-all"
                   aria-label="Instagram"
                 >
                   <Instagram className="h-5 w-5" aria-hidden />
                 </a>
                 <a
-                  href="#"
-                  className="bg-white text-black p-3 rounded-full hover:bg-black hover:text-white transition-all"
-                  aria-label="Facebook"
-                >
-                  <ThumbsUp className="h-5 w-5" aria-hidden />
-                </a>
-                <a
-                  href="#"
-                  className="bg-white text-black p-3 rounded-full hover:bg-black hover:text-white transition-all"
+                  href={CHURCH_INFO.YOUTUBE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-background text-foreground p-3 rounded-full hover:bg-foreground hover:text-background transition-all"
                   aria-label="YouTube"
                 >
                   <Youtube className="h-5 w-5" aria-hidden />
                 </a>
                 <a
-                  href="https://wa.me/5595999999999"
-                  className="bg-white text-black p-3 rounded-full hover:bg-black hover:text-white transition-all"
+                  href={`https://wa.me/${CHURCH_INFO.WHATSAPP_E164}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-background text-foreground p-3 rounded-full hover:bg-foreground hover:text-background transition-all"
                   aria-label="WhatsApp"
                 >
                   <MessageCircle className="h-5 w-5" aria-hidden />
@@ -293,18 +314,6 @@ export default function ContatoPage() {
           </div>
         </div>
       </section>
-
-      {/* Footer Navigation */}
-      <section className="bg-white py-8 px-4 border-t">
-        <div className="max-w-6xl mx-auto text-center">
-          <Link
-            href="/"
-            className="inline-block text-black font-semibold hover:text-[#D4C5B0] transition-all"
-          >
-            ← Voltar para Home
-          </Link>
-        </div>
-      </section>
-    </main>
+    </SiteShell>
   );
 }

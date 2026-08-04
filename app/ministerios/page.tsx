@@ -4,6 +4,7 @@ import Image from "next/image"
 import { User } from "lucide-react"
 import { sql } from "@/lib/neon"
 import { MinistryIcon } from "@/components/ministry-icon"
+import { SiteShell } from "@/components/site-shell"
 
 export const revalidate = 60
 export const dynamic = "force-dynamic"
@@ -19,27 +20,25 @@ export default async function MinisteriosPage() {
     ORDER BY m.ordem ASC, m.nome ASC
   `
 
-  // Fallback: se não há ministérios no banco ainda, mostra mensagem
   if (ministerios.length === 0) {
     return (
-      <main className="min-h-screen bg-white">
+      <SiteShell>
         <HeroSection />
         <section className="py-16 px-4 text-center">
-          <p className="text-lg text-gray-600">Os ministérios serão exibidos em breve.</p>
-          <Link href="/" className="inline-block mt-4 text-black font-semibold hover:text-[#D4C5B0]">← Voltar para Home</Link>
+          <p className="text-lg text-muted-foreground">Os ministérios serão exibidos em breve.</p>
         </section>
-      </main>
+      </SiteShell>
     )
   }
 
   return (
-    <main className="min-h-screen bg-white">
+    <SiteShell>
       <HeroSection />
 
-      <section className="bg-[#F5F1E8] py-16 px-4">
+      <section className="bg-muted/40 py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-black mb-6 font-montserrat">Descubra seu propósito</h2>
-          <p className="text-lg text-gray-800 leading-relaxed">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">Descubra seu propósito</h2>
+          <p className="text-lg text-muted-foreground leading-relaxed">
             Acreditamos que cada pessoa foi criada com dons e talentos únicos para servir ao Reino de Deus.
             Nossos ministérios são oportunidades de usar seus dons, crescer espiritualmente e fazer diferença na vida de outras pessoas.
           </p>
@@ -53,24 +52,24 @@ export default async function MinisteriosPage() {
             return (
               <div key={m.id} className={`grid grid-cols-1 lg:grid-cols-2 gap-8 items-center`}>
                 <div className={index % 2 === 1 ? "lg:order-2" : ""}>
-                  <div className="relative h-[300px] rounded-lg overflow-hidden shadow-xl bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                  <div className="relative h-[300px] rounded-lg overflow-hidden border border-border bg-muted/40 flex items-center justify-center">
                     <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={96} />
                   </div>
                 </div>
                 <div className={index % 2 === 1 ? "lg:order-1" : ""}>
                   <div className="flex items-center gap-3 mb-4">
                     <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={48} />
-                    <h3 className="text-3xl font-bold text-black font-montserrat">{m.nome}</h3>
+                    <h3 className="text-3xl font-bold text-foreground">{m.nome}</h3>
                   </div>
-                  <p className="text-gray-600 mb-4 text-lg">{m.descricao || "Ministério da nossa igreja."}</p>
+                  <p className="text-muted-foreground mb-4 text-lg">{m.descricao || "Ministério da nossa igreja."}</p>
                   <div className="space-y-2 mb-6">
                     <div className="flex items-center">
-                      <User className="h-4 w-4 text-[#D4C5B0] mr-2" />
-                      <span className="text-gray-700">{liderNome}</span>
+                      <User className="h-4 w-4 text-primary mr-2" />
+                      <span className="text-foreground">{liderNome}</span>
                     </div>
                   </div>
-                  <Link href="/cadastro" className="inline-block bg-black text-white font-semibold px-6 py-3 rounded-lg hover:bg-[#D4C5B0] hover:text-black transition-all">
-                    Quero Participar
+                  <Link href="/form-ministerios" className="inline-block bg-foreground text-background font-semibold px-6 py-3 rounded-lg hover:bg-primary hover:text-primary-foreground transition-all">
+                    Quero servir
                   </Link>
                 </div>
               </div>
@@ -79,23 +78,21 @@ export default async function MinisteriosPage() {
         </div>
       </section>
 
-      <section className="bg-gradient-to-r from-[#D4C5B0] to-[#C4B5A0] py-16 px-4">
+      <section className="bg-primary py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-black mb-6 font-montserrat">Pronto para fazer a diferença?</h2>
-          <p className="text-lg text-gray-800 mb-8">Entre em contato conosco e descubra como você pode servir</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-6">Pronto para fazer a diferença?</h2>
+          <p className="text-lg text-primary-foreground/90 mb-8">Descubra como você pode servir e crescer conosco</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/cadastro" className="bg-black text-white font-semibold px-8 py-4 rounded-lg hover:bg-white hover:text-black transition-all shadow-lg">Cadastrar-se</Link>
-            <Link href="/contato" className="bg-white text-black font-semibold px-8 py-4 rounded-lg hover:bg-black hover:text-white transition-all shadow-lg">Falar Conosco</Link>
+            <Link href="/form-ministerios" className="bg-foreground text-background font-semibold px-8 py-4 rounded-lg hover:bg-background hover:text-foreground transition-all">
+              Quero servir
+            </Link>
+            <Link href="/contato" className="bg-background text-foreground font-semibold px-8 py-4 rounded-lg hover:bg-foreground hover:text-background transition-all">
+              Falar Conosco
+            </Link>
           </div>
         </div>
       </section>
-
-      <section className="bg-white py-8 px-4 border-t">
-        <div className="max-w-6xl mx-auto text-center">
-          <Link href="/" className="inline-block text-black font-semibold hover:text-[#D4C5B0] transition-all">← Voltar para Home</Link>
-        </div>
-      </section>
-    </main>
+    </SiteShell>
   )
 }
 
@@ -106,8 +103,8 @@ function HeroSection() {
         <Image src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=1920&h=1080&fit=crop" alt="Ministérios" fill className="object-cover" />
       </div>
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-        <p className="text-sm md:text-base uppercase tracking-[0.3em] mb-4 text-[#D4C5B0] font-semibold">SERVINDO JUNTOS</p>
-        <h1 className="text-4xl md:text-6xl font-bold font-montserrat mb-4">Ministérios</h1>
+        <p className="text-sm md:text-base uppercase tracking-[0.3em] mb-4 text-primary font-semibold">SERVINDO JUNTOS</p>
+        <h1 className="text-4xl md:text-6xl font-bold mb-4">Ministérios</h1>
         <p className="text-lg md:text-xl">Há um lugar para você no que Deus está fazendo em nossa casa</p>
       </div>
     </section>

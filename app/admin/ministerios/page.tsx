@@ -18,11 +18,11 @@ export default function MinisteriosAdminPage() {
   const { data: ministerios, mutate } = useSWR("/api/ministerios", fetcher)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<any>(null)
-  const [form, setForm] = useState({ nome: "", descricao: "", cor: "#D4C5B0", icone: "Church", ordem: 0 })
+  const [form, setForm] = useState({ nome: "", descricao: "", cor: "#c9a84c", icone: "Church", ordem: 0 })
   const [detailId, setDetailId] = useState<string | null>(null)
   const { data: detail } = useSWR(detailId ? `/api/ministerios/${detailId}` : null, fetcher)
 
-  const resetForm = () => { setForm({ nome: "", descricao: "", cor: "#D4C5B0", icone: "Church", ordem: 0 }); setEditing(null) }
+  const resetForm = () => { setForm({ nome: "", descricao: "", cor: "#c9a84c", icone: "Church", ordem: 0 }); setEditing(null) }
 
   const handleSave = async () => {
     const method = editing ? "PUT" : "POST"

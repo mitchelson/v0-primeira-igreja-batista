@@ -97,8 +97,8 @@ export default function ConfiguracoesPage() {
             Visibilidade dos Menus
           </CardTitle>
           <CardDescription>
-            Selecione qual ministério deve ter acesso aos menus Cadastro e Administração.
-            Apenas membros desse ministério (e admins) verão esses menus. Se nenhum ministério for selecionado, os menus ficam visíveis para todos.
+            Ministério autorizado a ver atalhos legados de Cadastro/Admin. Se vazio, não há restrição por ministério.
+            A navegação principal do app usa as abas Feed · Escalas · Admin · Perfil.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
