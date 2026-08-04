@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
-import { auth } from "@/lib/auth"
+import { getSession } from "@/lib/mobile-auth"
 
 async function ensureTable() {
   await sql`
@@ -23,20 +23,20 @@ async function ensureTable() {
   `
 }
 
-export async function GET() {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+export async function GET(request: NextRequest) {
+  const session = await getSession(request)
+  if (!session?.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   await ensureTable()
-  const rows = await sql`SELECT ministerios FROM ministerio_form_respostas WHERE user_id = ${session.user.id}::uuid`
+  const rows = await sql`SELECT ministerios FROM ministerio_form_respostas WHERE user_id = ${session.userId}::uuid`
   const raw = rows[0]?.ministerios ?? null
   const ministerios = typeof raw === "string" ? JSON.parse(raw) : raw
   return NextResponse.json({ ministerios })
 }
 
-export async function POST(request: Request) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+export async function POST(request: NextRequest) {
+  const session = await getSession(request)
+  if (!session?.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { ministerios } = await request.json()
   if (!Array.isArray(ministerios) || ministerios.length === 0) {
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
 
   await sql`
     INSERT INTO ministerio_form_respostas (user_id, ministerios, updated_at)
-    VALUES (${session.user.id}::uuid, ${JSON.stringify(ministerios)}, now())
+    VALUES (${session.userId}::uuid, ${JSON.stringify(ministerios)}, now())
     ON CONFLICT (user_id) DO UPDATE SET ministerios = ${JSON.stringify(ministerios)}, updated_at = now()
   `
 

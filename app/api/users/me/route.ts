@@ -32,3 +32,14 @@ export async function PUT(request: NextRequest) {
   `
   return NextResponse.json(rows[0])
 }
+
+/** Self-service account deletion (mobile + web). */
+export async function DELETE(request: NextRequest) {
+  const session = await getSession(request)
+  if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
+
+  const id = session.userId
+  await sql`DELETE FROM users WHERE id = ${id}`
+  await sql`DELETE FROM accounts WHERE id = ${id}::uuid`.catch(() => {})
+  return NextResponse.json({ ok: true })
+}
