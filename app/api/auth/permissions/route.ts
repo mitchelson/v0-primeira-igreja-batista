@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAccountPermissions, getAccountRoles } from '@/lib/permissions';
-import { verify } from 'jsonwebtoken';
+import { getSession } from '@/lib/mobile-auth';
 
 /**
  * GET /api/auth/permissions
@@ -17,32 +17,15 @@ import { verify } from 'jsonwebtoken';
  */
 export async function GET(req: NextRequest) {
   try {
-    // Get token from Authorization header
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const session = await getSession(req)
+    if (!session?.userId) {
       return NextResponse.json(
-        { error: 'Missing or invalid authorization header' },
+        { error: 'Não autenticado' },
         { status: 401 }
       );
     }
 
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    
-    // Verify JWT token
-    const secret = process.env.AUTH_MOBILE_SECRET || process.env.AUTH_SECRET;
-    if (!secret) {
-      throw new Error('AUTH_MOBILE_SECRET or AUTH_SECRET not configured');
-    }
-
-    const decoded = verify(token, secret) as any;
-    const userId = decoded.userId || decoded.id;
-    
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Invalid token: missing user ID' },
-        { status: 401 }
-      );
-    }
+    const userId = session.userId
     
     // Get permissions and roles
     const [permissions, roles] = await Promise.all([
@@ -75,7 +58,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     console.error('Error in permissions endpoint:', error);
     
-    if (error.name === 'TokenExpiredError') {
+    if (error.name === 'TokenExpiredError' || error.code === 'ERR_JWT_EXPIRED') {
       return NextResponse.json({ error: 'Token expired' }, { status: 401 });
     }
     

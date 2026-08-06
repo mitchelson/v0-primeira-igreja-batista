@@ -30,9 +30,12 @@ export async function getSession(request: NextRequest): Promise<MobileSession | 
       const role = payload.role as string
       const ministerioIds = (payload.ministerioIds as string[]) ?? []
 
-      // Verifica se o user ainda está ativo
-      const rows = await sql`SELECT ativo FROM users WHERE id = ${userId} LIMIT 1`
-      if (!rows[0]?.ativo) return null
+      // Verifica se o user ainda está ativo (null = legado, trata como ativo)
+      const rows = await sql`
+        SELECT ativo FROM users WHERE id = ${userId}::uuid LIMIT 1
+      `
+      if (rows.length === 0) return null
+      if (rows[0].ativo === false) return null
 
       return { userId, role, ministerioIds }
     } catch {
